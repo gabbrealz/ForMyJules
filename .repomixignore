@@ -1,0 +1,10 @@
+**/.repomixignore
+**/.gitignore
+
+node_modules/**/*
+
+**/*.json
+!**/package.json
+
+**/vite.config.ts
+**/eslint.config.js
