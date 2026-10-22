@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { SESSION_COOKIE_NAME, cookieOptions } from '../config';
-import { requireAuth } from '../middleware/auth';
-import { validate } from '../middleware/validate';
+import { requireAuth } from '../middlewares/auth';
+import { validate } from '../middlewares/validate';
 import { User, toPublicUser } from '../models/user';
 import { destroySession, regenerateSession, saveSession } from '../utils/session';
 import { loginSchema, signUpSchema, type LoginInput, type SignUpInput } from '../validators/user';

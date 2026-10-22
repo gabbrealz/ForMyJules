@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { requireAdmin, requireAuth } from '../middleware/auth';
-import { validate } from '../middleware/validate';
+import { requireAdmin, requireAuth } from '../middlewares/auth';
+import { validate } from '../middlewares/validate';
 import { User, toPublicUser } from '../models/user';
 import { approveUserSchema, userIdParamSchema, type ApproveUserInput } from '../validators/user';
 
