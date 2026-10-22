@@ -9,7 +9,7 @@ Only me and my girlfriend will use this web app
 - Cat theme
 - Focused on light mode
 - Pastel colors
-- Sans-serif typography
+- Sans typography
 - Sleek UI with a touch of cute
 
 ## Features
