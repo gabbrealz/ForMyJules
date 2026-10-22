@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react"
-import { Navigate, useLocation, useNavigate } from "react-router-dom"
+import { useState, type SubmitEvent } from "react"
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom"
 import { CatIcon, EyeIcon, EyeOffIcon } from "lucide-react"
 
 import { useAuth } from "../auth/auth-context.ts"
@@ -43,7 +43,7 @@ export default function Login() {
     return <Navigate to={from} replace />
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
     setPending(true)
@@ -120,6 +120,15 @@ export default function Login() {
                   {pending && <Spinner />}
                   Log in
                 </Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <Link
+                    to="/signup"
+                    className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
+                  >
+                    Sign up
+                  </Link>
+                </p>
               </FieldGroup>
             </form>
           </CardContent>
