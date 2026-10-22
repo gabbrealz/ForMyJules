@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { v2 as cloudinary } from 'cloudinary';
-import { requireAuth } from '../middleware/auth'; // your existing JWT/session check
+import { requireAuth } from '../middleware/auth'; // your existing session check
 
 const API_SECRET = process.env.CLOUDINARY_API_SECRET!; // never sent to the browser
 
