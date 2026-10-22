@@ -34,7 +34,7 @@ async function main() {
 
   const admin = await User.findOneAndUpdate(
     { username },
-    { $set: { nickname, passwordHash, role: 'partner', isAdmin: true } },
+    { $set: { nickname, passwordHash, role: 'admin' } },
     { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true },
   );
 

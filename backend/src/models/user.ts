@@ -8,7 +8,7 @@ import {
   USERNAME_REGEX,
 } from '../validators/user';
 
-export const USER_ROLES = ['partner', 'guest', 'pending_approval'] as const;
+export const USER_ROLES = ['admin', 'partner', 'guest', 'pending_approval'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export interface IUser {
@@ -16,7 +16,6 @@ export interface IUser {
   nickname: string;
   passwordHash: string;
   role: UserRole;
-  isAdmin: boolean; // admin is a flag, separate from the three roles above
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,10 +52,6 @@ const userSchema = new Schema<IUser>(
       required: true,
       default: 'pending_approval', // every new account starts here until an admin approves it
     },
-    isAdmin: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true },
 );
@@ -68,7 +63,6 @@ export interface PublicUser {
   username: string;
   nickname: string;
   role: UserRole;
-  isAdmin: boolean;
 }
 
 // The only shape of a user that should ever leave the server. Works for hydrated and lean docs.
@@ -77,13 +71,11 @@ export function toPublicUser(user: {
   username: string;
   nickname: string;
   role: UserRole;
-  isAdmin: boolean;
 }): PublicUser {
   return {
     id: user._id.toString(),
     username: user.username,
     nickname: user.nickname,
     role: user.role,
-    isAdmin: user.isAdmin,
   };
 }

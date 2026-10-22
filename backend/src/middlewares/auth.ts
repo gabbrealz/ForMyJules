@@ -47,7 +47,7 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
 
 // Use after requireAuth: router.use(requireAuth, requireAdmin)
 export const requireAdmin: RequestHandler = (req, res, next) => {
-  if (!req.user?.isAdmin) {
+  if (req.user === undefined || req.user.role !== 'admin') {
     res.status(403).json({ error: 'Admin access required' });
     return;
   }
