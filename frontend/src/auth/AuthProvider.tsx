@@ -47,14 +47,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(next)
   }, [])
 
+  const signup = useCallback(
+    async (username: string, nickname: string, password: string) => {
+      const name = username.trim()
+      const nick = nickname.trim()
+      if (!name || !nick || !password) {
+        throw new Error("Fill in all the fields to create your account.")
+      }
+
+      // TODO: replace this stub with a real request to your backend
+      // (and surface errors like "username already taken" by throwing them).
+      // For now the account is created locally and the person is signed straight in.
+      const next: AuthUser = {
+        username: name,
+        displayName: nick,
+      }
+      writeStoredUser(next)
+      setUser(next)
+    },
+    []
+  )
+
   const logout = useCallback(() => {
     writeStoredUser(null)
     setUser(null)
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isAuthenticated: user !== null, login, logout }),
-    [user, login, logout]
+    () => ({ user, isAuthenticated: user !== null, login, signup, logout }),
+    [user, login, signup, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

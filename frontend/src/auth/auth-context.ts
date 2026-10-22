@@ -9,6 +9,11 @@ export type AuthContextValue = {
   user: AuthUser | null
   isAuthenticated: boolean
   login: (username: string, password: string) => Promise<void>
+  signup: (
+    username: string,
+    nickname: string,
+    password: string
+  ) => Promise<void>
   logout: () => void
 }
 
