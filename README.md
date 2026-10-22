@@ -9,6 +9,10 @@ Only me and my girlfriend will use this web app
 - Cat theme
 - Focused on light mode
 - Pastel colors
+    - Dark brown
+    - Pastel cream
+    - Vanilla cream
+    - Apricot cream
 - Sans typography
 - Sleek UI with a touch of cute
 
