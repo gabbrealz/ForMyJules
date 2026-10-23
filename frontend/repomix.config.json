@@ -37,7 +37,8 @@
     "useDotIgnore": true,
     "useDefaultPatterns": true,
     "customPatterns": [
-      "assets/**/*"
+      "assets/**/*",
+      "src/components/ui/**/*"
     ]
   },
   "security": {
