@@ -5,6 +5,7 @@ import './styles/globals.css';
 import { AuthProvider } from './auth/AuthProvider.tsx';
 import ProtectedRoute from './auth/ProtectedRoute.tsx';
 import Layout from './Layout.tsx';
+import { AdminSidebar } from '#components/admin/admin-sidebar';
 import Landing from './pages/Landing.tsx';
 import Login from './pages/Login.tsx';
 import Signup from './pages/Signup.tsx';
@@ -15,6 +16,8 @@ import Photobooth from './pages/Photobooth.tsx';
 import MusicLocker from './pages/MusicLocker.tsx';
 import SpinTheWheel from './pages/SpinTheWheel.tsx';
 import Profile from './pages/Profile.tsx';
+import AdminUsers from './pages/admin/AdminUsers.tsx';
+import AdminPending from './pages/admin/AdminPending.tsx';
 
 const router = createBrowserRouter([
   // Public
@@ -22,10 +25,11 @@ const router = createBrowserRouter([
   { path: "/login", element: <Login /> },
   { path: "/signup", element: <Signup /> },
 
-  // Authenticated: sidebar layout
+  // Authenticated
   {
     element: <ProtectedRoute />,
     children: [
+      // Main app: standard sidebar layout
       {
         element: <Layout />,
         children: [
@@ -36,6 +40,17 @@ const router = createBrowserRouter([
           { path: "music", element: <MusicLocker /> },
           { path: "spin-the-wheel", element: <SpinTheWheel /> },
           { path: "profile", element: <Profile /> },
+        ],
+      },
+
+      // Admin: same shell, its own sidebar.
+      // TODO: add a role check (e.g. an <AdminRoute />) once users have roles.
+      {
+        element: <Layout sidebar={AdminSidebar} />,
+        children: [
+          { path: "admin", element: <Navigate to="/admin/users" replace /> },
+          { path: "admin/users", element: <AdminUsers /> },
+          { path: "admin/pending", element: <AdminPending /> },
         ],
       },
     ],
