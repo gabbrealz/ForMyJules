@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react"
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import {
   BookHeartIcon,
   CameraIcon,
@@ -10,10 +10,12 @@ import {
   LogOutIcon,
   MusicIcon,
   UserIcon,
+  type LucideIcon,
 } from "lucide-react"
 
 import { useAuth } from "../auth/auth-context.ts"
 import { Brand } from "#components/brand"
+import { NavItem, type NavPersonality } from "#components/nav-item"
 import { Avatar, AvatarFallback } from "#components/ui/avatar"
 import {
   DropdownMenu,
@@ -35,13 +37,33 @@ import {
   useSidebar,
 } from "#components/ui/sidebar"
 
-const NAV_ITEMS = [
-  { label: "Home", to: "/home", icon: HouseIcon },
-  { label: "Gallery", to: "/gallery", icon: ImagesIcon },
-  { label: "Scrapbook", to: "/scrapbook", icon: BookHeartIcon },
-  { label: "Photobooth", to: "/photobooth", icon: CameraIcon },
-  { label: "Music Locker", to: "/music", icon: MusicIcon },
-  { label: "Spin the Wheel", to: "/spin-the-wheel", icon: FerrisWheelIcon },
+const NAV_ITEMS: {
+  label: string
+  to: string
+  icon: LucideIcon
+  personality: NavPersonality
+}[] = [
+  { label: "Home", to: "/home", icon: HouseIcon, personality: "hop" },
+  { label: "Gallery", to: "/gallery", icon: ImagesIcon, personality: "fan" },
+  {
+    label: "Scrapbook",
+    to: "/scrapbook",
+    icon: BookHeartIcon,
+    personality: "heartbeat",
+  },
+  {
+    label: "Photobooth",
+    to: "/photobooth",
+    icon: CameraIcon,
+    personality: "snap",
+  },
+  { label: "Music Locker", to: "/music", icon: MusicIcon, personality: "sway" },
+  {
+    label: "Spin the Wheel",
+    to: "/spin-the-wheel",
+    icon: FerrisWheelIcon,
+    personality: "spin",
+  },
 ]
 
 function ProfileAvatar({ name, size }: { name: string; size?: "default" | "lg" }) {
@@ -76,19 +98,18 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {NAV_ITEMS.map(({ label, to, icon: Icon }) => (
-                <SidebarMenuItem key={to}>
-                  <SidebarMenuButton
-                    render={<Link to={to} />}
-                    isActive={pathname === to || pathname.startsWith(`${to}/`)}
-                    onClick={closeMobileSidebar}
-                    className="h-10 rounded-xl px-3"
-                  >
-                    <Icon />
-                    <span>{label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+            {/* gap-2! = a bit more air between items (was gap-1) */}
+            <SidebarMenu className="gap-2!">
+              {NAV_ITEMS.map((item) => (
+                <NavItem
+                  key={item.to}
+                  {...item}
+                  pillId="app-nav-pill"
+                  isActive={
+                    pathname === item.to || pathname.startsWith(`${item.to}/`)
+                  }
+                  onNavigate={closeMobileSidebar}
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
