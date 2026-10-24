@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { SESSION_COOKIE_NAME, config, cookieOptions } from './config';
 import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
+import photosRouter from './routes/photos';
 import uploadsRouter from './routes/sign-upload';
 
 async function main() {
@@ -34,14 +35,10 @@ async function main() {
     }),
   );
 
-  // Basic Route
-  app.get('/', (req: Request, res: Response) => {
-    res.json({ message: 'Hello, TypeScript + Express!' });
-  });
-
   app.use('/api/auth', authRouter);
   app.use('/api/admin', adminRouter);
-  app.use('/api', uploadsRouter);
+  app.use('/api/photos', photosRouter);
+  app.use('/api/uploads', uploadsRouter);
 
   // Express 5 forwards rejected promises from async handlers here.
   app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
