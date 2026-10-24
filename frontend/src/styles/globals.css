@@ -24,6 +24,8 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-field: var(--field);
+  --color-field-border: var(--field-border);
   --color-ring: var(--ring);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -85,6 +87,9 @@
   --destructive-foreground: oklch(0.985 0.012 80);
   --border: oklch(0.91 0.03 80);
   --input: oklch(0.89 0.035 78);
+  /* Form fields: a tinted well with a ~3:1 border so inputs read as their own object on cards */
+  --field: oklch(0.945 0.035 82);
+  --field-border: oklch(0.66 0.06 62);
   --ring: oklch(0.72 0.1 60);
   --chart-1: oklch(0.89 0.07 65);
   --chart-2: oklch(0.8 0.09 62);
@@ -120,6 +125,8 @@
   --destructive-foreground: oklch(0.2 0.02 52);
   --border: oklch(1 0.02 80 / 12%);
   --input: oklch(1 0.02 80 / 16%);
+  --field: oklch(0.2 0.02 52);
+  --field-border: oklch(0.56 0.05 62);
   --ring: oklch(0.7 0.09 62);
   --chart-1: oklch(0.89 0.07 65);
   --chart-2: oklch(0.8 0.09 62);
