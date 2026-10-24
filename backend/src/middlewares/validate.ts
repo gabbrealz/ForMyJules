@@ -2,10 +2,13 @@ import type { RequestHandler } from 'express';
 import type { ZodType } from 'zod';
 
 /**
- * Validates req.body or req.params against a zod schema.
- * On success the body is replaced with the parsed (trimmed, lowercased, unknown-keys-stripped) data.
+ * Validates req.body, req.params or req.query against a zod schema.
+ *
+ * - body: replaced with the parsed (trimmed, lowercased, unknown-keys-stripped) data.
+ * - query: Express 5 makes req.query read-only, so the parsed data is put on res.locals.query.
+ * - params: validated only; read them from req.params as before.
  */
-export function validate(source: 'body' | 'params', schema: ZodType): RequestHandler {
+export function validate(source: 'body' | 'params' | 'query', schema: ZodType): RequestHandler {
   return (req, res, next) => {
     const result = schema.safeParse(req[source]);
 
@@ -21,6 +24,7 @@ export function validate(source: 'body' | 'params', schema: ZodType): RequestHan
     }
 
     if (source === 'body') req.body = result.data;
+    if (source === 'query') res.locals.query = result.data;
     next();
   };
 }
