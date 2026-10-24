@@ -1,9 +1,10 @@
 import { useState, type SubmitEvent } from "react"
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom"
-import { CatIcon, EyeIcon, EyeOffIcon } from "lucide-react"
+import { CatIcon } from "lucide-react"
 
 import { useAuth } from "../auth/auth-context.ts"
 import { Backdrop } from "#components/backdrop"
+import { FloatingInput, PasswordToggle } from "#components/floating-input"
 import { Button } from "#components/ui/button"
 import {
   Card,
@@ -12,14 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "#components/ui/card"
-import { Field, FieldError, FieldGroup, FieldLabel } from "#components/ui/field"
-import { Input } from "#components/ui/input"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "#components/ui/input-group"
+import { Field, FieldError, FieldGroup } from "#components/ui/field"
 import { Spinner } from "#components/ui/spinner"
 import { APP_NAME } from "#lib/brand"
 
@@ -74,10 +68,10 @@ export default function Login() {
             <form onSubmit={handleSubmit} noValidate>
               <FieldGroup className="gap-5">
                 <Field data-invalid={error ? true : undefined}>
-                  <FieldLabel htmlFor="username">Username</FieldLabel>
-                  <Input
+                  <FloatingInput
                     id="username"
                     name="username"
+                    label="Username"
                     autoComplete="username"
                     autoFocus
                     value={username}
@@ -86,29 +80,23 @@ export default function Login() {
                   />
                 </Field>
                 <Field data-invalid={error ? true : undefined}>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      aria-invalid={error ? true : undefined}
-                    />
-                    <InputGroupAddon align="inline-end">
-                      <InputGroupButton
-                        size="icon-xs"
-                        aria-label={
-                          showPassword ? "Hide password" : "Show password"
-                        }
-                        onClick={() => setShowPassword((shown) => !shown)}
-                      >
-                        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                      </InputGroupButton>
-                    </InputGroupAddon>
-                  </InputGroup>
+                  <FloatingInput
+                    id="password"
+                    name="password"
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    aria-invalid={error ? true : undefined}
+                    endAdornment={
+                      <PasswordToggle
+                        shown={showPassword}
+                        onToggle={() => setShowPassword((shown) => !shown)}
+                        label={showPassword ? "Hide password" : "Show password"}
+                      />
+                    }
+                  />
                 </Field>
                 {error && <FieldError>{error}</FieldError>}
                 <Button

@@ -1,9 +1,10 @@
 import { useState, type SubmitEvent } from "react"
 import { Link, Navigate, useNavigate } from "react-router-dom"
-import { CatIcon, EyeIcon, EyeOffIcon } from "lucide-react"
+import { CatIcon } from "lucide-react"
 
 import { useAuth } from "../auth/auth-context.ts"
 import { Backdrop } from "#components/backdrop"
+import { FloatingInput, PasswordToggle } from "#components/floating-input"
 import { Button } from "#components/ui/button"
 import {
   Card,
@@ -12,14 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "#components/ui/card"
-import { Field, FieldError, FieldGroup, FieldLabel } from "#components/ui/field"
-import { Input } from "#components/ui/input"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "#components/ui/input-group"
+import { Field, FieldError, FieldGroup } from "#components/ui/field"
 import { Spinner } from "#components/ui/spinner"
 import { APP_NAME } from "#lib/brand"
 
@@ -111,15 +105,11 @@ export default function Signup() {
   }
 
   const passwordToggle = (
-    <InputGroupAddon align="inline-end">
-      <InputGroupButton
-        size="icon-xs"
-        aria-label={showPassword ? "Hide passwords" : "Show passwords"}
-        onClick={() => setShowPassword((shown) => !shown)}
-      >
-        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-      </InputGroupButton>
-    </InputGroupAddon>
+    <PasswordToggle
+      shown={showPassword}
+      onToggle={() => setShowPassword((shown) => !shown)}
+      label={showPassword ? "Hide passwords" : "Show passwords"}
+    />
   )
 
   return (
@@ -139,10 +129,10 @@ export default function Signup() {
             <form onSubmit={handleSubmit} noValidate>
               <FieldGroup className="gap-5">
                 <Field data-invalid={fieldErrors.username ? true : undefined}>
-                  <FieldLabel htmlFor="username">Username</FieldLabel>
-                  <Input
+                  <FloatingInput
                     id="username"
                     name="username"
+                    label="Username"
                     autoComplete="username"
                     autoFocus
                     value={values.username}
@@ -153,10 +143,10 @@ export default function Signup() {
                 </Field>
 
                 <Field data-invalid={fieldErrors.nickname ? true : undefined}>
-                  <FieldLabel htmlFor="nickname">Nickname</FieldLabel>
-                  <Input
+                  <FloatingInput
                     id="nickname"
                     name="nickname"
+                    label="Nickname"
                     autoComplete="nickname"
                     value={values.nickname}
                     onChange={(e) => setValue("nickname", e.target.value)}
@@ -166,44 +156,34 @@ export default function Signup() {
                 </Field>
 
                 <Field data-invalid={fieldErrors.password ? true : undefined}>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      value={values.password}
-                      onChange={(e) => setValue("password", e.target.value)}
-                      aria-invalid={fieldErrors.password ? true : undefined}
-                    />
-                    {passwordToggle}
-                  </InputGroup>
+                  <FloatingInput
+                    id="password"
+                    name="password"
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={values.password}
+                    onChange={(e) => setValue("password", e.target.value)}
+                    aria-invalid={fieldErrors.password ? true : undefined}
+                    endAdornment={passwordToggle}
+                  />
                   <FieldError>{fieldErrors.password}</FieldError>
                 </Field>
 
                 <Field
                   data-invalid={fieldErrors.confirmPassword ? true : undefined}
                 >
-                  <FieldLabel htmlFor="confirmPassword">
-                    Confirm Password
-                  </FieldLabel>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      value={values.confirmPassword}
-                      onChange={(e) =>
-                        setValue("confirmPassword", e.target.value)
-                      }
-                      aria-invalid={
-                        fieldErrors.confirmPassword ? true : undefined
-                      }
-                    />
-                    {passwordToggle}
-                  </InputGroup>
+                  <FloatingInput
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={values.confirmPassword}
+                    onChange={(e) => setValue("confirmPassword", e.target.value)}
+                    aria-invalid={fieldErrors.confirmPassword ? true : undefined}
+                    endAdornment={passwordToggle}
+                  />
                   <FieldError>{fieldErrors.confirmPassword}</FieldError>
                 </Field>
 
