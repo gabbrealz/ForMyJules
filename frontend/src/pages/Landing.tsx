@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 
-import { useAuth } from "../auth/auth-context.ts"
+import { useAuth } from "../features/auth/index.ts"
 import { Backdrop } from "#components/backdrop"
 import { Brand } from "#components/brand"
 import { Button } from "#components/ui/button"

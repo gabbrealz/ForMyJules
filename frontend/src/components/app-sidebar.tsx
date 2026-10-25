@@ -13,7 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { useAuth } from "../auth/auth-context.ts"
+import { useAuth } from "../features/auth/index.ts"
 import { Brand } from "#components/brand"
 import { NavItem, type NavPersonality } from "#components/nav-item"
 import { Avatar, AvatarFallback } from "#components/ui/avatar"

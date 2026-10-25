@@ -2,7 +2,7 @@ import { useState, type SubmitEvent } from "react"
 import { Link, Navigate, useNavigate } from "react-router-dom"
 import { CatIcon } from "lucide-react"
 
-import { useAuth } from "../auth/auth-context.ts"
+import { useAuth } from "../features/auth/index.ts"
 import { Backdrop } from "#components/backdrop"
 import { FloatingInput, PasswordToggle } from "#components/floating-input"
 import { Button } from "#components/ui/button"
