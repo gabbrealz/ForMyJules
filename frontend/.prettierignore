@@ -1,0 +1,5 @@
+dist
+node_modules
+package-lock.json
+# shadcn-managed: never hand-edit or reformat
+src/components/ui
