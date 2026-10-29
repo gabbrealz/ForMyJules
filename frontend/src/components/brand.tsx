@@ -1,7 +1,7 @@
 import { cn } from "cn"
 import { CatIcon } from "lucide-react"
 
-import { APP_NAME } from "#lib/brand"
+import { APP_NAME } from "#config/brand"
 
 export function Brand({ className }: { className?: string }) {
   return (

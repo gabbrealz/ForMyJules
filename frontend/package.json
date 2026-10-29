@@ -14,8 +14,13 @@
   },
   "imports": {
     "#components/*": "./src/components/*.tsx",
-    "#lib/*": "./src/lib/*.ts",
-    "#hooks/*": "./src/hooks/*.ts"
+    "#pages/*": "./src/pages/*.tsx",
+    "#hooks/*": "./src/hooks/*.ts",
+    "#config/*": "./src/config/*.ts",
+    "#routes/*": "./src/routes/*.tsx",
+    "#layouts/*": "./src/layouts/*.tsx",
+    "#services/*": "./src/services/*.ts",
+    "#features/*": "./src/features/*/index.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

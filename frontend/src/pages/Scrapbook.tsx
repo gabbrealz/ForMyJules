@@ -2,10 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import HTMLFlipBook from "react-pageflip"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
-import { PageContent } from "#components/scrapbook/page-content"
-import { Sheet } from "#components/scrapbook/sheet"
+import { PageContent, Sheet, PAGES } from "#features/scrapbook"
 import { Button } from "#components/ui/button"
-import { PAGES } from "#lib/scrapbook"
 
 // Just the bit of react-pageflip's imperative API we use.
 type FlipBookHandle = {

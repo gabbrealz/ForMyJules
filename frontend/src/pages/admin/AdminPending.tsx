@@ -1,8 +1,8 @@
 import { CheckIcon, XIcon } from "lucide-react"
 
-import { AdminPage } from "#components/admin/admin-page"
-import { UsersTable, type UserAction } from "#components/admin/users-table"
-import { PENDING_REGISTRATIONS } from "./mock-data.ts"
+import { AdminPage } from "#features/admin"
+import { UsersTable, type UserAction } from "#features/admin"
+import { PENDING_REGISTRATIONS } from "#features/admin"
 
 // TODO: wire these up. Each handler receives the row's user once you add a parameter.
 function handleApprove() {

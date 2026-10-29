@@ -1,23 +1,13 @@
-// Domain
-export type { AuthUser, Role } from "./domain/auth-user.ts"
-export { isAdmin } from "./domain/auth-user.ts"
-export type { Session } from "./domain/session.ts"
-export { InvalidCredentialsError } from "./domain/credentials.ts"
-
-// Ports (so src/app or another feature can type adapters)
-export type { AuthApi, SessionStore } from "./application/ports.ts"
-
-// Adapters: for the composition root in src/app only
-export { LocalStorageSessionStore } from "./infrastructure/local-storage-session-store.ts"
-export { StubAuthApi } from "./infrastructure/stub-auth-api.ts"
+export type { AuthUser, Role } from "./types.ts"
+export { isAdmin } from "./types.ts"
 
 // Presentation
-export { AuthProvider } from "./presentation/auth-provider.tsx"
-export { useAuth } from "./presentation/use-auth.ts"
-export { useRequiredUser } from "./presentation/use-required-user.ts"
-export { useLogout } from "./presentation/use-logout.ts"
-export { ProtectedRoute } from "./presentation/protected-route.tsx"
-export { AdminRoute } from "./presentation/admin-route.tsx"
-export { AuthCardLayout } from "./presentation/auth-card-layout.tsx"
-export { useLoginForm } from "./presentation/use-login-form.ts"
-export { useSignupForm } from "./presentation/use-signup-form.ts"
+export { AuthProvider } from "./components/auth-provider.tsx"
+export { ProtectedRoute } from "./components/protected-route.tsx"
+export { AdminRoute } from "./components/admin-route.tsx"
+export { LoginForm } from "./components/login-form.tsx"
+export { SignupForm } from "./components/signup-form.tsx"
+
+export { useAuth } from "./hooks/use-auth.ts"
+export { useRequiredUser } from "./hooks/use-required-user.ts"
+export { useLogout } from "./hooks/use-logout.ts"

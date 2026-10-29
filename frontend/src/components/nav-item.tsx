@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
 } from "#components/ui/sidebar"
 
-import { useRipple } from "./use-ripple"
+import { useRipple } from "../hooks/use-ripple"
 
 // ─── Icon personalities ──────────────────────────────────────────────────────
 // Every icon gets its own little move on hover and a shared squish on click.
