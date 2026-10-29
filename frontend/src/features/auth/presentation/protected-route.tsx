@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom"
 import { Spinner } from "#components/ui/spinner"
+import type { LoginRedirectState } from "./login-redirect.ts"
 import { useAuth } from "./use-auth.ts"
 
 export function ProtectedRoute() {
@@ -16,7 +17,13 @@ export function ProtectedRoute() {
   }
 
   if (status === "anonymous") {
-    return <Navigate to="/login" replace state={{ from: location }} />
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location } satisfies LoginRedirectState}
+      />
+    )
   }
 
   return <Outlet />
