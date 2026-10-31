@@ -30,6 +30,7 @@ export const cookieOptions = {
 export const config = {
   isProd,
   port: Number(process.env.PORT) || 3000,
+  frontendUrl: required('FRONTEND_URL'),
   mongoUri: required('MONGODB_URI'),
   sessionSecret: required('SESSION_SECRET'),
   sessionMaxAgeMs: 7 * 24 * 60 * 60 * 1000, // 7 days

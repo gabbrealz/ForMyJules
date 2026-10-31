@@ -1,4 +1,5 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
+import cors from 'cors';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import mongoose from 'mongoose';
@@ -12,6 +13,11 @@ async function main() {
   await mongoose.connect(config.mongoUri);
 
   const app = express();
+
+  app.use(cors({
+    origin: config.frontendUrl,
+    credentials: true
+  }));
 
   // Render terminates TLS in front of the app; without this, `secure` cookies are never set.
   if (config.isProd) app.set('trust proxy', 1);
