@@ -36,7 +36,7 @@ const sendNotFound = (res: Response) => {
 };
 
 // body: { kind?, takenAt? }. Expects requireAuth + requireContributor to have run.
-export const updatePhoto: RequestHandler = async (req, res) => {
+export const updatePhoto: RequestHandler<{ id: string }> = async (req, res) => {
   const result = await photoService.updatePhoto(req.params.id, req.body as UpdatePhotoInput);
 
   if (!result.ok) {
@@ -47,7 +47,7 @@ export const updatePhoto: RequestHandler = async (req, res) => {
 };
 
 // Expects requireAuth + requireContributor to have run.
-export const deletePhoto: RequestHandler = async (req, res) => {
+export const deletePhoto: RequestHandler<{ id: string }> = async (req, res) => {
   const result = await photoService.deletePhoto(req.params.id);
 
   if (!result.ok) {
