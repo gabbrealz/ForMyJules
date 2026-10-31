@@ -1,37 +1,42 @@
-import type { LoginCredentials, Session, SignupCredentials } from "../types.ts"
-import { sessionCache } from "./session-cache.ts"
+import { http, HttpError, type RequestOptions } from "#services/http-client"
+import type { LoginCredentials, Session, SignupCredentials, User } from "../types.ts"
 
-const deriveDisplayName = (username: string) =>
-  username.charAt(0).toUpperCase() + username.slice(1)
+export type SignupResponse = {
+  message: string
+  /** The new account, with role `pending_approval`. */
+  user: User
+}
 
-// TODO: replace each method body with a call to `http` (#services/http-client),
-// e.g. http.post<Session>("/api/auth/login", credentials). Throw real errors
-// (e.g. "username already taken") from login/signup.
+// /api/auth
 export const authApi = {
-  async login({ username }: LoginCredentials): Promise<Session> {
-    // Any non-empty username and password is accepted so the UI can be built.
-    // Everyone is "admin" while stubbed so /admin keeps working as it does today.
-    return {
-      user: {
-        username,
-        displayName: deriveDisplayName(username),
-        role: "admin",
-      },
+  /**
+   * Creates a `pending_approval` account. No session is started: an admin has to
+   * approve the account before the person can log in.
+   * Errors: 409 (username taken), 400 (validation, see HttpError.details),
+   * 429 (5 signups per IP per hour).
+   */
+  signup: (body: SignupCredentials, opts?: RequestOptions) =>
+    http.post<SignupResponse>("/api/auth/signup", body, opts),
+
+  /**
+   * Starts a session (the server sets the httpOnly `sid` cookie).
+   * Errors: 401 (bad credentials), 403 with code "pending_approval", 400,
+   * 429 (10 failed attempts per IP within 15 minutes).
+   */
+  login: (body: LoginCredentials, opts?: RequestOptions) =>
+    http.post<Session>("/api/auth/login", body, opts),
+
+  /** Ends the session. Safe to call when logged out. */
+  logout: (opts?: RequestOptions) =>
+    http.post<void>("/api/auth/logout", undefined, opts),
+
+  /** The current session, or null when logged out (401). Other failures still throw. */
+  async getCurrentSession(opts?: RequestOptions): Promise<Session | null> {
+    try {
+      return await http.get<Session>("/api/auth/me", opts)
+    } catch (error) {
+      if (error instanceof HttpError && error.status === 401) return null
+      throw error
     }
-  },
-
-  async signup({ username, nickname }: SignupCredentials): Promise<Session> {
-    // The account is "created" locally and the person is signed straight in.
-    return {
-      user: { username, displayName: nickname, role: "admin" },
-    }
-  },
-
-  async getCurrentSession(): Promise<Session | null> {
-    return sessionCache.load(); // stub only: no server, so read the cache
-  },
-
-  async logout(): Promise<void> {
-    // Nothing to invalidate server-side while stubbed. AuthProvider clears the cache.
   },
 }

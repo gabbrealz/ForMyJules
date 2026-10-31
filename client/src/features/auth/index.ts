@@ -1,5 +1,5 @@
-export type { AuthUser, Role } from "./types.ts"
-export { isAdmin } from "./types.ts"
+export type { AuthUser, Role, User, UserRole } from "./types.ts"
+export { isAdmin, canManagePhotos } from "./types.ts"
 
 // Presentation
 export { AuthProvider } from "./components/auth-provider.tsx"

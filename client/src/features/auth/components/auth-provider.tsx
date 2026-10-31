@@ -60,14 +60,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(
     async (username: string, nickname: string, password: string) => {
-      epoch.current += 1
-      const session = await authApi.signup({
+      // New accounts are pending until an admin approves them, so there is no
+      // session to store here: the person logs in once they're approved.
+      const { message } = await authApi.signup({
         username: username.trim(),
         nickname: nickname.trim(),
         password,
       });
-      sessionCache.save(session);
-      setState(fromSession(session));
+      return { message };
     }, [])
 
   const logout = useCallback(async () => {

@@ -83,7 +83,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const logout = useLogout("/")
   const { isMobile, setOpenMobile } = useSidebar()
 
-  const displayName = user?.displayName ?? "Guest"
+  const displayName = user?.nickname ?? "Guest"
   const username = user?.username ?? "guest"
 
   function closeMobileSidebar() {
