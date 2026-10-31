@@ -1,46 +1,61 @@
-import { CheckIcon, XIcon } from "lucide-react"
+import { CheckIcon, UserRoundCheckIcon, XIcon } from "lucide-react"
 
-import { AdminPage } from "#features/admin"
-import { UsersTable, type UserAction } from "#features/admin"
-import { PENDING_REGISTRATIONS } from "#features/admin"
-
-// TODO: wire these up. Each handler receives the row's user once you add a parameter.
-function handleApprove() {
-  // Intentionally empty for now.
-}
-
-function handleReject() {
-  // Intentionally empty for now.
-}
-
-const ACTIONS: UserAction[] = [
-  {
-    key: "approve",
-    label: "Approve",
-    icon: CheckIcon,
-    variant: "default",
-    onClick: handleApprove,
-  },
-  {
-    key: "reject",
-    label: "Reject",
-    icon: XIcon,
-    variant: "destructive",
-    onClick: handleReject,
-  },
-]
+import {
+  AdminPage,
+  UsersTable,
+  usePendingUsers,
+  type AdminUser,
+  type UserAction,
+} from "#features/admin"
 
 export default function AdminPending() {
+  const { users, loading, error, isBusy, approve, reject } = usePendingUsers()
+
+  // Approving needs a role, so there is one approve button per role the API allows.
+  const actionsFor = (user: AdminUser): UserAction[] => {
+    const disabled = isBusy(user.id)
+    return [
+      {
+        key: "approve-partner",
+        label: "Approve as partner",
+        icon: CheckIcon,
+        variant: "default",
+        disabled,
+        onClick: (u) => void approve(u, "partner"),
+      },
+      {
+        key: "approve-guest",
+        label: "Approve as guest",
+        icon: UserRoundCheckIcon,
+        disabled,
+        onClick: (u) => void approve(u, "guest"),
+      },
+      {
+        key: "reject",
+        label: "Reject",
+        icon: XIcon,
+        variant: "destructive",
+        disabled,
+        onClick: (u) => void reject(u),
+      },
+    ]
+  }
+
   return (
     <AdminPage
       title="Pending Registrations"
       description="New sign-ups waiting for your approval."
-      count={PENDING_REGISTRATIONS.length}
+      count={loading ? undefined : users.length}
     >
+      {error && (
+        <p role="alert" className="mb-4 text-sm text-destructive">
+          {error}
+        </p>
+      )}
       <UsersTable
-        users={PENDING_REGISTRATIONS}
-        actions={ACTIONS}
-        emptyMessage="No pending registrations."
+        users={users}
+        actions={actionsFor}
+        emptyMessage={loading ? "Loading..." : "No pending registrations."}
       />
     </AdminPage>
   )
