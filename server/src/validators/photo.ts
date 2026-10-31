@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const PHOTO_KINDS = ['photo', 'graphic', 'sticker'] as const;
+export const PHOTO_KINDS = ['photo', 'photobooth' , 'graphic', 'sticker'] as const;
 export type PhotoKind = (typeof PHOTO_KINDS)[number];
 
 export const DEFAULT_PAGE_SIZE = 40;
