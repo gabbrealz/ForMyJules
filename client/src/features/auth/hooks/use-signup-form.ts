@@ -2,6 +2,7 @@ import { useState, type SubmitEvent } from "react"
 import {
   DEFAULT_POST_LOGIN_PATH,
   errorMessage,
+  signupFieldErrorsFromApi,
   validateSignup,
   type SignupField,
   type SignupFieldErrors,
@@ -26,6 +27,7 @@ export function useSignupForm() {
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({})
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   function setValue(name: SignupField, value: string) {
     setValues((current) => ({ ...current, [name]: value }))
@@ -45,10 +47,14 @@ export function useSignupForm() {
 
     setPending(true)
     try {
-      await signup(values.username, values.nickname, values.password)
-      // On success the auth state flips and the redirect in the page takes over.
+      const { message } = await signup(values.username, values.nickname, values.password)
+      // No session yet: the account waits for an admin, so show the server's message.
+      setSuccessMessage(message)
+      setValues(EMPTY_VALUES)
     } catch (err) {
-      setError(errorMessage(err, FALLBACK_ERROR))
+      const apiFieldErrors = signupFieldErrorsFromApi(err)
+      if (Object.keys(apiFieldErrors).length > 0) setFieldErrors(apiFieldErrors)
+      else setError(errorMessage(err, FALLBACK_ERROR))
     } finally {
       setPending(false)
     }
@@ -62,6 +68,8 @@ export function useSignupForm() {
     toggleShowPassword: () => setShowPassword((shown) => !shown),
     error,
     pending,
+    /** Set once the account was created; show it instead of the form. */
+    successMessage,
     handleSubmit,
     /** Where to send an already-authenticated visitor, or null to show the form. */
     redirectTo: isAuthenticated ? DEFAULT_POST_LOGIN_PATH : null,

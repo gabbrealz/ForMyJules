@@ -9,6 +9,17 @@ export function SignupForm() {
   if (form.redirectTo) return <Navigate to={form.redirectTo} replace />
   const { values, fieldErrors, setValue } = form
 
+  if (form.successMessage) {
+    return (
+      <div role="status" className="space-y-2 py-2 text-center">
+        <p className="font-heading text-lg font-semibold">Account created</p>
+        <p className="text-sm text-pretty text-muted-foreground">
+          {form.successMessage}
+        </p>
+      </div>
+    )
+  }
+
   const passwordToggle = (
     <PasswordToggle
       shown={form.showPassword}
