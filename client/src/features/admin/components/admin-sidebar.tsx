@@ -20,7 +20,6 @@ import {
   SidebarMenu,
   useSidebar,
 } from "#components/ui/sidebar"
-import { PENDING_REGISTRATIONS } from "../services/mock-data.ts"
 
 type AdminNavItem = {
   label: string
@@ -43,7 +42,7 @@ const NAV_ITEMS: AdminNavItem[] = [
     icon: UserRoundCheckIcon,
     personality: "pop",
     // TODO: replace with the real pending count from your backend.
-    badge: PENDING_REGISTRATIONS.length,
+    badge: 5,
   },
 ]
 
