@@ -45,5 +45,27 @@ export const listPhotosQuerySchema = z.object({
   kind: z.enum(PHOTO_KINDS).optional(),
 });
 
+// PATCH/DELETE /api/photos/:id
+export const photoIdParamSchema = z.object({
+  id: z.string().regex(PHOTO_ID_REGEX, 'Invalid photo id'),
+});
+
+// PATCH /api/photos/:id body. Only metadata the user can meaningfully change; dimensions,
+// thumbhash and sizes describe the stored files, so they are not editable.
+// takenAt: an ISO date sets it, null clears it, leaving it out keeps it as is.
+export const updatePhotoSchema = z
+  .object({
+    kind: z.enum(PHOTO_KINDS).optional(),
+    takenAt: z.iso
+      .datetime({ offset: true })
+      .nullable()
+      .optional()
+      .transform((value) => (typeof value === 'string' ? new Date(value) : value)),
+  })
+  .refine((value) => value.kind !== undefined || value.takenAt !== undefined, {
+    message: 'Provide at least one field to change: kind or takenAt',
+  });
+
 export type CreatePhotoInput = z.infer<typeof createPhotoSchema>;
 export type ListPhotosQuery = z.infer<typeof listPhotosQuerySchema>;
+export type UpdatePhotoInput = z.infer<typeof updatePhotoSchema>;

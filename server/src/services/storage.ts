@@ -44,6 +44,11 @@ export function recordUpload(bytes: number): void {
   if (cached) cached.usedBytes += bytes;
 }
 
+/** Called after a photo's Cloudinary assets are deleted, so the cached figure frees the space too. */
+export function recordDeletion(bytes: number): void {
+  if (cached) cached.usedBytes = Math.max(0, cached.usedBytes - bytes);
+}
+
 export type StorageStatus = {
   usedBytes: number | null;
   budgetBytes: number;

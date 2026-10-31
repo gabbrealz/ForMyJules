@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import { SESSION_COOKIE_NAME, cookieOptions } from '../config';
-import { User, toPublicUser, type PublicUser } from '../models/user';
+import { User, toPublicUser, type PublicUser, type UserRole } from '../models/user';
 import { destroySession } from '../utils/session';
 
 declare module 'express-session' {
@@ -53,3 +53,21 @@ export const requireAdmin: RequestHandler = (req, res, next) => {
   }
   next();
 };
+
+/**
+ * Allows only the listed roles. Use after requireAuth.
+ * Guests are view-only, so anything that changes data should sit behind requireContributor.
+ */
+export const requireRole =
+  (...allowed: UserRole[]): RequestHandler =>
+  (req, res, next) => {
+    if (req.user === undefined || !allowed.includes(req.user.role)) {
+      res.status(403).json({ error: 'You do not have permission to do this', code: 'forbidden' });
+      return;
+    }
+    next();
+  };
+
+// Partners and admins can upload, edit and delete any photo. Guests can only view.
+// Managing user accounts is separate: those routes use requireAdmin.
+export const requireContributor = requireRole('admin', 'partner');

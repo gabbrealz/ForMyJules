@@ -37,8 +37,9 @@ Send `Content-Type: application/json`. Unknown keys in a body are silently strip
 | `400` | `{ "error": "Validation failed", "details": [{ "field": "username", "message": "..." }] }` | Body, params or query failed validation. `field` is a dotted path. |
 | `400` | `{ "error": "Bad request" }` | Malformed JSON body or other client error raised by Express. |
 | `401` | `{ "error": "Authentication required" }` | No session, or the session's user no longer exists / is pending. |
-| `403` | `{ "error": "Admin access required" }` | Authenticated but not an admin (admin routes only). |
-| `429` | `{ "error": "Too many requests. Please slow down.", "code": "rate_limited" }` | A per-user rate limit was hit. Standard `RateLimit*` headers (draft-7) are included. |
+| `403` | `{ "error": "Admin access required" }` | Authenticated but not an admin (`/api/admin/*` only). |
+| `403` | `{ "error": "You do not have permission to do this", "code": "forbidden" }` | Authenticated but the role isn't allowed to do this, e.g. a guest trying to upload, edit or delete a photo. |
+| `429` | `{ "error": "Too many requests. Please slow down.", "code": "rate_limited" }` | A rate limit was hit (per user on photo/upload routes, per IP on login and signup). Standard `RateLimit*` headers (draft-7) are included. |
 | `500` | `{ "error": "Internal server error" }` | Unexpected server error. |
 
 Only endpoint-specific errors are listed in each section below; the common ones above can occur on any endpoint that mentions the corresponding middleware.
@@ -70,6 +71,7 @@ Only endpoint-specific errors are listed in each section below; the common ones 
   "hasAlpha": false,
   "takenAt": "2026-08-14T09:30:00.000Z",
   "createdAt": "2026-10-30T14:05:12.481Z",
+  "canEdit": true,
   "thumbUrl": "https://res.cloudinary.com/.../photos/3f2b.../thumb",
   "fullUrl": "https://res.cloudinary.com/.../photos/3f2b.../full"
 }
@@ -79,6 +81,7 @@ Only endpoint-specific errors are listed in each section below; the common ones 
 - `kind` is `photo`, `graphic` or `sticker`.
 - `w` / `h` are the stored dimensions with orientation applied.
 - `takenAt` is an ISO 8601 string or `null`.
+- `canEdit` is `true` if the **requesting user** may edit or delete photos (`admin` and `partner`: `true`; `guest`: `false`). Use it to show or hide edit/delete buttons. It depends on the viewer, not the photo.
 - `thumbUrl` / `fullUrl` are signed Cloudinary URLs. They are rebuilt on every response, but are deterministic (no expiry), so the same photo always yields the same URL and browser caching works.
 
 ---
@@ -88,11 +91,25 @@ Only endpoint-specific errors are listed in each section below; the common ones 
 | Role | Meaning |
 |---|---|
 | `pending_approval` | Default for new sign-ups. Cannot log in or use any authenticated endpoint. |
-| `guest` | Approved user. |
-| `partner` | Approved user. |
-| `admin` | Approved user who can use `/api/admin/*`. Created only with `npm run create-admin`, never through the API. |
+| `guest` | **View only.** Can list photos. Cannot upload, edit or delete. |
+| `partner` | Can view, upload, edit and delete **all photos**, including ones uploaded by other users. Cannot manage user accounts. |
+| `admin` | Can do everything: all photo actions, plus managing user accounts via `/api/admin/*`. Created only with `npm run create-admin`, never through the API. |
 
-Currently, every approved role (`guest`, `partner`, `admin`) can list, upload and save photos; only the admin routes are role-restricted.
+### Permission matrix
+
+| Action | Endpoint | `guest` | `partner` | `admin` |
+|---|---|:---:|:---:|:---:|
+| View photos | `GET /api/photos` | ✅ | ✅ | ✅ |
+| Upload (sign + save) | `POST /api/uploads/sign`, `POST /api/photos` | ❌ | ✅ | ✅ |
+| Storage status | `GET /api/uploads/storage` | ❌ | ✅ | ✅ |
+| Edit any photo | `PATCH /api/photos/:id` | ❌ | ✅ | ✅ |
+| Delete any photo | `DELETE /api/photos/:id` | ❌ | ✅ | ✅ |
+| Approve / reject accounts | `/api/admin/*` | ❌ | ❌ | ✅ |
+| Read own account | `GET /api/auth/me` | ✅ | ✅ | ✅ |
+
+User data is protected separately from photos: only admins can manage other users' accounts. There is currently no endpoint for editing your own account (nickname, password), so the only user-data action a non-admin has is reading their own via `/api/auth/me`.
+
+Roles are re-checked from the database on every request, so a role change takes effect immediately.
 
 ---
 
@@ -137,6 +154,8 @@ Creates an account with role `pending_approval`. No session is created; an admin
 
 `400` — validation failed (see [common errors](#common-error-responses)).
 
+`429` — rate limited: 5 signups per IP per hour.
+
 ---
 
 ### `POST /api/auth/login`
@@ -177,6 +196,8 @@ Verifies credentials and starts a session (sets the `sid` cookie). A new session
 ```
 
 `400` — validation failed.
+
+`429` — rate limited: after 10 failed attempts from one IP within 15 minutes, further attempts are refused until the window resets. Successful logins don't count towards the limit.
 
 ---
 
@@ -304,11 +325,13 @@ Deletes a pending account, which frees the username for reuse. Only pending acco
 
 Base path: `/api/photos`
 
-**Auth:** every route here requires a logged-in, approved user.
+**Auth:** every route here requires a logged-in, approved user. Viewing is open to every role; creating, editing and deleting need `partner` or `admin`, and then apply to **any** photo, whoever uploaded it (see the [permission matrix](#permission-matrix)).
 
 ### `GET /api/photos`
 
-Returns one page of photos, newest first, using cursor pagination. Photos from all users are included.
+**Roles:** `guest`, `partner`, `admin`
+
+Returns one page of photos, newest first, using cursor pagination. Photos from all users are included. Each photo carries a `canEdit` flag (`false` for guests).
 
 **Query string**
 
@@ -338,6 +361,8 @@ Example: `GET /api/photos?limit=40&kind=photo&cursor=665f1c2e8a1b2c3d4e5f6a7b`
 ---
 
 ### `POST /api/photos`
+
+**Roles:** `partner`, `admin` (guests get `403`).
 
 Saves metadata for an image whose two Cloudinary uploads (`full` and `thumb`) have **already finished**. The server asks Cloudinary what actually landed under that id and takes the real format and byte sizes from there, rather than trusting the client.
 
@@ -409,7 +434,86 @@ Possible `error` messages:
 - `The thumbnail must be a WebP image.`
 - `Marked as compressed, but the stored file is <format>, not WebP.`
 
-`400` — validation failed · `429` — rate limited.
+`403` — guest · `400` — validation failed · `429` — rate limited.
+
+---
+
+### `PATCH /api/photos/:id`
+
+**Roles:** `partner`, `admin` (any photo, whoever uploaded it). Guests get `403`.
+
+Edits a photo's metadata. Only `kind` and `takenAt` can change; dimensions, thumbhash and sizes describe the stored files and are not editable.
+
+**URL params**
+
+| Param | Rules |
+|---|---|
+| `id` | The photo's `id` (lowercase UUID), as returned in the Photo object. |
+
+**Body** — send at least one field.
+
+| Field | Type | Rules |
+|---|---|---|
+| `kind` | string, optional | `photo`, `graphic` or `sticker`. |
+| `takenAt` | string / `null`, optional | ISO 8601 datetime with offset to set it, `null` to clear it. Leave the key out to keep the current value. |
+
+```json
+{ "kind": "graphic", "takenAt": "2026-08-14T17:30:00+08:00" }
+```
+
+**Responses**
+
+`200 OK`
+
+```json
+{ "photo": { /* updated Photo object */ } }
+```
+
+`403 Forbidden` — guest
+
+```json
+{ "error": "You do not have permission to do this", "code": "forbidden" }
+```
+
+`404 Not Found` — no photo with that id
+
+```json
+{ "error": "Photo not found", "code": "not_found" }
+```
+
+`400` — invalid `id`, invalid field, or an empty body (`"Provide at least one field to change: kind or takenAt"`).
+
+---
+
+### `DELETE /api/photos/:id`
+
+**Roles:** `partner`, `admin` (any photo, whoever uploaded it). Guests get `403`.
+
+Permanently deletes the photo: the database record first, then both Cloudinary assets (`full` and `thumb`), and the freed space is reflected in the storage figures. **This can't be undone.**
+
+If the record is deleted but Cloudinary cleanup fails, the request still succeeds (the photo is gone from the app); the orphaned asset ids are logged on the server for manual cleanup.
+
+**Rate limit:** 200 requests per 15 minutes per user (separate counter).
+
+**URL params:** `id` — the photo's `id` (lowercase UUID) · **Body:** none
+
+**Responses**
+
+`204 No Content`
+
+`403 Forbidden` — guest
+
+```json
+{ "error": "You do not have permission to do this", "code": "forbidden" }
+```
+
+`404 Not Found`
+
+```json
+{ "error": "Photo not found", "code": "not_found" }
+```
+
+`400` — invalid `id` · `429` — rate limited.
 
 ---
 
@@ -417,7 +521,7 @@ Possible `error` messages:
 
 Base path: `/api/uploads`
 
-**Auth:** every route here requires a logged-in, approved user.
+**Auth:** every route here requires a logged-in `partner` or `admin`. Guests are view-only and get `403`.
 
 ### `POST /api/uploads/sign`
 
@@ -471,7 +575,7 @@ Issues signed parameters for direct-to-Cloudinary uploads: one signature for the
 }
 ```
 
-`429` — rate limited.
+`403` — guest · `429` — rate limited.
 
 ---
 
@@ -527,14 +631,16 @@ If step 4 fails with `assets_missing`, a Cloudinary upload hasn't completed; fin
 
 | Method | Path | Auth | Success | Description |
 |---|---|---|---|---|
-| `POST` | `/api/auth/signup` | none | `201` | Create a pending account |
-| `POST` | `/api/auth/login` | none | `200` | Log in, set session cookie |
+| `POST` | `/api/auth/signup` | none | `201` | Create a pending account (5/hour/IP) |
+| `POST` | `/api/auth/login` | none | `200` | Log in, set session cookie (10 failures/15 min/IP) |
 | `POST` | `/api/auth/logout` | none | `204` | Log out, clear cookie |
-| `GET` | `/api/auth/me` | user | `200` | Current user |
+| `GET` | `/api/auth/me` | any user | `200` | Current user |
 | `GET` | `/api/admin/users/pending` | admin | `200` | List pending accounts |
 | `POST` | `/api/admin/users/:id/approve` | admin | `200` | Approve as `partner` / `guest` |
 | `POST` | `/api/admin/users/:id/reject` | admin | `204` | Delete a pending account |
-| `GET` | `/api/photos` | user | `200` | Paginated photo list |
-| `POST` | `/api/photos` | user | `201` | Save metadata after uploads finish |
-| `POST` | `/api/uploads/sign` | user | `200` | Get Cloudinary upload signatures |
-| `GET` | `/api/uploads/storage` | user | `200` | Storage usage status |
+| `GET` | `/api/photos` | guest, partner, admin | `200` | Paginated photo list |
+| `POST` | `/api/photos` | partner, admin | `201` | Save metadata after uploads finish |
+| `PATCH` | `/api/photos/:id` | partner, admin | `200` | Edit `kind` / `takenAt` on any photo |
+| `DELETE` | `/api/photos/:id` | partner, admin | `204` | Delete any photo and its Cloudinary assets |
+| `POST` | `/api/uploads/sign` | partner, admin | `200` | Get Cloudinary upload signatures |
+| `GET` | `/api/uploads/storage` | partner, admin | `200` | Storage usage status |

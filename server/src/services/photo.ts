@@ -1,7 +1,8 @@
 import { Types } from 'mongoose';
 import { FULL_FORMATS, Photo, type FullFormat, type IPhoto } from '../models/photo';
-import { cloudinary, publicIdFor, signedUrl } from '../utils/cloudinary';
-import type { CreatePhotoInput, ListPhotosQuery } from '../validators/photo';
+import type { PublicUser } from '../models/user';
+import { VARIANTS, cloudinary, publicIdFor, signedUrl } from '../utils/cloudinary';
+import type { CreatePhotoInput, ListPhotosQuery, UpdatePhotoInput } from '../validators/photo';
 import * as storageService from './storage';
 
 const isDuplicateKeyError = (err: unknown): boolean =>
@@ -11,6 +12,7 @@ const isDuplicateKeyError = (err: unknown): boolean =>
 export type PhotoDto = Pick<IPhoto, 'kind' | 'w' | 'h' | 'thumbhash' | 'hasAlpha' | 'createdAt'> & {
   id: string;
   takenAt: Date | null;
+  canEdit: boolean; // whether the requesting user may edit/delete this photo (drives the UI buttons)
   thumbUrl: string;
   fullUrl: string;
 };
@@ -20,7 +22,13 @@ type PhotoLike = Pick<
   'photoId' | 'kind' | 'w' | 'h' | 'thumbhash' | 'hasAlpha' | 'takenAt' | 'createdAt'
 >;
 
-function toPhotoDto(photo: PhotoLike): PhotoDto {
+// Permissions: admins and partners can upload, edit and delete ANY photo; guests are view-only.
+// The write routes enforce this with requireContributor; this only drives the `canEdit` flag.
+type Actor = Pick<PublicUser, 'role'>;
+
+const canModify = (actor: Actor): boolean => actor.role === 'admin' || actor.role === 'partner';
+
+function toPhotoDto(photo: PhotoLike, canEdit: boolean): PhotoDto {
   return {
     id: photo.photoId,
     kind: photo.kind,
@@ -30,13 +38,14 @@ function toPhotoDto(photo: PhotoLike): PhotoDto {
     hasAlpha: photo.hasAlpha,
     takenAt: photo.takenAt ?? null,
     createdAt: photo.createdAt,
+    canEdit,
     thumbUrl: signedUrl(photo.photoId, 'thumb'),
     fullUrl: signedUrl(photo.photoId, 'full'),
   };
 }
 
 /** One page, newest first. Cursor = _id of the last item of the previous page. */
-export async function listPhotos({ cursor, limit, kind }: ListPhotosQuery) {
+export async function listPhotos({ cursor, limit, kind }: ListPhotosQuery, actor: Actor) {
   const docs = await Photo.find({
     ...(cursor ? { _id: { $lt: new Types.ObjectId(cursor) } } : {}),
     ...(kind ? { kind } : {}),
@@ -50,8 +59,10 @@ export async function listPhotos({ cursor, limit, kind }: ListPhotosQuery) {
   const page = hasMore ? docs.slice(0, limit) : docs;
   const last = page[page.length - 1];
 
+  const canEdit = canModify(actor);
+
   return {
-    photos: page.map(toPhotoDto),
+    photos: page.map((doc) => toPhotoDto(doc, canEdit)),
     nextCursor: hasMore && last ? last._id.toString() : null,
   };
 }
@@ -148,7 +159,8 @@ export async function createPhoto(ownerId: string, input: CreatePhotoInput): Pro
     });
 
     storageService.recordUpload(assets.fullBytes + assets.thumbBytes);
-    return { ok: true, photo: toPhotoDto(photo) };
+    // Only admins and partners can reach this route, and both can edit photos.
+    return { ok: true, photo: toPhotoDto(photo, true) };
   } catch (err) {
     if (isDuplicateKeyError(err)) return { ok: false, reason: 'already_saved' };
 
@@ -161,4 +173,79 @@ export async function createPhoto(ownerId: string, input: CreatePhotoInput): Pro
     );
     throw err;
   }
+}
+
+// --- editing and deleting ----------------------------------------------------------------
+
+// Who may call these is decided by the routes (requireContributor: admin or partner, any photo).
+type NotFound = { ok: false; reason: 'not_found' };
+
+export type UpdatePhotoResult = { ok: true; photo: PhotoDto } | NotFound;
+export type DeletePhotoResult = { ok: true } | NotFound;
+
+/** Changes kind and/or takenAt (a null takenAt clears it). */
+export async function updatePhoto(photoId: string, input: UpdatePhotoInput): Promise<UpdatePhotoResult> {
+  const $set: { kind?: IPhoto['kind']; takenAt?: Date } = {};
+  if (input.kind !== undefined) $set.kind = input.kind;
+  if (input.takenAt instanceof Date) $set.takenAt = input.takenAt;
+
+  const update = {
+    ...(Object.keys($set).length > 0 ? { $set } : {}),
+    ...(input.takenAt === null ? { $unset: { takenAt: 1 as const } } : {}),
+  };
+
+  const doc = await Photo.findOneAndUpdate({ photoId }, update, {
+    new: true,
+    runValidators: true,
+  }).lean();
+
+  if (!doc) return { ok: false, reason: 'not_found' };
+  return { ok: true, photo: toPhotoDto(doc, true) }; // only contributors reach this
+}
+
+/**
+ * Deletes the photo's record, then its two Cloudinary assets.
+ *
+ * The database row goes first because it is what the app lists: once it is gone the photo is gone
+ * for everyone. If the Cloudinary cleanup then fails, the delete still succeeds for the user and
+ * the orphaned public IDs are logged, the same way a failed insert is handled.
+ */
+export async function deletePhoto(photoId: string): Promise<DeletePhotoResult> {
+  const doc = await Photo.findOneAndDelete({ photoId }).lean();
+  if (!doc) return { ok: false, reason: 'not_found' };
+
+  const publicIds = VARIANTS.map((variant) => publicIdFor(photoId, variant));
+
+  try {
+    // Cloudinary reports per-asset results ({ deleted: { [publicId]: 'deleted' | 'not_found' | ... } })
+    // instead of throwing when one asset can't be removed, so the result has to be checked.
+    const result = (await cloudinary.api.delete_resources(publicIds, {
+      resource_type: 'image',
+      type: 'authenticated',
+      invalidate: true, // purge CDN copies too
+    })) as { deleted?: Record<string, string> };
+
+    // "not_found" is fine: the asset is already gone, which is the outcome we wanted.
+    const failed = publicIds.filter((id) => {
+      const status = result.deleted?.[id];
+      return status !== 'deleted' && status !== 'not_found';
+    });
+    if (failed.length > 0) {
+      console.error(
+        'Photo deleted from the database, but these Cloudinary assets were not removed; delete them manually:',
+        ...failed,
+        result.deleted,
+      );
+    } else {
+      storageService.recordDeletion(doc.fullBytes + doc.thumbBytes);
+    }
+  } catch (err) {
+    console.error(
+      'Photo deleted from the database, but removing these Cloudinary assets failed; delete them manually:',
+      ...publicIds,
+      err,
+    );
+  }
+
+  return { ok: true };
 }
