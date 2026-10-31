@@ -8,7 +8,7 @@ export const listPendingUsers: RequestHandler = async (_req, res) => {
 };
 
 // body: { role: "partner" | "guest" }
-export const approveUser: RequestHandler = async (req, res) => {
+export const approveUser: RequestHandler<{ id: string }> = async (req, res) => {
   const { role } = req.body as ApproveUserInput;
 
   const user = await userService.approvePendingUser(req.params.id, role);
@@ -20,7 +20,7 @@ export const approveUser: RequestHandler = async (req, res) => {
   res.json({ user });
 };
 
-export const rejectUser: RequestHandler = async (req, res) => {
+export const rejectUser: RequestHandler<{ id: string }> = async (req, res) => {
   const deleted = await userService.rejectPendingUser(req.params.id);
 
   if (!deleted) {
