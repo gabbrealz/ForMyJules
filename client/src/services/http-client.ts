@@ -15,22 +15,52 @@ type HttpClientOptions = {
   getAuth?: () => HttpAuth
 }
 
-type RequestOptions = {
+export type RequestOptions = {
   signal?: AbortSignal
   headers?: Record<string, string>
 }
 
 type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 
+/** One entry of a 400 "Validation failed" response. `field` is a dotted path. */
+export type ValidationIssue = { field: string; message: string }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
+}
+
+function readString(body: unknown, key: string): string | undefined {
+  if (!isRecord(body)) return undefined
+  const value = body[key]
+  return typeof value === "string" && value ? value : undefined
+}
+
+function readIssues(body: unknown): ValidationIssue[] {
+  if (!isRecord(body) || !Array.isArray(body.details)) return []
+  return body.details.flatMap((item: unknown) =>
+    isRecord(item) &&
+    typeof item.field === "string" &&
+    typeof item.message === "string"
+      ? [{ field: item.field, message: item.message }]
+      : []
+  )
+}
+
 export class HttpError extends Error {
   readonly status: number
   readonly body: unknown
+  /** Machine-readable code from the API, e.g. "pending_approval", "rate_limited", "storage_full". */
+  readonly code: string | undefined
+  /** Per-field problems from a 400 "Validation failed" response (empty otherwise). */
+  readonly details: ValidationIssue[]
 
   constructor(status: number, message: string, body: unknown) {
     super(message)
     this.name = "HttpError"
     this.status = status
     this.body = body
+    this.code = readString(body, "code")
+    this.details = readIssues(body)
   }
 }
 
@@ -42,20 +72,17 @@ async function toHttpError(res: Response): Promise<HttpError> {
   } catch {
     // Not JSON: keep the raw text.
   }
+  // The API reports problems as { error: "..." }.
   const message =
-    typeof body === "object" &&
-    body !== null &&
-    "message" in body &&
-    typeof body.message === "string"
-      ? body.message
-      : `Request failed (${res.status})`
+    readString(body, "error") ??
+    readString(body, "message") ??
+    `Request failed (${res.status})`
   return new HttpError(res.status, message, body)
 }
 
 export function createHttpClient(options: HttpClientOptions = {}) {
   const baseUrl = (options.baseUrl ?? API_URL).replace(/\/$/, "");
   const getAuth = options.getAuth ?? (() => ({ credentials: "include" as const }));
-``
   async function request<T>(
     method: Method,
     path: string,
