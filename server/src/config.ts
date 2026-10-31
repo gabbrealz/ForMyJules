@@ -10,7 +10,7 @@ const positiveNumber = (name: string, fallback: number): number => {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 };
 
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'prod';
 
 // If your frontend is hosted on a different site than this API (e.g. Vercel/Netlify -> Render),
 // the browser only sends the session cookie cross-site with COOKIE_SAMESITE=none (requires HTTPS).
