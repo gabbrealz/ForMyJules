@@ -20,7 +20,7 @@ async function main() {
   }));
 
   // Render terminates TLS in front of the app; without this, `secure` cookies are never set.
-  if (config.isProd) app.set('trust proxy', 1);
+  if (config.isProd || config.secureCookies) app.set('trust proxy', 1);
 
   // Middleware to parse JSON
   app.use(express.json());

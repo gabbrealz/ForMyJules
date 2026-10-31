@@ -17,18 +17,21 @@ const isProd = process.env.NODE_ENV === 'production' || process.env.NODE_ENV ===
 const sameSiteOptions = ['lax', 'strict', 'none'] as const;
 const sameSite = sameSiteOptions.find((v) => v === process.env.COOKIE_SAMESITE) ?? 'lax';
 
+const secureCookies = isProd || sameSite === 'none';
+
 export const SESSION_COOKIE_NAME = 'sid';
 
 // Used when setting the session cookie AND when clearing it (the options must match).
 export const cookieOptions = {
   httpOnly: true,
-  secure: isProd,
+  secure: secureCookies,
   sameSite,
   path: '/',
 } as const;
 
 export const config = {
   isProd,
+  secureCookies,
   port: Number(process.env.PORT) || 3000,
   frontendUrl: required('FRONTEND_URL'),
   mongoUri: required('MONGODB_URI'),
