@@ -43,5 +43,5 @@ export const deletePhotoLimiter = perUser(200, 15 * 60 * 1000);
 // Brute-force guard: 10 failed logins per IP per 15 minutes. Successful logins don't count.
 export const loginLimiter = perIp(10, 15 * 60 * 1000, { skipSuccessfulRequests: true });
 
-// Each signup runs a bcrypt hash and creates a row, so keep it slow: 5 per IP per hour.
-export const signUpLimiter = perIp(5, 60 * 60 * 1000);
+// Each signup runs a bcrypt hash and creates a row, so keep it slow: 8 per IP per hour.
+export const signUpLimiter = perIp(8, 60 * 60 * 1000);
