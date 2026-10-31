@@ -17,5 +17,3 @@ export { usePendingUsers } from "./hooks/use-pending-users.ts";
 export { useUsers } from "./hooks/use-users.ts";
 
 export { adminApi } from "./services/admin-api.ts";
-
-export { USERS, PENDING_REGISTRATIONS } from "./services/mock-data.ts";
