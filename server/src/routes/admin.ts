@@ -8,6 +8,9 @@ const router = Router();
 
 router.use(requireAuth, requireAdmin);
 
+// GET /api/admin/users  -> every account except the admin's own
+router.get('/users', adminController.listUsers);
+
 // GET /api/admin/users/pending
 router.get('/users/pending', adminController.listPendingUsers);
 
@@ -21,5 +24,8 @@ router.post(
 
 // POST /api/admin/users/:id/reject  -> deletes the pending account (frees the username)
 router.post('/users/:id/reject', validate('params', userIdParamSchema), adminController.rejectUser);
+
+// DELETE /api/admin/users/:id  -> deletes a non-admin account (the admin can't be deleted)
+router.delete('/users/:id', validate('params', userIdParamSchema), adminController.deleteUser);
 
 export default router;

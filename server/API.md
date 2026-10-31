@@ -93,7 +93,7 @@ Only endpoint-specific errors are listed in each section below; the common ones 
 | `pending_approval` | Default for new sign-ups. Cannot log in or use any authenticated endpoint. |
 | `guest` | **View only.** Can list photos. Cannot upload, edit or delete. |
 | `partner` | Can view, upload, edit and delete **all photos**, including ones uploaded by other users. Cannot manage user accounts. |
-| `admin` | Can do everything: all photo actions, plus managing user accounts via `/api/admin/*`. Created only with `npm run create-admin`, never through the API. |
+| `admin` | Can do everything: all photo actions, plus managing user accounts via `/api/admin/*`. There is only one admin. Created only with `npm run create-admin`, never through the API. |
 
 ### Permission matrix
 
@@ -104,10 +104,10 @@ Only endpoint-specific errors are listed in each section below; the common ones 
 | Storage status | `GET /api/uploads/storage` | ❌ | ✅ | ✅ |
 | Edit any photo | `PATCH /api/photos/:id` | ❌ | ✅ | ✅ |
 | Delete any photo | `DELETE /api/photos/:id` | ❌ | ✅ | ✅ |
-| Approve / reject accounts | `/api/admin/*` | ❌ | ❌ | ✅ |
+| List, approve, reject and delete accounts | `/api/admin/*` | ❌ | ❌ | ✅ |
 | Read own account | `GET /api/auth/me` | ✅ | ✅ | ✅ |
 
-User data is protected separately from photos: only admins can manage other users' accounts. There is currently no endpoint for editing your own account (nickname, password), so the only user-data action a non-admin has is reading their own via `/api/auth/me`.
+User data is protected separately from photos: only admins can list, approve, reject or delete other users' accounts. There is currently no endpoint for editing your own account (nickname, password), so the only user-data action a non-admin has is reading their own via `/api/auth/me`.
 
 Roles are re-checked from the database on every request, so a role change takes effect immediately.
 
@@ -237,6 +237,39 @@ Base path: `/api/admin`
 
 **Auth:** every route here requires a logged-in user with role `admin`. Non-admins receive `403 { "error": "Admin access required" }`; unauthenticated requests receive `401`.
 
+### `GET /api/admin/users`
+
+Lists every account except the admin's, oldest first. All other roles are included (`partner`, `guest` and `pending_approval`). There is only one admin and it isn't managed through the API, so it never appears here. The list is not paginated. Password hashes are never included.
+
+**Body:** none
+
+**Responses**
+
+`200 OK`
+
+```json
+{
+  "users": [
+    {
+      "id": "665f...",
+      "username": "bob",
+      "nickname": "Bob",
+      "role": "partner",
+      "createdAt": "2026-10-01T10:00:00.000Z"
+    },
+    {
+      "id": "665f...",
+      "username": "carol",
+      "nickname": "Carol",
+      "role": "pending_approval",
+      "createdAt": "2026-10-29T08:12:44.120Z"
+    }
+  ]
+}
+```
+
+---
+
 ### `GET /api/admin/users/pending`
 
 Lists accounts waiting for approval, oldest first.
@@ -303,7 +336,7 @@ Promotes a pending account to `partner` or `guest`. Only accounts that are curre
 
 ### `POST /api/admin/users/:id/reject`
 
-Deletes a pending account, which frees the username for reuse. Only pending accounts can be rejected.
+Deletes a pending account, which frees the username for reuse. Only pending accounts can be rejected; to remove an account that has already been approved, use [`DELETE /api/admin/users/:id`](#delete-apiadminusersid).
 
 **URL params:** `id` — 24-character hex ObjectId · **Body:** none
 
@@ -315,6 +348,40 @@ Deletes a pending account, which frees the username for reuse. Only pending acco
 
 ```json
 { "error": "Pending user not found" }
+```
+
+`400` — invalid `id`.
+
+---
+
+### `DELETE /api/admin/users/:id`
+
+Permanently deletes a `partner`, `guest` or `pending_approval` account, which frees the username for reuse. The user's session stops working immediately: their next request returns `401`. **This can't be undone.**
+
+The admin account can't be deleted through the API. Trying to delete your own account returns `403`, and an admin id is never matched by this endpoint.
+
+**URL params**
+
+| Param | Rules |
+|---|---|
+| `id` | MongoDB ObjectId (24 hex characters). |
+
+**Body:** none
+
+**Responses**
+
+`204 No Content`
+
+`403 Forbidden` — `id` is the requesting admin's own account
+
+```json
+{ "error": "You cannot delete your own account", "code": "cannot_delete_self" }
+```
+
+`404 Not Found` — no deletable user with that id
+
+```json
+{ "error": "User not found" }
 ```
 
 `400` — invalid `id`.
@@ -635,9 +702,11 @@ If step 4 fails with `assets_missing`, a Cloudinary upload hasn't completed; fin
 | `POST` | `/api/auth/login` | none | `200` | Log in, set session cookie (10 failures/15 min/IP) |
 | `POST` | `/api/auth/logout` | none | `204` | Log out, clear cookie |
 | `GET` | `/api/auth/me` | any user | `200` | Current user |
+| `GET` | `/api/admin/users` | admin | `200` | List all accounts except the admin's |
 | `GET` | `/api/admin/users/pending` | admin | `200` | List pending accounts |
 | `POST` | `/api/admin/users/:id/approve` | admin | `200` | Approve as `partner` / `guest` |
 | `POST` | `/api/admin/users/:id/reject` | admin | `204` | Delete a pending account |
+| `DELETE` | `/api/admin/users/:id` | admin | `204` | Delete a non-admin account |
 | `GET` | `/api/photos` | guest, partner, admin | `200` | Paginated photo list |
 | `POST` | `/api/photos` | partner, admin | `201` | Save metadata after uploads finish |
 | `PATCH` | `/api/photos/:id` | partner, admin | `200` | Edit `kind` / `takenAt` on any photo |
