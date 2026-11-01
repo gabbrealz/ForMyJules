@@ -2,3 +2,5 @@
 !**/.env.example
 
 **/*repomix*.xml
+
+**/lint.txt
