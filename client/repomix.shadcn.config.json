@@ -28,9 +28,7 @@
       "includeLogsCount": 50
     }
   },
-  "include": [
-    "src/components/ui/**/*"
-  ],
+  "include": ["src/components/ui/**/*"],
   "ignore": {
     "useGitignore": true,
     "useDotIgnore": true,

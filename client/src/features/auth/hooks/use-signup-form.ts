@@ -33,7 +33,7 @@ export function useSignupForm() {
     setValues((current) => ({ ...current, [name]: value }))
     // Clear a field's error as soon as the person starts fixing it.
     setFieldErrors((current) =>
-      current[name] ? { ...current, [name]: undefined } : current
+      current[name] ? { ...current, [name]: undefined } : current,
     )
   }
 
@@ -47,7 +47,11 @@ export function useSignupForm() {
 
     setPending(true)
     try {
-      const { message } = await signup(values.username, values.nickname, values.password)
+      const { message } = await signup(
+        values.username,
+        values.nickname,
+        values.password,
+      )
       // No session yet: the account waits for an admin, so show the server's message.
       setSuccessMessage(message)
       setValues(EMPTY_VALUES)

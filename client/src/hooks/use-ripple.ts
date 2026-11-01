@@ -21,7 +21,7 @@ const RIPPLE_EASING = "cubic-bezier(0.2, 0, 0, 1)" // MD3 emphasized decelerate
 export function startRipple(
   host: HTMLElement,
   clientX?: number,
-  clientY?: number
+  clientY?: number,
 ): () => void {
   const noop = () => {}
 
@@ -40,7 +40,7 @@ export function startRipple(
   const y = clientY === undefined ? rect.height / 2 : clientY - rect.top
   const radius = Math.hypot(
     Math.max(x, rect.width - x),
-    Math.max(y, rect.height - y)
+    Math.max(y, rect.height - y),
   )
 
   Object.assign(ripple.style, {
@@ -72,12 +72,12 @@ export function startRipple(
 
     const wait = Math.max(
       0,
-      RIPPLE_MIN_PRESS_MS - (performance.now() - startedAt)
+      RIPPLE_MIN_PRESS_MS - (performance.now() - startedAt),
     )
     window.setTimeout(() => {
       const fade = ripple.animate(
         [{ opacity: RIPPLE_OPACITY }, { opacity: 0 }],
-        { duration: RIPPLE_FADE_MS, easing: "linear", fill: "forwards" }
+        { duration: RIPPLE_FADE_MS, easing: "linear", fill: "forwards" },
       )
       fade.onfinish = () => ripple.remove()
       fade.oncancel = () => ripple.remove()

@@ -46,7 +46,10 @@ export const router = createBrowserRouter([
           {
             element: <SidebarLayout sidebar={AdminSidebar} />,
             children: [
-              { path: "admin", element: <Navigate to="/admin/users" replace /> },
+              {
+                path: "admin",
+                element: <Navigate to="/admin/users" replace />,
+              },
               { path: "admin/users", element: <AdminUsers /> },
               { path: "admin/pending", element: <AdminPending /> },
             ],

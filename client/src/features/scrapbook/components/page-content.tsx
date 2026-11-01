@@ -47,7 +47,7 @@ function Photos({ photos }: { photos: Photo[] }) {
               ? "w-4/5"
               : i % 2 === 0
                 ? "w-[64%] self-start"
-                : "-mt-5 w-[64%] self-end"
+                : "-mt-5 w-[64%] self-end",
           )}
         />
       ))}

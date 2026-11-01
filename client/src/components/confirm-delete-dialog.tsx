@@ -58,7 +58,7 @@ export function ConfirmDeleteDialog({
       setError(
         err instanceof Error
           ? err.message
-          : "Something went wrong. Please try again."
+          : "Something went wrong. Please try again.",
       )
     } finally {
       setPending(false)
@@ -80,7 +80,9 @@ export function ConfirmDeleteDialog({
         )}
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{cancelLabel}</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>
+            {cancelLabel}
+          </AlertDialogCancel>
           {/* A plain Button, not AlertDialogAction: that one closes the dialog
               immediately, but we only want to close once the request succeeds. */}
           <Button

@@ -19,7 +19,11 @@ export type AuthUser = User<Role>
 export type Session = { user: AuthUser }
 
 export type LoginCredentials = { username: string; password: string }
-export type SignupCredentials = { username: string; nickname: string; password: string }
+export type SignupCredentials = {
+  username: string
+  nickname: string
+  password: string
+}
 
 export const isAdmin = (user: AuthUser) => user.role === "admin"
 

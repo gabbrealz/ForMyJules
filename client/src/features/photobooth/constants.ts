@@ -17,8 +17,16 @@ export const FILTERS: CameraFilter[] = [
     name: "Vintage",
     css: "sepia(0.4) contrast(1.1) saturate(1.3) hue-rotate(-10deg)",
   },
-  { id: "warm", name: "Warm", css: "saturate(1.3) sepia(0.2) brightness(1.05)" },
-  { id: "cool", name: "Cool", css: "saturate(1.1) hue-rotate(15deg) brightness(1.05)" },
+  {
+    id: "warm",
+    name: "Warm",
+    css: "saturate(1.3) sepia(0.2) brightness(1.05)",
+  },
+  {
+    id: "cool",
+    name: "Cool",
+    css: "saturate(1.1) hue-rotate(15deg) brightness(1.05)",
+  },
   { id: "vivid", name: "Vivid", css: "saturate(1.8) contrast(1.1)" },
 ]
 

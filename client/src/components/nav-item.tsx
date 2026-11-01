@@ -62,7 +62,7 @@ const ICON_MOTION = {
     rest: REST,
     press: PRESS,
     hover: {
-      scale: [1, 1.10, 1, 1.16, 1],
+      scale: [1, 1.1, 1, 1.16, 1],
       rotate: [0, -3.0, 0, 3.0, 0],
       transition: {
         duration: 0.8,
@@ -174,7 +174,7 @@ function useIconPlayer() {
         busy.current = false
       }
     },
-    [controls]
+    [controls],
   )
 
   return useMemo(() => ({ controls, play }), [controls, play])
@@ -202,7 +202,9 @@ function Burst() {
           key={i}
           className={cn(
             "absolute top-1/2 left-1/2 rounded-full",
-            large ? "-m-[2px] size-[4px] bg-ring" : "-m-px size-[2px] bg-primary"
+            large
+              ? "-m-[2px] size-[4px] bg-ring"
+              : "-m-px size-[2px] bg-primary",
           )}
           initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
           animate={{ x, y, scale: [0, 1.2, 0], opacity: [1, 1, 0] }}
@@ -260,7 +262,7 @@ export function NavItem({
           // the button itself stays transparent.
           className={cn(
             "group/nav relative isolate h-10 overflow-visible! rounded-xl bg-transparent! px-3 hover:bg-transparent! active:bg-transparent!",
-            hasBadge && "pr-10"
+            hasBadge && "pr-10",
           )}
           {...ripple.handlers}
           onClick={() => {
@@ -272,7 +274,8 @@ export function NavItem({
             if (event.pointerType === "mouse") void play("hover")
           }}
           onFocus={(event) => {
-            if (event.currentTarget.matches(":focus-visible")) void play("hover")
+            if (event.currentTarget.matches(":focus-visible"))
+              void play("hover")
           }}
         >
           {/* Active pill: one shared element that springs from item to item. */}
@@ -314,7 +317,7 @@ export function NavItem({
               className={cn(
                 "truncate transition-transform duration-300 motion-reduce:transition-none",
                 SPRING_OVERSHOOT,
-                "motion-safe:group-hover/nav:translate-x-0.5"
+                "motion-safe:group-hover/nav:translate-x-0.5",
               )}
             >
               {label}
@@ -327,7 +330,7 @@ export function NavItem({
             className={cn(
               "top-2.5 rounded-full bg-apricot text-brown transition-transform duration-300 motion-reduce:transition-none",
               SPRING_OVERSHOOT,
-              "motion-safe:group-hover/nav-item:-rotate-6 motion-safe:group-hover/nav-item:scale-110"
+              "motion-safe:group-hover/nav-item:-rotate-6 motion-safe:group-hover/nav-item:scale-110",
             )}
           >
             {badge}

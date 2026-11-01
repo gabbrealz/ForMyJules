@@ -1,4 +1,4 @@
-import type { Location } from "react-router-dom";
+import type { Location } from "react-router-dom"
 import { HttpError } from "#services/http-client"
 
 // These mirror the API's rules (API.md > POST /api/auth/signup). The server
@@ -11,10 +11,7 @@ export const MAX_PASSWORD_BYTES = 72 // bcrypt limit, counted in UTF-8 bytes
 export const USERNAME_PATTERN = /^[a-zA-Z0-9_]+$/
 
 export type SignupField =
-  | "username"
-  | "nickname"
-  | "password"
-  | "confirmPassword"
+  "username" | "nickname" | "password" | "confirmPassword"
 export type SignupValues = Record<SignupField, string>
 export type SignupFieldErrors = Partial<Record<SignupField, string>>
 
@@ -43,7 +40,9 @@ export function validateSignup(values: SignupValues): SignupFieldErrors {
     errors.password = "Create a password."
   } else if (values.password.length < MIN_PASSWORD_LENGTH) {
     errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
-  } else if (new TextEncoder().encode(values.password).length > MAX_PASSWORD_BYTES) {
+  } else if (
+    new TextEncoder().encode(values.password).length > MAX_PASSWORD_BYTES
+  ) {
     errors.password = "Password is too long. Try a shorter one."
   }
 
@@ -55,7 +54,6 @@ export function validateSignup(values: SignupValues): SignupFieldErrors {
 
   return errors
 }
-
 
 export const DEFAULT_POST_LOGIN_PATH = "/home"
 
@@ -91,7 +89,6 @@ export function getPostLoginPath(state: unknown): string {
 
   return pathname + stringOrEmpty(search) + stringOrEmpty(hash)
 }
-
 
 export function errorMessage(error: unknown, fallback: string): string {
   // A 400 from the API lists what was wrong with each field.

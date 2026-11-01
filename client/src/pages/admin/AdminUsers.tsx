@@ -62,11 +62,7 @@ export default function AdminUsers() {
         </div>
       )}
 
-      <UsersTable
-        users={users}
-        actions={actions}
-        emptyMessage={emptyMessage}
-      />
+      <UsersTable users={users} actions={actions} emptyMessage={emptyMessage} />
 
       <ConfirmDeleteDialog
         open={dialogOpen}
@@ -74,9 +70,8 @@ export default function AdminUsers() {
         title="Delete this user?"
         description={
           <>
-            <strong>{target?.username}</strong> will lose access immediately
-            and their account will be permanently deleted. This can't be
-            undone.
+            <strong>{target?.username}</strong> will lose access immediately and
+            their account will be permanently deleted. This can't be undone.
           </>
         }
         onConfirm={() => (target ? deleteUser(target) : undefined)}

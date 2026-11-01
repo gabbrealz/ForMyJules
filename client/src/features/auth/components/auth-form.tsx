@@ -3,7 +3,13 @@ import { FieldGroup, FieldError } from "#components/ui/field"
 import { Button } from "#components/ui/button"
 import { Spinner } from "#components/ui/spinner"
 
-export function AuthForm({ onSubmit, submitLabel, pending, error, children }: {
+export function AuthForm({
+  onSubmit,
+  submitLabel,
+  pending,
+  error,
+  children,
+}: {
   onSubmit: (event: SubmitEvent<HTMLFormElement>) => void | Promise<void>
   submitLabel: string
   pending: boolean
@@ -15,7 +21,12 @@ export function AuthForm({ onSubmit, submitLabel, pending, error, children }: {
       <FieldGroup className="gap-5">
         {children}
         {error && <FieldError>{error}</FieldError>}
-        <Button type="submit" size="lg" className="h-10 w-full text-sm" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-10 w-full text-sm"
+          disabled={pending}
+        >
           {pending && <Spinner />}
           {submitLabel}
         </Button>

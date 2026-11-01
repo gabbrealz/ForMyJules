@@ -22,10 +22,9 @@ function fromSession(session: Session | null): AuthState {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-
   // Paint instantly from the cached session; otherwise wait for the server.
   const [state, setState] = useState<AuthState>(() => {
-    const cached = sessionCache.load();
+    const cached = sessionCache.load()
     return cached ? fromSession(cached) : { status: "loading", user: null }
   })
 
@@ -36,27 +35,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const startedAt = epoch.current
     authApi.getCurrentSession().then(
       (session) => {
-        if (epoch.current !== startedAt) return;
-        if (session) sessionCache.save(session);
-        else sessionCache.clear();
-        setState(fromSession(session));
+        if (epoch.current !== startedAt) return
+        if (session) sessionCache.save(session)
+        else sessionCache.clear()
+        setState(fromSession(session))
       },
       () => {
         // Server unreachable: keep a cached session, but don't spin forever.
         if (epoch.current === startedAt) {
-          setState((prev) => (prev.status === "loading" ? anonymous : prev));
+          setState((prev) => (prev.status === "loading" ? anonymous : prev))
         }
-      }
+      },
     )
   }, [])
 
-  const login = useCallback(
-    async (username: string, password: string) => {
-      epoch.current += 1
-      const session = await authApi.login({ username: username.trim(), password });
-      sessionCache.save(session);
-      setState(fromSession(session));
-    }, [])
+  const login = useCallback(async (username: string, password: string) => {
+    epoch.current += 1
+    const session = await authApi.login({ username: username.trim(), password })
+    sessionCache.save(session)
+    setState(fromSession(session))
+  }, [])
 
   const signup = useCallback(
     async (username: string, nickname: string, password: string) => {
@@ -66,9 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         username: username.trim(),
         nickname: nickname.trim(),
         password,
-      });
-      return { message };
-    }, [])
+      })
+      return { message }
+    },
+    [],
+  )
 
   const logout = useCallback(async () => {
     epoch.current += 1
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signup,
       logout,
     }),
-    [state, login, signup, logout]
+    [state, login, signup, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

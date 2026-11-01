@@ -48,5 +48,5 @@ export function LoginForm() {
         />
       </Field>
     </AuthForm>
-  );
+  )
 }

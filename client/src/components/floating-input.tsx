@@ -54,7 +54,7 @@ export function FloatingInput({
             ? "border-destructive focus:ring-destructive/25"
             : "border-field-border hover:not-focus:border-muted-foreground focus:border-primary focus:ring-ring/20",
           endAdornment && "pr-12",
-          className
+          className,
         )}
       />
       <label
@@ -66,7 +66,7 @@ export function FloatingInput({
           invalid
             ? "text-destructive"
             : "text-muted-foreground peer-focus:text-primary",
-          ...LABEL_FLOATED
+          ...LABEL_FLOATED,
         )}
       >
         {/*
@@ -95,7 +95,11 @@ type PasswordToggleProps = {
 }
 
 /** Eye button that sits inside a <FloatingInput endAdornment={...} />. */
-export function PasswordToggle({ shown, onToggle, label }: PasswordToggleProps) {
+export function PasswordToggle({
+  shown,
+  onToggle,
+  label,
+}: PasswordToggleProps) {
   return (
     <button
       type="button"
@@ -103,7 +107,11 @@ export function PasswordToggle({ shown, onToggle, label }: PasswordToggleProps) 
       onClick={onToggle}
       className="absolute inset-y-0 right-2 my-auto grid size-9 place-items-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
     >
-      {shown ? <EyeOffIcon className="size-4.5" /> : <EyeIcon className="size-4.5" />}
+      {shown ? (
+        <EyeOffIcon className="size-4.5" />
+      ) : (
+        <EyeIcon className="size-4.5" />
+      )}
     </button>
   )
 }

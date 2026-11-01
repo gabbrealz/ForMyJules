@@ -1,34 +1,34 @@
-import type { ComponentProps, ComponentType } from 'react';
-import { Outlet } from 'react-router-dom';
-import { AppSidebar } from '#layouts/app-sidebar';
-import { Brand } from '#components/brand';
+import type { ComponentProps, ComponentType } from "react"
+import { Outlet } from "react-router-dom"
+import { AppSidebar } from "#layouts/app-sidebar"
+import { Brand } from "#components/brand"
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from '#components/ui/resizable';
+} from "#components/ui/resizable"
 import {
   Sidebar,
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from '#components/ui/sidebar';
-import { useIsMobile } from '#hooks/use-mobile';
+} from "#components/ui/sidebar"
+import { useIsMobile } from "#hooks/use-mobile"
 
 // Sidebar width limits (px) on desktop.
-const SIDEBAR_DEFAULT_WIDTH = '260px';
-const SIDEBAR_MIN_WIDTH = '220px';
-const SIDEBAR_MAX_WIDTH = '380px';
+const SIDEBAR_DEFAULT_WIDTH = "260px"
+const SIDEBAR_MIN_WIDTH = "220px"
+const SIDEBAR_MAX_WIDTH = "380px"
 
-type SidebarComponent = ComponentType<ComponentProps<typeof Sidebar>>;
+type SidebarComponent = ComponentType<ComponentProps<typeof Sidebar>>
 
 // `sidebar` lets a route group (e.g. /admin) reuse this shell with its own navigation.
 export default function SidebarLayout({
   sidebar: SidebarNav = AppSidebar,
 }: {
-  sidebar?: SidebarComponent;
+  sidebar?: SidebarComponent
 }) {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
 
   // Phones get the stock slide-over sidebar; resizing only makes sense on desktop.
   if (isMobile) {
@@ -43,7 +43,7 @@ export default function SidebarLayout({
           <Outlet />
         </SidebarInset>
       </SidebarProvider>
-    );
+    )
   }
 
   return (
@@ -66,5 +66,5 @@ export default function SidebarLayout({
         </ResizablePanel>
       </ResizablePanelGroup>
     </SidebarProvider>
-  );
+  )
 }

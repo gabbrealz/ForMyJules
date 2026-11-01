@@ -11,7 +11,7 @@ export const adminApi = {
   async listUsers(opts?: RequestOptions): Promise<ListedUser[]> {
     const { users } = await http.get<{ users: ListedUser[] }>(
       "/api/admin/users",
-      opts
+      opts,
     )
     return users
   },
@@ -20,7 +20,7 @@ export const adminApi = {
   async listPendingUsers(opts?: RequestOptions): Promise<PendingUser[]> {
     const { users } = await http.get<{ users: PendingUser[] }>(
       "/api/admin/users/pending",
-      opts
+      opts,
     )
     return users
   },
@@ -29,7 +29,7 @@ export const adminApi = {
   async getPendingCount(options?: { signal?: AbortSignal }) {
     const { count } = await http.get<{ count: number }>(
       "/api/admin/users/pending/count",
-      options
+      options,
     )
     return count
   },
@@ -41,19 +41,23 @@ export const adminApi = {
   async approveUser(
     id: string,
     role: ApprovableRole,
-    opts?: RequestOptions
+    opts?: RequestOptions,
   ): Promise<AuthUser> {
     const { user } = await http.post<{ user: AuthUser }>(
       `/api/admin/users/${encodeURIComponent(id)}/approve`,
       { role },
-      opts
+      opts,
     )
     return user
   },
 
   /** Deletes a pending account (frees the username). 404 if it isn't pending. */
   rejectUser: (id: string, opts?: RequestOptions) =>
-    http.post<void>(`/api/admin/users/${encodeURIComponent(id)}/reject`, undefined, opts),
+    http.post<void>(
+      `/api/admin/users/${encodeURIComponent(id)}/reject`,
+      undefined,
+      opts,
+    ),
 
   /**
    * Permanently deletes a partner, guest or pending account (can't be undone;

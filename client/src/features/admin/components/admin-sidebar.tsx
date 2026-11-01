@@ -70,9 +70,13 @@ export function AdminSidebar(props: ComponentProps<typeof Sidebar>) {
                 <NavItem
                   key={item.to}
                   {...item}
-                  badge={showPendingCount ? pendingCount || undefined : undefined}
+                  badge={
+                    showPendingCount ? pendingCount || undefined : undefined
+                  }
                   pillId="admin-nav-pill"
-                  isActive={pathname === item.to || pathname.startsWith(`${item.to}/`)}
+                  isActive={
+                    pathname === item.to || pathname.startsWith(`${item.to}/`)
+                  }
                   onNavigate={closeMobileSidebar}
                 />
               ))}

@@ -66,7 +66,13 @@ const NAV_ITEMS: {
   },
 ]
 
-function ProfileAvatar({ name, size }: { name: string; size?: "default" | "lg" }) {
+function ProfileAvatar({
+  name,
+  size,
+}: {
+  name: string
+  size?: "default" | "lg"
+}) {
   return (
     <Avatar size={size}>
       <AvatarFallback className="bg-apricot font-heading font-semibold text-brown">

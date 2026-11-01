@@ -40,7 +40,7 @@ export function useUsers() {
         if (controller.signal.aborted) return
         setError(messageOf(err, "Couldn't load users."))
         setLoading(false)
-      }
+      },
     )
     return () => controller.abort()
   }, [reloadKey])

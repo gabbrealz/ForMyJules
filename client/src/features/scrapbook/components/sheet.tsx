@@ -26,7 +26,7 @@ export function Sheet({
   // react-pageflip would then register every page twice. Forward each
   // (callback, node) pair only once to keep the page list clean.
   const lastForwarded = useRef<{ cb: unknown; node: HTMLDivElement } | null>(
-    null
+    null,
   )
   const setRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -36,7 +36,7 @@ export function Sheet({
       lastForwarded.current = { cb: ref, node }
       ref(node)
     },
-    [ref]
+    [ref],
   )
 
   const isLeftPage = index % 2 === 1
@@ -49,7 +49,7 @@ export function Sheet({
         className={cn(
           "relative size-full overflow-hidden select-none",
           !hard && "bg-cream text-brown",
-          className
+          className,
         )}
       >
         {children}
@@ -59,7 +59,7 @@ export function Sheet({
             aria-hidden="true"
             className={cn(
               "pointer-events-none absolute inset-y-0 w-10 from-brown/15 to-transparent",
-              isLeftPage ? "right-0 bg-linear-to-l" : "left-0 bg-linear-to-r"
+              isLeftPage ? "right-0 bg-linear-to-l" : "left-0 bg-linear-to-r",
             )}
           />
         )}

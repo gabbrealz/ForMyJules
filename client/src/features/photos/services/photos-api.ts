@@ -69,8 +69,15 @@ export const photosApi = {
    * upload hasn't finished: finish it, then retry with the same id) or
    * "invalid_assets", 429.
    */
-  async create(body: CreatePhotoRequest, opts?: RequestOptions): Promise<Photo> {
-    const { photo } = await http.post<{ photo: Photo }>("/api/photos", body, opts)
+  async create(
+    body: CreatePhotoRequest,
+    opts?: RequestOptions,
+  ): Promise<Photo> {
+    const { photo } = await http.post<{ photo: Photo }>(
+      "/api/photos",
+      body,
+      opts,
+    )
     return photo
   },
 
@@ -78,11 +85,15 @@ export const photosApi = {
    * Edits `kind` and/or `takenAt` on any photo and returns the updated photo.
    * Errors: 400 (empty body or invalid field), 403 (guest), 404 code "not_found".
    */
-  async update(id: string, body: UpdatePhotoRequest, opts?: RequestOptions): Promise<Photo> {
+  async update(
+    id: string,
+    body: UpdatePhotoRequest,
+    opts?: RequestOptions,
+  ): Promise<Photo> {
     const { photo } = await http.patch<{ photo: Photo }>(
       `/api/photos/${encodeURIComponent(id)}`,
       body,
-      opts
+      opts,
     )
     return photo
   },

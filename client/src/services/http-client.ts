@@ -42,7 +42,7 @@ function readIssues(body: unknown): ValidationIssue[] {
     typeof item.field === "string" &&
     typeof item.message === "string"
       ? [{ field: item.field, message: item.message }]
-      : []
+      : [],
   )
 }
 
@@ -81,13 +81,14 @@ async function toHttpError(res: Response): Promise<HttpError> {
 }
 
 export function createHttpClient(options: HttpClientOptions = {}) {
-  const baseUrl = (options.baseUrl ?? API_URL).replace(/\/$/, "");
-  const getAuth = options.getAuth ?? (() => ({ credentials: "include" as const }));
+  const baseUrl = (options.baseUrl ?? API_URL).replace(/\/$/, "")
+  const getAuth =
+    options.getAuth ?? (() => ({ credentials: "include" as const }))
   async function request<T>(
     method: Method,
     path: string,
     body: unknown,
-    { signal, headers: extraHeaders }: RequestOptions
+    { signal, headers: extraHeaders }: RequestOptions,
   ): Promise<T> {
     const auth: HttpAuth = getAuth()
     const headers: Record<string, string> = {
@@ -131,5 +132,5 @@ export function createHttpClient(options: HttpClientOptions = {}) {
   }
 }
 
-export type HttpClient = ReturnType<typeof createHttpClient>;
+export type HttpClient = ReturnType<typeof createHttpClient>
 export const http = createHttpClient()

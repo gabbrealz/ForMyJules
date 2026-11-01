@@ -7,7 +7,8 @@ export type CameraState = {
   retry: () => void
 }
 
-const CAMERA_ERROR = "Unable to access camera. Please check your browser permissions."
+const CAMERA_ERROR =
+  "Unable to access camera. Please check your browser permissions."
 
 /**
  * Owns the webcam stream. The camera is on only while `enabled` is true, and the

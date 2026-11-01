@@ -38,7 +38,7 @@ export function CameraPreview({
     <div
       className={cn(
         "relative aspect-4/3 w-full overflow-hidden rounded-xl border bg-black/90 shadow-lg",
-        className
+        className,
       )}
     >
       {error ? (

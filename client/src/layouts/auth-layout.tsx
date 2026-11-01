@@ -22,7 +22,12 @@ type AuthLayoutProps = {
 
 // Page shell for login/signup: backdrop, card and footer link. The form itself
 // lives in the auth feature (LoginForm / SignupForm).
-export function AuthLayout({ title, description, footer, children }: AuthLayoutProps) {
+export function AuthLayout({
+  title,
+  description,
+  footer,
+  children,
+}: AuthLayoutProps) {
   const navigate = useNavigate()
 
   return (

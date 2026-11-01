@@ -7,9 +7,7 @@ import { Button } from "#components/ui/button"
 
 // Just the bit of react-pageflip's imperative API we use.
 type FlipBookHandle = {
-  pageFlip: () =>
-    | { flipPrev: () => void; flipNext: () => void }
-    | undefined
+  pageFlip: () => { flipPrev: () => void; flipNext: () => void } | undefined
 }
 
 // Pages keep a 400x540 ratio. "stretch" sizes the book to its container, between
@@ -103,11 +101,7 @@ export default function Scrapbook() {
             aria-label="Scrapbook pages"
             className="w-full max-w-[calc((100svh_-_13rem)*1.48)] rounded-3xl bg-accent/60 p-3 sm:p-5"
           >
-            <HTMLFlipBook
-              ref={bookRef}
-              {...FLIPBOOK_PROPS}
-              onFlip={handleFlip}
-            >
+            <HTMLFlipBook ref={bookRef} {...FLIPBOOK_PROPS} onFlip={handleFlip}>
               {SHEETS}
             </HTMLFlipBook>
           </div>

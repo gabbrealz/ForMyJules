@@ -92,5 +92,5 @@ export function SignupForm() {
         <FieldError>{fieldErrors.confirmPassword}</FieldError>
       </Field>
     </AuthForm>
-  );
+  )
 }

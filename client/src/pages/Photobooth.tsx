@@ -50,7 +50,7 @@ export default function Photobooth() {
       if (next.id !== layout?.id) setPhotos([])
       setLayout(next)
     },
-    [layout]
+    [layout],
   )
 
   const handleExperienceChange = useCallback((next: Experience) => {
@@ -60,7 +60,7 @@ export default function Photobooth() {
 
   const handleCapture = useCallback(
     (dataUrl: string) => setPhotos((current) => [...current, dataUrl]),
-    []
+    [],
   )
   const handleReset = useCallback(() => setPhotos([]), [])
 

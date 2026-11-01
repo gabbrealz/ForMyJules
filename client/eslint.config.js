@@ -85,7 +85,10 @@ const featureLayerConfigs = features.flatMap((feature) => {
         others.map((name) => `@features/${name}/*`),
         indexOnly,
       ),
-      ban([own("presentation")], "infrastructure must not import presentation."),
+      ban(
+        [own("presentation")],
+        "infrastructure must not import presentation.",
+      ),
     ],
     presentation: [
       ban(

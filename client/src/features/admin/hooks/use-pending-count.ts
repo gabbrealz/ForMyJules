@@ -33,7 +33,7 @@ export function usePendingCount() {
       },
       () => {
         // Keep the previous value; nothing to surface for a badge.
-      }
+      },
     )
     return () => controller.abort()
   }, [reloadKey])

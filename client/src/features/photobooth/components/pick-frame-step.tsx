@@ -1,8 +1,3 @@
-
-
-
 export function PickFrameStep() {
-  return (
-    <></>
-  )
+  return <></>
 }

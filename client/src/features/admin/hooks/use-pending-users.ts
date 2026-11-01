@@ -35,7 +35,7 @@ export function usePendingUsers() {
         if (controller.signal.aborted) return
         setError(messageOf(err, "Couldn't load pending registrations."))
         setLoading(false)
-      }
+      },
     )
     return () => controller.abort()
   }, [reloadKey])
@@ -66,7 +66,7 @@ export function usePendingUsers() {
         })
       }
     },
-    []
+    [],
   )
 
   const approve = useCallback(
@@ -74,9 +74,9 @@ export function usePendingUsers() {
       act(
         user.id,
         () => adminApi.approveUser(user.id, role),
-        `Couldn't approve ${user.username}.`
+        `Couldn't approve ${user.username}.`,
       ),
-    [act]
+    [act],
   )
 
   const reject = useCallback(
@@ -84,9 +84,9 @@ export function usePendingUsers() {
       act(
         user.id,
         () => adminApi.rejectUser(user.id),
-        `Couldn't reject ${user.username}.`
+        `Couldn't reject ${user.username}.`,
       ),
-    [act]
+    [act],
   )
 
   return {

@@ -1,5 +1,10 @@
 import { http, HttpError, type RequestOptions } from "#services/http-client"
-import type { LoginCredentials, Session, SignupCredentials, User } from "../types.ts"
+import type {
+  LoginCredentials,
+  Session,
+  SignupCredentials,
+  User,
+} from "../types.ts"
 
 export type SignupResponse = {
   message: string

@@ -28,18 +28,12 @@
       "includeLogsCount": 50
     }
   },
-  "include": [
-    "package.json",
-    "src/**/*"
-  ],
+  "include": ["package.json", "src/**/*"],
   "ignore": {
     "useGitignore": true,
     "useDotIgnore": true,
     "useDefaultPatterns": true,
-    "customPatterns": [
-      "assets/**/*",
-      "src/components/ui/**/*"
-    ]
+    "customPatterns": ["assets/**/*", "src/components/ui/**/*"]
   },
   "security": {
     "enableSecurityCheck": true

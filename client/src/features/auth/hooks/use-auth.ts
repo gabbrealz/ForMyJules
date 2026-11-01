@@ -16,7 +16,7 @@ export type AuthContextValue = AuthState & {
   signup: (
     username: string,
     nickname: string,
-    password: string
+    password: string,
   ) => Promise<{ message: string }>
   /** Ends the session only. Use useLogout() when you also want to navigate. */
   logout: () => Promise<void>

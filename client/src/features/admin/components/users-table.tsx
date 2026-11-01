@@ -64,7 +64,8 @@ export function UsersTable({
             </TableRow>
           ) : (
             users.map((user) => {
-              const rowActions = typeof actions === "function" ? actions(user) : actions
+              const rowActions =
+                typeof actions === "function" ? actions(user) : actions
 
               return (
                 <TableRow key={user.id}>
@@ -104,7 +105,7 @@ export function UsersTable({
                             <Icon />
                             <span className="max-sm:sr-only">{label}</span>
                           </Button>
-                        )
+                        ),
                       )}
                     </div>
                   </TableCell>

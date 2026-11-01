@@ -55,8 +55,8 @@
   --color-vanilla: var(--brand-vanilla);
   --color-apricot: var(--brand-apricot);
 
-  --font-sans: 'DM Sans Variable', sans-serif;
-  --font-heading: 'Nunito Variable', 'DM Sans Variable', sans-serif;
+  --font-sans: "DM Sans Variable", sans-serif;
+  --font-heading: "Nunito Variable", "DM Sans Variable", sans-serif;
 }
 
 :root {
