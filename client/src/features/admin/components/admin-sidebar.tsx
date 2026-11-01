@@ -20,13 +20,14 @@ import {
   SidebarMenu,
   useSidebar,
 } from "#components/ui/sidebar"
+import { usePendingCount } from "../hooks/use-pending-count.ts"
 
 type AdminNavItem = {
   label: string
   to: string
   icon: LucideIcon
   personality: NavPersonality
-  badge?: number
+  showPendingCount?: boolean
 }
 
 const NAV_ITEMS: AdminNavItem[] = [
@@ -41,14 +42,14 @@ const NAV_ITEMS: AdminNavItem[] = [
     to: "/admin/pending",
     icon: UserRoundCheckIcon,
     personality: "pop",
-    // TODO: replace with the real pending count from your backend.
-    badge: 5,
+    showPendingCount: true,
   },
 ]
 
 export function AdminSidebar(props: ComponentProps<typeof Sidebar>) {
   const { pathname } = useLocation()
   const { isMobile, setOpenMobile } = useSidebar()
+  const pendingCount = usePendingCount()
 
   function closeMobileSidebar() {
     if (isMobile) setOpenMobile(false)
@@ -65,14 +66,13 @@ export function AdminSidebar(props: ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Admin</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2!">
-              {NAV_ITEMS.map((item) => (
+              {NAV_ITEMS.map(({ showPendingCount, ...item }) => (
                 <NavItem
                   key={item.to}
                   {...item}
+                  badge={showPendingCount ? pendingCount || undefined : undefined}
                   pillId="admin-nav-pill"
-                  isActive={
-                    pathname === item.to || pathname.startsWith(`${item.to}/`)
-                  }
+                  isActive={pathname === item.to || pathname.startsWith(`${item.to}/`)}
                   onNavigate={closeMobileSidebar}
                 />
               ))}

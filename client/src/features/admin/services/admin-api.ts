@@ -25,6 +25,15 @@ export const adminApi = {
     return users
   },
 
+  /** Number of accounts waiting for approval */
+  async getPendingCount(options?: { signal?: AbortSignal }) {
+    const { count } = await http.get<{ count: number }>(
+      "/api/admin/users/pending/count",
+      options
+    )
+    return count
+  },
+
   /**
    * Promotes a pending account to `partner` or `guest`.
    * Errors: 404 if there is no pending user with that id (e.g. already handled).
