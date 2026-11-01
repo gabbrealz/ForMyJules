@@ -14,6 +14,9 @@ router.get('/users', adminController.listUsers);
 // GET /api/admin/users/pending
 router.get('/users/pending', adminController.listPendingUsers);
 
+// GET /api/admin/users/pending/count
+router.get('/users/pending/count', adminController.countPendingUsers);
+
 // POST /api/admin/users/:id/approve   body: { role: "partner" | "guest" }
 router.post(
   '/users/:id/approve',

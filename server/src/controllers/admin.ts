@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 import * as userService from '../services/user';
 import type { ApproveUserInput } from '../validators/user';
 
@@ -11,6 +11,11 @@ export const listPendingUsers: RequestHandler = async (_req, res) => {
   const users = await userService.listPendingUsers();
   res.json({ users });
 };
+
+export const countPendingUsers: RequestHandler = async (_req, res) => {
+  const count = await userService.countPendingUsers();
+  res.json({ count });
+}
 
 // body: { role: "partner" | "guest" }
 export const approveUser: RequestHandler<{ id: string }> = async (req, res) => {

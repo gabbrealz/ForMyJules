@@ -296,6 +296,24 @@ Lists accounts waiting for approval, oldest first.
 
 ---
 
+### `GET /api/admin/users/pending/count`
+
+Gets the number of accounts waiting for approval.
+
+**Body:** none
+
+**Responses**
+
+`200 OK`
+
+```json
+{
+  "count": number
+}
+```
+
+---
+
 ### `POST /api/admin/users/:id/approve`
 
 Promotes a pending account to `partner` or `guest`. Only accounts that are currently `pending_approval` can be approved.
@@ -704,6 +722,7 @@ If step 4 fails with `assets_missing`, a Cloudinary upload hasn't completed; fin
 | `GET` | `/api/auth/me` | any user | `200` | Current user |
 | `GET` | `/api/admin/users` | admin | `200` | List all accounts except the admin's |
 | `GET` | `/api/admin/users/pending` | admin | `200` | List pending accounts |
+| `GET` | `/api/admin/users/pending/count` | admin | `200` | Get number of pending accounts |
 | `POST` | `/api/admin/users/:id/approve` | admin | `200` | Approve as `partner` / `guest` |
 | `POST` | `/api/admin/users/:id/reject` | admin | `204` | Delete a pending account |
 | `DELETE` | `/api/admin/users/:id` | admin | `204` | Delete a non-admin account |

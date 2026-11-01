@@ -21,6 +21,12 @@ export async function listPendingUsers(): Promise<PendingUser[]> {
   return users.map((u) => ({ ...toPublicUser(u), createdAt: u.createdAt }));
 }
 
+/** Count pending accounts */
+export async function countPendingUsers(): Promise<number> {
+  const count = await User.countDocuments({ role: 'pending_approval' });
+  return count;
+}
+
 /**
  * Promotes a pending account to the given role. Returns null if there is no such pending user.
  * The filter includes role: 'pending_approval' so this can only ever promote pending accounts.
