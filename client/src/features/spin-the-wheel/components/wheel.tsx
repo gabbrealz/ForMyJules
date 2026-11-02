@@ -6,7 +6,6 @@ import {
   BORDER_WAVES,
   EMPTY_WHEEL_COLOR,
   LABEL_COLOR,
-  NEEDLE_TOP_COLOR,
   SEPARATOR_COLOR,
   WHEEL_EDGE_MARGIN,
   WHEEL_FONT_FAMILY,
@@ -333,7 +332,7 @@ export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
         aria-label={`Wheel with ${entries.length} ${
           entries.length === 1 ? "entry" : "entries"
         }`}
-        className={`block aspect-square w-full drop-shadow-lg ${
+        className={`block aspect-square w-full rounded-full drop-shadow-lg ${
           canSpin ? "cursor-pointer" : ""
         }`}
       />
@@ -347,8 +346,7 @@ export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
       >
         <div ref={pointerRef} className="origin-center drop-shadow-md">
           <svg viewBox="0 0 48 26" className="block w-full" aria-hidden>
-            {/* Top half: coral. Bottom half: theme primary. */}
-            <path d="M3 13 L24 3 L45 13 Z" fill={NEEDLE_TOP_COLOR} />
+            <path d="M3 13 L24 3 L45 13 Z" className="fill-muted-foreground" />
             <path d="M3 13 L45 13 L24 23 Z" className="fill-primary" />
             <path
               d="M3 13 L24 3 L45 13 L24 23 Z"
