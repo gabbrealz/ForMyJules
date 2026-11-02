@@ -162,7 +162,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            {/* gap-2! = a bit more air between items (was gap-1) */}
+            <SidebarGroupLabel>App</SidebarGroupLabel>
             <SidebarMenu className="gap-2!">
               {NAV_ITEMS.map((item) => (
                 <NavItem
