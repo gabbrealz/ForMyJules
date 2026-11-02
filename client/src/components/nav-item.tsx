@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import {
+  AnimatePresence,
   MotionConfig,
   motion,
   useAnimationControls,
@@ -224,11 +225,6 @@ type NavItemProps = {
   /** Which little animation the icon plays. */
   personality: NavPersonality
   isActive: boolean
-  /**
-   * Id for the sliding "you are here" pill. Items in the same list share one id
-   * so the pill glides between them; use a different id per sidebar.
-   */
-  pillId: string
   onNavigate?: () => void
   badge?: number
 }
@@ -241,7 +237,6 @@ export function NavItem({
   icon: Icon,
   personality,
   isActive,
-  pillId,
   onNavigate,
   badge,
 }: NavItemProps) {
@@ -278,15 +273,21 @@ export function NavItem({
               void play("hover")
           }}
         >
-          {/* Active pill: one shared element that springs from item to item. */}
-          {isActive && (
-            <motion.span
-              layoutId={pillId}
-              aria-hidden
-              transition={{ type: "spring", stiffness: 520, damping: 40 }}
-              className="absolute inset-0 -z-10 rounded-xl bg-sidebar-accent shadow-xs"
-            />
-          )}
+          {/* Active pill: each item owns its own. It grows in when the item
+              becomes active and shrinks away when it stops being active.
+              `initial={false}` keeps it from animating on first render. */}
+          <AnimatePresence initial={false}>
+            {isActive && (
+              <motion.span
+                aria-hidden
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.6 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="absolute inset-0 -z-10 rounded-xl bg-sidebar-accent shadow-xs"
+              />
+            )}
+          </AnimatePresence>
 
           {/* State layer: a tint of the text color that fades in on hover (8%),
               keyboard focus and press (10%). Sits over the pill when active. */}
