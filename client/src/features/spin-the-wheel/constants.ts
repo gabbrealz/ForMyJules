@@ -36,8 +36,12 @@ export const BORDER_FILL = "oklch(0.996 0.006 80)"
 export const BORDER_WAVES = 20
 /** Band thickness as a fraction of the wheel's outer radius. */
 export const BORDER_BAND = 0.12
+/** Gap in px between the rim's outer crests and the canvas edge. */
+export const WHEEL_EDGE_MARGIN = 2
 /** Wave height (crest to mid-line) as a fraction of the wheel's outer radius. */
 export const BORDER_AMPLITUDE = 0.025
+
+export const NEEDLE_TOP_COLOR = "oklch(0.4518 0.0883 52)"
 
 export const WHEEL_FONT_FAMILY = '"Nunito Variable", "DM Sans Variable", sans-serif'
 

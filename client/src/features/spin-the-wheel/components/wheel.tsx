@@ -6,7 +6,9 @@ import {
   BORDER_WAVES,
   EMPTY_WHEEL_COLOR,
   LABEL_COLOR,
+  NEEDLE_TOP_COLOR,
   SEPARATOR_COLOR,
+  WHEEL_EDGE_MARGIN,
   WHEEL_FONT_FAMILY,
   getSliceColor,
 } from "../constants"
@@ -26,6 +28,13 @@ interface LabelLayout {
 }
 
 type LabelCache = { current: LabelLayout | null }
+
+/**
+ * Distance from the canvas edge to the edge of the choices (where the slices
+ * end), derived from the same values `drawWheel` uses so the needle stays
+ * glued to it at any wheel size.
+ */
+const CHOICES_EDGE = `calc(${BORDER_BAND * 50}% + ${WHEEL_EDGE_MARGIN * (1 - BORDER_BAND)}px)`
 
 const wheelFont = (px: number) => `700 ${px}px ${WHEEL_FONT_FAMILY}`
 
@@ -161,7 +170,7 @@ function drawWheel(
   cache: LabelCache
 ) {
   const center = size / 2
-  const peak = center - 2 // small margin so the crests aren't clipped
+  const peak = center - WHEEL_EDGE_MARGIN // small margin so the crests aren't clipped
   const radius = peak * (1 - BORDER_BAND)
 
   drawBorder(ctx, center, peak)
@@ -316,7 +325,7 @@ export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
   const canSpin = entries.length > 0 && !spinning
 
   return (
-    <div className="relative mx-auto w-full max-w-[640px]">
+    <div className="@container relative mx-auto w-full max-w-[640px]">
       <canvas
         ref={canvasRef}
         onClick={spin}
@@ -329,17 +338,24 @@ export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
         }`}
       />
 
-      {/* Pointer: sits at 3 o'clock and points at the winning slice. */}
-      <div className="pointer-events-none absolute top-1/2 right-0 z-10 w-[7.5%] min-w-7 -translate-y-1/2">
-        <div ref={pointerRef} className="origin-right drop-shadow-md">
-          <svg
-            viewBox="0 0 44 36"
-            className="block w-full fill-primary stroke-card"
-            strokeWidth={3}
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <path d="M3 18 L35 3 Q41 1 41 8 L41 28 Q41 35 35 33 Z" />
+      {/* Needle: its centre sits exactly on the edge of the choices, so it
+          straddles the rim. `translate-x-1/2` shifts it by half its own width,
+          which keeps the centre on that edge whatever the width is. */}
+      <div
+        className="pointer-events-none absolute top-1/2 z-10 w-[12%] min-w-7 translate-x-1/2 -translate-y-1/2"
+        style={{ right: CHOICES_EDGE }}
+      >
+        <div ref={pointerRef} className="origin-center drop-shadow-md">
+          <svg viewBox="0 0 48 26" className="block w-full" aria-hidden>
+            {/* Top half: coral. Bottom half: theme primary. */}
+            <path d="M3 13 L24 3 L45 13 Z" fill={NEEDLE_TOP_COLOR} />
+            <path d="M3 13 L45 13 L24 23 Z" className="fill-primary" />
+            <path
+              d="M3 13 L24 3 L45 13 L24 23 Z"
+              className="fill-none stroke-card"
+              strokeWidth={2}
+              strokeLinejoin="round"
+            />
           </svg>
         </div>
       </div>
@@ -349,9 +365,24 @@ export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
         onClick={spin}
         disabled={!canSpin}
         aria-label="Spin the wheel"
-        className="absolute top-1/2 left-1/2 z-10 flex aspect-square w-[17%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-card bg-primary font-heading font-extrabold tracking-wide text-primary-foreground shadow-lg transition-transform hover:scale-103 focus-visible:ring-4 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-97 disabled:opacity-60 disabled:hover:scale-100 text-base"
+        className={`
+          absolute top-1/2 left-1/2 z-10 flex aspect-square w-[17%] -translate-x-1/2 -translate-y-1/2 items-center justify-center
+          rounded-full border-4 border-card bg-primary font-heading font-extrabold
+          text-base @sm:text-lg @md:text-xl @lg:text-2xl tracking-wide text-primary-foreground shadow-lg
+          focus-visible:ring-4 focus-visible:ring-ring/50 focus-visible:outline-none
+          transition-transform duration-500 motion-reduce:transition-none ${
+          spinning
+            ? "pointer-events-none scale-30 ease-in-out"
+            : "ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-103 active:scale-97 disabled:opacity-60 disabled:hover:scale-100"
+        }`}
       >
-        SPIN
+        <span
+          className={`transition-opacity motion-reduce:transition-none ${
+            spinning ? "opacity-0 duration-150" : "opacity-100 delay-200 duration-300"
+          }`}
+        >
+          SPIN
+        </span>
       </button>
     </div>
   )
