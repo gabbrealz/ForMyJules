@@ -62,6 +62,7 @@ export default function SpinTheWheel() {
         >
           <Wheel
             entries={entries}
+            paused={dialogOpen}
             onSpinStart={() => setSpinning(true)}
             onSpinEnd={handleSpinEnd}
           />

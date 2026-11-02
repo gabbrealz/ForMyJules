@@ -16,6 +16,7 @@ import { TAU, easeOutQuart, indexAtPointer, mod, planSpin } from "../utils"
 
 interface WheelProps {
   entries: Entry[]
+  paused?: boolean
   onSpinStart?: () => void
   onSpinEnd?: (result: SpinResult) => void
 }
@@ -34,6 +35,10 @@ type LabelCache = { current: LabelLayout | null }
  * glued to it at any wheel size.
  */
 const CHOICES_EDGE = `calc(${BORDER_BAND * 50}% + ${WHEEL_EDGE_MARGIN * (1 - BORDER_BAND)}px)`
+
+/** While idle the wheel drifts: one slow turn every 45 s, eased in over 1.5 s. */
+const IDLE_TURN_SECONDS = 45
+const IDLE_EASE_IN_MS = 1500
 
 const wheelFont = (px: number) => `700 ${px}px ${WHEEL_FONT_FAMILY}`
 
@@ -188,7 +193,12 @@ function drawWheel(
   ctx.stroke()
 }
 
-export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
+export function Wheel({
+  entries,
+  paused = false,
+  onSpinStart,
+  onSpinEnd,
+}: WheelProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const pointerRef = useRef<HTMLDivElement>(null)
   const entriesRef = useRef(entries)
@@ -196,6 +206,7 @@ export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
   const rotationRef = useRef(0)
   const sizeRef = useRef(0)
   const frameRef = useRef(0)
+  const idleFrameRef = useRef(0)
   const spinningRef = useRef(false)
   const labelCacheRef = useRef<LabelLayout | null>(null)
   const [spinning, setSpinning] = useState(false)
@@ -321,6 +332,31 @@ export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
 
   useEffect(() => () => cancelAnimationFrame(frameRef.current), [])
 
+  // Slow idle drift whenever the wheel isn't spinning. It eases in each time it
+  // starts, and stays off for an empty wheel, while paused, and for people who
+  // prefer reduced motion.
+  const drifts = entries.length > 0 && !spinning && !paused
+  useEffect(() => {
+    if (!drifts) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+    const startedAt = performance.now()
+    let last = startedAt
+    const frame = (now: number) => {
+      if (spinningRef.current) return
+      // Clamp so a long gap (e.g. a background tab) doesn't cause a jump.
+      const dt = Math.min(now - last, 100) / 1000
+      last = now
+      const ease = Math.min(1, (now - startedAt) / IDLE_EASE_IN_MS)
+      const step = (TAU / IDLE_TURN_SECONDS) * ease * dt
+      rotationRef.current = mod(rotationRef.current + step, TAU)
+      paint()
+      idleFrameRef.current = requestAnimationFrame(frame)
+    }
+    idleFrameRef.current = requestAnimationFrame(frame)
+    return () => cancelAnimationFrame(idleFrameRef.current)
+  }, [drifts, paint])
+
   const canSpin = entries.length > 0 && !spinning
 
   return (
@@ -346,6 +382,7 @@ export function Wheel({ entries, onSpinStart, onSpinEnd }: WheelProps) {
       >
         <div ref={pointerRef} className="origin-center drop-shadow-md">
           <svg viewBox="0 0 48 26" className="block w-full" aria-hidden>
+            {/* Top half: coral. Bottom half: theme primary. */}
             <path d="M3 13 L24 3 L45 13 Z" className="fill-muted-foreground" />
             <path d="M3 13 L45 13 L24 23 Z" className="fill-primary" />
             <path
