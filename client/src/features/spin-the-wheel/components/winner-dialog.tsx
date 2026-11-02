@@ -27,11 +27,11 @@ const seeded = (n: number) => {
   return x - Math.floor(x)
 }
 
-const CONFETTI_COUNT = 28
+const CONFETTI_COUNT = 40
 
 const CONFETTI = Array.from({ length: CONFETTI_COUNT }, (_, i) => {
   const angle = (i / CONFETTI_COUNT) * TAU + seeded(i) * 0.6
-  const distance = 110 + seeded(i + 50) * 120
+  const distance = 200 + seeded(i + 50) * 120
   return {
     id: i,
     x: Math.cos(angle) * distance,
@@ -63,16 +63,16 @@ function Confetti() {
             height: piece.height,
             backgroundColor: piece.color,
           }}
-          initial={{ x: 0, y: 0, opacity: 0, scale: 0.4, rotate: 0 }}
+          initial={{ x: 0, y: 0, opacity: 0.25, scale: 0.4, rotate: 0 }}
           animate={{
             x: [0, piece.x, piece.x * 1.1],
             y: [0, piece.y, piece.y + piece.fall],
-            opacity: [0, 1, 0],
+            opacity: [0.25, 1, 0],
             scale: 1,
             rotate: piece.rotate,
           }}
           transition={{
-            duration: 1.8,
+            duration: 3,
             delay: piece.delay,
             ease: "easeOut",
             times: [0, 0.35, 1],
