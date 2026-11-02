@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom"
 import { AdminRoute, ProtectedRoute } from "#features/auth"
 import SidebarLayout from "#layouts/SidebarLayout"
-import { AdminSidebar } from "@features/admin"
 import Landing from "#pages/Landing"
 import Login from "#pages/Login"
 import Signup from "#pages/Signup"
@@ -25,7 +24,7 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      // Main app: standard sidebar layout
+      // Main app: sidebar layout (admins also get the admin nav items)
       {
         element: <SidebarLayout />,
         children: [
@@ -36,15 +35,10 @@ export const router = createBrowserRouter([
           { path: "music", element: <MusicLocker /> },
           { path: "spin-the-wheel", element: <SpinTheWheel /> },
           { path: "profile", element: <Profile /> },
-        ],
-      },
 
-      // Admin: same shell, its own sidebar, admins only.
-      {
-        element: <AdminRoute />,
-        children: [
+          // Admin pages: same shell, admins only.
           {
-            element: <SidebarLayout sidebar={AdminSidebar} />,
+            element: <AdminRoute />,
             children: [
               {
                 path: "admin",

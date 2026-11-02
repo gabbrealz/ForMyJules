@@ -10,10 +10,14 @@ import {
   LogOutIcon,
   MusicIcon,
   UserIcon,
+  UserRoundCheckIcon,
+  UsersIcon,
   type LucideIcon,
 } from "lucide-react"
 
-import { useAuth, useLogout } from "../features/auth/index.ts"
+import { usePendingCount } from "#features/admin"
+import { useAuth, useLogout } from "#features/auth"
+import { isAdmin } from "../features/auth/types.ts"
 import { Brand } from "#components/brand"
 import { NavItem, type NavPersonality } from "#components/nav-item"
 import { Avatar, AvatarFallback } from "#components/ui/avatar"
@@ -30,6 +34,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -37,12 +42,14 @@ import {
   useSidebar,
 } from "#components/ui/sidebar"
 
-const NAV_ITEMS: {
+type AppNavItem = {
   label: string
   to: string
   icon: LucideIcon
   personality: NavPersonality
-}[] = [
+}
+
+const NAV_ITEMS: AppNavItem[] = [
   { label: "Home", to: "/home", icon: HouseIcon, personality: "hop" },
   { label: "Gallery", to: "/gallery", icon: ImagesIcon, personality: "fan" },
   {
@@ -66,6 +73,26 @@ const NAV_ITEMS: {
   },
 ]
 
+// Only shown to admins, after the items above.
+const ADMIN_NAV_ITEMS: (AppNavItem & { showPendingCount?: boolean })[] = [
+  {
+    label: "Users",
+    to: "/admin/users",
+    icon: UsersIcon,
+    personality: "waddle",
+  },
+  {
+    label: "Pending Registrations",
+    to: "/admin/pending",
+    icon: UserRoundCheckIcon,
+    personality: "pop",
+    showPendingCount: true,
+  },
+]
+
+const isActivePath = (pathname: string, to: string) =>
+  pathname === to || pathname.startsWith(`${to}/`)
+
 function ProfileAvatar({
   name,
   size,
@@ -79,6 +106,36 @@ function ProfileAvatar({
         {name.charAt(0).toUpperCase()}
       </AvatarFallback>
     </Avatar>
+  )
+}
+
+// Its own component so the pending-count request is only made for admins.
+function AdminNavGroup({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string
+  onNavigate: () => void
+}) {
+  const pendingCount = usePendingCount()
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>Admin</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu className="gap-2!">
+          {ADMIN_NAV_ITEMS.map(({ showPendingCount, ...item }) => (
+            <NavItem
+              key={item.to}
+              {...item}
+              badge={showPendingCount ? pendingCount || undefined : undefined}
+              isActive={isActivePath(pathname, item.to)}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   )
 }
 
@@ -111,16 +168,17 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
                 <NavItem
                   key={item.to}
                   {...item}
-                  pillId="app-nav-pill"
-                  isActive={
-                    pathname === item.to || pathname.startsWith(`${item.to}/`)
-                  }
+                  isActive={isActivePath(pathname, item.to)}
                   onNavigate={closeMobileSidebar}
                 />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {user && isAdmin(user) && (
+          <AdminNavGroup pathname={pathname} onNavigate={closeMobileSidebar} />
+        )}
       </SidebarContent>
 
       <SidebarFooter className="p-3">

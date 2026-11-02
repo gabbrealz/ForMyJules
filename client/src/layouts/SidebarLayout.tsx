@@ -1,4 +1,3 @@
-import type { ComponentProps, ComponentType } from "react"
 import { Outlet } from "react-router-dom"
 import { AppSidebar } from "#layouts/app-sidebar"
 import { Brand } from "#components/brand"
@@ -8,7 +7,6 @@ import {
   ResizablePanelGroup,
 } from "#components/ui/resizable"
 import {
-  Sidebar,
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
@@ -20,21 +18,14 @@ const SIDEBAR_DEFAULT_WIDTH = "260px"
 const SIDEBAR_MIN_WIDTH = "220px"
 const SIDEBAR_MAX_WIDTH = "380px"
 
-type SidebarComponent = ComponentType<ComponentProps<typeof Sidebar>>
-
-// `sidebar` lets a route group (e.g. /admin) reuse this shell with its own navigation.
-export default function SidebarLayout({
-  sidebar: SidebarNav = AppSidebar,
-}: {
-  sidebar?: SidebarComponent
-}) {
+export default function SidebarLayout() {
   const isMobile = useIsMobile()
 
   // Phones get the stock slide-over sidebar; resizing only makes sense on desktop.
   if (isMobile) {
     return (
       <SidebarProvider>
-        <SidebarNav />
+        <AppSidebar />
         <SidebarInset>
           <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur">
             <SidebarTrigger />
@@ -56,7 +47,7 @@ export default function SidebarLayout({
           maxSize={SIDEBAR_MAX_WIDTH}
           groupResizeBehavior="preserve-pixel-size"
         >
-          <SidebarNav collapsible="none" className="w-full" />
+          <AppSidebar collapsible="none" className="w-full" />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel id="content">

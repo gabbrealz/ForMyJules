@@ -25,7 +25,7 @@ import { useRipple } from "../hooks/use-ripple"
 // lands back where it began. Amplitudes are kept small so the motion reads as
 // a nudge rather than a performance.
 
-const REST = { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotate: 0 }
+const REST = { y: 0, scale: 1, scaleX: 1, scaleY: 1, rotate: 0 }
 
 const PRESS = {
   scale: [1, 0.88, 1.08, 1],
@@ -125,18 +125,6 @@ const ICON_MOTION = {
       scale: [1, 1.16, 0.97, 1.04, 1],
       rotate: [0, -4, 2, 0, 0],
       transition: { duration: 0.6, ease: "easeOut" },
-    },
-  },
-  // Nudges backwards.
-  backslide: {
-    rest: REST,
-    hover: {
-      x: [0, -2.5, 1, 0],
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-    press: {
-      x: [0, -4.5, 0],
-      transition: { duration: 0.35, ease: "easeOut" },
     },
   },
 } satisfies Record<string, Variants>
