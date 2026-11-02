@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import HTMLFlipBook from "react-pageflip"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
+import { usePageTitle } from "#hooks/use-page-title"
+
 import { PageContent, Sheet, PAGES } from "#features/scrapbook"
 import { Button } from "#components/ui/button"
 
@@ -51,6 +53,8 @@ const SHEETS = PAGES.map((page, index) => (
 ))
 
 export default function Scrapbook() {
+  usePageTitle("Scrapbook")
+
   const bookRef = useRef<FlipBookHandle>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const [pageIndex, setPageIndex] = useState(0)

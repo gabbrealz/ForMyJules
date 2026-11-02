@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react"
 import { CheckIcon } from "lucide-react"
 
+import { usePageTitle } from "#hooks/use-page-title"
+
 import {
   Stepper,
   StepperContent,
@@ -35,6 +37,8 @@ const STEPS = [
 const INDICATORS = { completed: <CheckIcon className="size-3.5" /> }
 
 export default function Photobooth() {
+  usePageTitle("Photobooth")
+
   const [step, setStep] = useState(1)
   const [layout, setLayout] = useState<PhotoLayout | null>(null)
   const [experience, setExperience] = useState<Experience>(DEFAULT_EXPERIENCE)

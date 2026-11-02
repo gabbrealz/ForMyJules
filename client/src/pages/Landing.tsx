@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom"
+import { usePageTitle } from "#hooks/use-page-title"
 
 import { useAuth } from "#features/auth"
 import { Backdrop } from "#components/backdrop"
@@ -6,6 +7,8 @@ import { Brand } from "#components/brand"
 import { Button } from "#components/ui/button"
 
 export default function Landing() {
+  usePageTitle("Our Little Howm", { addBrand: false })
+
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
 

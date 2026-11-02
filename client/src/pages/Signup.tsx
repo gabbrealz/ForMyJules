@@ -1,8 +1,12 @@
+import { usePageTitle } from "#hooks/use-page-title"
+
 import { AuthLayout } from "#layouts/auth-layout"
 import { SignupForm } from "#features/auth"
 import { APP_NAME } from "#config/brand"
 
 export default function Signup() {
+  usePageTitle("Signup")
+
   return (
     <AuthLayout
       title="Create your account"
