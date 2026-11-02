@@ -17,5 +17,4 @@ export interface SpinRecord {
   id: string
   label: string
   color: string
-  time: string
 }

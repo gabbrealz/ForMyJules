@@ -32,10 +32,6 @@ export default function SpinTheWheel() {
         id: `${Date.now()}-${previous.length}`,
         label: result.entry.label,
         color: result.color,
-        time: new Date().toLocaleTimeString([], {
-          hour: "numeric",
-          minute: "2-digit",
-        }),
       },
       ...previous,
     ])
