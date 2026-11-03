@@ -241,6 +241,8 @@ export function NavItem({
         <SidebarMenuButton
           render={<Link to={to} />}
           isActive={isActive}
+          // Shown on hover only while the sidebar is collapsed to icons.
+          tooltip={label}
           // The default hover/active fill is replaced by the layers below, so
           // the button itself stays transparent.
           className={cn(
@@ -292,7 +294,7 @@ export function NavItem({
             className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[inherit]"
           />
 
-          <span className="relative flex min-w-0 flex-1 items-center gap-2 overflow-visible! transition-transform duration-150 ease-out group-active/nav:scale-[0.97] motion-reduce:transition-none motion-reduce:transform-none">
+          <span className="relative flex min-w-0 flex-1 items-center gap-2 overflow-visible! group-data-[collapsible=icon]:justify-center transition-transform duration-150 ease-out group-active/nav:scale-[0.97] motion-reduce:transition-none motion-reduce:transform-none">
             <motion.span
               variants={ICON_MOTION[personality]}
               initial="rest"
@@ -304,7 +306,7 @@ export function NavItem({
             </motion.span>
             <span
               className={cn(
-                "truncate transition-transform duration-300 motion-reduce:transition-none",
+                "truncate transition-transform duration-300 group-data-[collapsible=icon]:hidden motion-reduce:transition-none",
                 SPRING_OVERSHOOT,
                 "motion-safe:group-hover/nav:translate-x-0.5",
               )}

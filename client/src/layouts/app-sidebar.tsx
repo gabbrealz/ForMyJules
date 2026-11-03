@@ -15,8 +15,8 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { usePendingCount } from "#features/admin"
-import { useAuth, useLogout } from "#features/auth"
+import { usePendingCount } from "../features/admin/hooks/use-pending-count.ts"
+import { useAuth, useLogout } from "../features/auth/index.ts"
 import { isAdmin } from "../features/auth/types.ts"
 import { Brand } from "#components/brand"
 import { NavItem, type NavPersonality } from "#components/nav-item"
@@ -39,6 +39,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
   useSidebar,
 } from "#components/ui/sidebar"
 
@@ -155,14 +156,19 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar {...props}>
-      <SidebarHeader className="p-4">
-        <Brand className="text-sidebar-foreground" />
+      <SidebarHeader className="flex-row items-center justify-between p-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+        {/* Collapsed: the brand gives way to just the toggle. */}
+        <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+          <Brand className="text-sidebar-foreground" />
+        </div>
+        {/* Phones close the sheet by tapping outside; they have a trigger in the page header. */}
+        {!isMobile && <SidebarTrigger />}
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarGroupLabel>App</SidebarGroupLabel>
+            {/* gap-2! = a bit more air between items (was gap-1) */}
             <SidebarMenu className="gap-2!">
               {NAV_ITEMS.map((item) => (
                 <NavItem
@@ -181,7 +187,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-3 group-data-[collapsible=icon]:px-2">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

@@ -160,7 +160,7 @@ function Sidebar({
 }: React.ComponentProps<"div"> & {
   side?: "left" | "right"
   variant?: "sidebar" | "floating" | "inset"
-  collapsible?: "offcanvas" | "icon" | "none"
+  collapsible?: "offcanvas" | "icon" | "none" | "panel"
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
@@ -170,6 +170,26 @@ function Sidebar({
         data-slot="sidebar"
         className={cn(
           "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    )
+  }
+
+  // Fills a parent that owns the width (e.g. a resizable panel). While
+  // collapsed it shows icons only: `data-collapsible="icon"` switches on the
+  // same `group-data-[collapsible=icon]` styles the fixed sidebar uses.
+  if (collapsible === "panel") {
+    return (
+      <div
+        data-slot="sidebar"
+        data-state={state}
+        data-collapsible={state === "collapsed" ? "icon" : ""}
+        className={cn(
+          "group flex h-full w-full flex-col bg-sidebar text-sidebar-foreground",
           className
         )}
         {...props}
