@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react"
+
+import PageHeader from "#components/page-header"
 import {
   DEFAULT_ENTRIES,
   EntriesCard,
@@ -45,15 +47,8 @@ export default function SpinTheWheel() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 md:p-8">
-      <header className="space-y-1">
-        <h1 className="font-heading text-3xl font-extrabold tracking-tight">
-          Spin the Wheel
-        </h1>
-        <p className="text-muted-foreground">
-          Add your entries, give the wheel a spin, and let fate decide.
-        </p>
-      </header>
+    <div className="mx-auto flex w-full max-w-6xl flex-col p-4 md:p-8">
+      <PageHeader title="Spin the Wheel" subtitle="Add your entries, give the wheel a spin, and let fate decide." />
 
       <div className="grid items-stretch gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
         <section

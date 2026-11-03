@@ -5,6 +5,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { usePageTitle } from "#hooks/use-page-title"
 
+import PageHeader from "#components/page-header"
 import { PageContent, Sheet, PAGES } from "#features/scrapbook"
 import { Button } from "#components/ui/button"
 
@@ -189,14 +190,7 @@ export default function Scrapbook() {
     // scrollbar, and the stable gutter means a real scrollbar can't resize the layout.
     <div className="flex w-full flex-col overflow-x-hidden md:h-svh md:overflow-y-auto md:[scrollbar-gutter:stable]">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8">
-        <header className="mb-6 space-y-1">
-          <h1 className="font-heading text-2xl font-bold tracking-tight">
-            Scrapbook
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Flip through the moments we&rsquo;ve kept.
-          </p>
-        </header>
+        <PageHeader title="Scrapbook" subtitle="Flip through the moments we've kept." />
 
         <div className="flex flex-1 flex-col items-center justify-center gap-6">
           {/*

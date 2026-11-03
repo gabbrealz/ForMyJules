@@ -25,6 +25,7 @@ import {
   type Experience,
   type PhotoLayout,
 } from "#features/photobooth"
+import PageHeader from "#components/page-header"
 
 // Steps are 1-indexed to match the Stepper component.
 const STEPS = [
@@ -77,17 +78,9 @@ export default function Photobooth() {
   const back = () => setStep((current) => Math.max(current - 1, 1))
 
   return (
-    <div className="flex w-full flex-col md:h-svh md:overflow-y-auto">
+    <div className="mx-auto flex w-full max-w-6xl flex-col p-4 md:p-8">
+      <PageHeader title="Photobooth" subtitle="Choose a layout, set up the camera, and take your photos." />
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col p-4 md:p-8">
-        <header className="mb-6 space-y-1">
-          <h1 className="font-heading text-2xl font-bold tracking-tight">
-            Photobooth
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Choose a layout, set up the camera, and take your photos.
-          </p>
-        </header>
-
         <Stepper
           value={step}
           onValueChange={setStep}
