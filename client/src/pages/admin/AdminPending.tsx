@@ -1,4 +1,4 @@
-import { CheckIcon, UserRoundCheckIcon, XIcon } from "lucide-react"
+import { UserRoundCheckIcon, XIcon } from "lucide-react"
 
 import {
   AdminPage,
@@ -15,14 +15,6 @@ export default function AdminPending() {
   const actionsFor = (user: AdminUser): UserAction[] => {
     const disabled = isBusy(user.id)
     return [
-      {
-        key: "approve-partner",
-        label: "Approve as partner",
-        icon: CheckIcon,
-        variant: "default",
-        disabled,
-        onClick: (u) => void approve(u, "partner"),
-      },
       {
         key: "approve-guest",
         label: "Approve as guest",
