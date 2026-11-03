@@ -33,7 +33,7 @@ export function SpinButton({ spinning, disabled, onClick }: SpinButtonProps) {
         transition-transform duration-500 motion-reduce:transition-none ${
         spinning
           ? "pointer-events-none scale-30 ease-in-out"
-          : "ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-103 active:scale-97 disabled:opacity-60 disabled:hover:scale-100"
+          : "ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-104 active:scale-96 disabled:opacity-60 disabled:hover:scale-100"
       }`}
     >
       <span
