@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 
+import PageHeader from "#components/page-header"
 import { Badge } from "#components/ui/badge"
 
 type AdminPageProps = {
@@ -19,16 +20,10 @@ export function AdminPage({
 }: AdminPageProps) {
   return (
     <div className="w-full md:h-svh md:overflow-y-auto">
-      <div className="mx-auto w-full max-w-5xl p-4 md:p-8">
-        <header className="mb-6 space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="font-heading text-2xl font-bold tracking-tight">
-              {title}
-            </h1>
-            {count !== undefined && <Badge variant="secondary">{count}</Badge>}
-          </div>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </header>
+      <div className="mx-auto flex w-full max-w-6xl flex-col p-4 md:p-8">
+        <PageHeader title={title} subtitle={description} badge={
+          count === undefined ? undefined : <Badge variant="secondary" className="text-base py-3">{count}</Badge>
+        }/>
         {children}
       </div>
     </div>
