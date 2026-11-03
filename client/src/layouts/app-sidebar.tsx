@@ -17,7 +17,7 @@ import {
 
 import { usePendingCount } from "#features/admin"
 import { useAuth, useLogout } from "#features/auth"
-import { isAdmin } from "#features/auth"
+import { isAdmin } from "../features/auth/types.ts"
 import { Brand } from "#components/brand"
 import { NavItem, type NavPersonality } from "#components/nav-item"
 import { Avatar, AvatarFallback } from "#components/ui/avatar"
@@ -123,7 +123,7 @@ function AdminNavGroup({
   return (
     <SidebarGroup>
       {/* Collapsed: the label hides itself, so a divider marks where the group starts. */}
-      <SidebarSeparator className="mb-2 hidden group-data-[collapsible=icon]:block" />
+      <SidebarSeparator className="mb-2 hidden bg-sidebar-foreground/30 h-[1.5px] rounded-full group-data-[collapsible=icon]:block" />
       <SidebarGroupLabel>Admin</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu className="gap-2!">
@@ -168,7 +168,7 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            {/* gap-2! = a bit more air between items (was gap-1) */}
+            <SidebarGroupLabel>App</SidebarGroupLabel>
             <SidebarMenu className="gap-2!">
               {NAV_ITEMS.map((item) => (
                 <NavItem
