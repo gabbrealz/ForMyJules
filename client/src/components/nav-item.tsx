@@ -281,7 +281,7 @@ export function NavItem({
         {hasBadge && (
           <SidebarMenuBadge
             className={cn(
-              "top-2.5 rounded-full bg-apricot text-brown transition-transform duration-300 motion-reduce:transition-none",
+              "rounded-full bg-apricot peer-data-active/menu-button:bg-vanilla text-brown transition-transform duration-300 motion-reduce:transition-none",
               SPRING_OVERSHOOT,
               "motion-safe:group-hover/nav-item:-rotate-6 motion-safe:group-hover/nav-item:scale-110",
             )}
