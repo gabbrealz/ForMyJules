@@ -15,9 +15,9 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import { usePendingCount } from "../features/admin/hooks/use-pending-count.ts"
-import { useAuth, useLogout } from "../features/auth/index.ts"
-import { isAdmin } from "../features/auth/types.ts"
+import { usePendingCount } from "#features/admin"
+import { useAuth, useLogout } from "#features/auth"
+import { isAdmin } from "#features/auth"
 import { Brand } from "#components/brand"
 import { NavItem, type NavPersonality } from "#components/nav-item"
 import { Avatar, AvatarFallback } from "#components/ui/avatar"
