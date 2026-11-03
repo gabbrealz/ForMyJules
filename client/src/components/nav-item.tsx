@@ -237,7 +237,9 @@ export function NavItem({
 
   return (
     <MotionConfig reducedMotion="user">
-      <SidebarMenuItem className="group/nav-item">
+      {/* Fixed 40px row, so the 32px collapsed button sits centered where the
+            full-height one was and every item keeps its position. */}
+      <SidebarMenuItem className="group/nav-item flex h-10 items-center justify-center">
         <SidebarMenuButton
           render={<Link to={to} />}
           isActive={isActive}
@@ -246,7 +248,7 @@ export function NavItem({
           // The default hover/active fill is replaced by the layers below, so
           // the button itself stays transparent.
           className={cn(
-            "group/nav relative isolate h-10 overflow-visible! rounded-xl bg-transparent! px-3 hover:bg-transparent! active:bg-transparent!",
+            "group/nav relative isolate h-10 overflow-visible! rounded-xl bg-transparent! px-3 transition-none hover:bg-transparent! active:bg-transparent!",
             hasBadge && "pr-10",
           )}
           {...ripple.handlers}

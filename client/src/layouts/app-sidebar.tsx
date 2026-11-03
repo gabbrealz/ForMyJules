@@ -39,7 +39,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
+  SidebarSeparator,
   useSidebar,
 } from "#components/ui/sidebar"
 
@@ -122,6 +122,8 @@ function AdminNavGroup({
 
   return (
     <SidebarGroup>
+      {/* Collapsed: the label hides itself, so a divider marks where the group starts. */}
+      <SidebarSeparator className="mb-2 hidden group-data-[collapsible=icon]:block" />
       <SidebarGroupLabel>Admin</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu className="gap-2!">
@@ -156,13 +158,11 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar {...props}>
-      <SidebarHeader className="flex-row items-center justify-between p-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
-        {/* Collapsed: the brand gives way to just the toggle. */}
-        <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+      {/* Collapsed: only the brand's first child (its icon) stays. */}
+      <SidebarHeader className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
+        <div className="min-w-0 group-data-[collapsible=icon]:[&>*>:not(:first-child)]:hidden">
           <Brand className="text-sidebar-foreground" />
         </div>
-        {/* Phones close the sheet by tapping outside; they have a trigger in the page header. */}
-        {!isMobile && <SidebarTrigger />}
       </SidebarHeader>
 
       <SidebarContent>
@@ -187,12 +187,17 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="p-3 group-data-[collapsible=icon]:px-2">
+      <SidebarFooter className="p-3 group-data-[collapsible=icon]:px-3.5">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={<SidebarMenuButton size="lg" className="rounded-xl" />}
+                render={
+                  <SidebarMenuButton
+                    size="lg"
+                    className="rounded-xl transition-none"
+                  />
+                }
               >
                 <ProfileAvatar name={displayName} />
                 <div className="grid min-w-0 flex-1 text-left leading-tight">
