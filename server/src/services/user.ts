@@ -9,7 +9,7 @@ export type ListedUser = PublicUser & { createdAt: Date };
  * `npm run create-admin`), and it is not managed through the API, so it is left out of the list.
  */
 export async function listUsers(): Promise<ListedUser[]> {
-  const users = await User.find({ role: { $ne: 'admin' } })
+  const users = await User.find({ role: { $nin: ['admin', 'pending_approval'] } })
     .sort({ createdAt: 1, _id: 1 })
     .lean();
   return users.map((u) => ({ ...toPublicUser(u), createdAt: u.createdAt }));
@@ -17,7 +17,9 @@ export async function listUsers(): Promise<ListedUser[]> {
 
 /** Pending accounts, oldest first. */
 export async function listPendingUsers(): Promise<PendingUser[]> {
-  const users = await User.find({ role: 'pending_approval' }).sort({ createdAt: 1 }).lean();
+  const users = await User.find({ role: 'pending_approval' })
+    .sort({ createdAt: 1 })
+    .lean();
   return users.map((u) => ({ ...toPublicUser(u), createdAt: u.createdAt }));
 }
 
