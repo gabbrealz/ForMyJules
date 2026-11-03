@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { Link } from "react-router-dom"
 import {
   AnimatePresence,
   MotionConfig,
   motion,
   useAnimationControls,
-  useReducedMotion,
   type Variants,
 } from "framer-motion"
 import { cn } from "cn"
@@ -169,41 +168,6 @@ function useIconPlayer() {
   return useMemo(() => ({ controls, play }), [controls, play])
 }
 
-// ─── Click burst ─────────────────────────────────────────────────────────────
-
-const BURST = Array.from({ length: 6 }, (_, i) => {
-  const angle = (i / 6) * Math.PI * 2 - Math.PI / 2
-  const large = i % 2 === 0
-  const distance = large ? 12 : 9
-  return {
-    x: Math.cos(angle) * distance,
-    y: Math.sin(angle) * distance,
-    large,
-  }
-})
-
-// Six tiny dots that pop outward from the icon and fade.
-function Burst() {
-  return (
-    <span aria-hidden className="pointer-events-none absolute inset-0">
-      {BURST.map(({ x, y, large }, i) => (
-        <motion.span
-          key={i}
-          className={cn(
-            "absolute top-1/2 left-1/2 rounded-full",
-            large
-              ? "-m-[2px] size-[4px] bg-ring"
-              : "-m-px size-[2px] bg-primary",
-          )}
-          initial={{ x: 0, y: 0, scale: 0, opacity: 1 }}
-          animate={{ x, y, scale: [0, 1.2, 0], opacity: [1, 1, 0] }}
-          transition={{ duration: 0.55, ease: "easeOut" }}
-        />
-      ))}
-    </span>
-  )
-}
-
 // ─── Nav item ────────────────────────────────────────────────────────────────
 
 type NavItemProps = {
@@ -228,11 +192,9 @@ export function NavItem({
   onNavigate,
   badge,
 }: NavItemProps) {
-  const reduceMotion = useReducedMotion()
   const { controls, play } = useIconPlayer()
   // Links activate on Enter only (Space scrolls the page), so only Enter ripples.
   const ripple = useRipple<HTMLButtonElement>({ keys: ["Enter"] })
-  const [burst, setBurst] = useState(0)
   const hasBadge = badge !== undefined && badge > 0
 
   return (
@@ -255,7 +217,6 @@ export function NavItem({
           onClick={() => {
             onNavigate?.()
             void play("press")
-            if (!reduceMotion) setBurst((n) => n + 1)
           }}
           onPointerEnter={(event) => {
             if (event.pointerType === "mouse") void play("hover")
@@ -301,10 +262,9 @@ export function NavItem({
               variants={ICON_MOTION[personality]}
               initial="rest"
               animate={controls}
-              className="relative grid size-5 shrink-0 place-items-center"
+              className="grid size-5 shrink-0 place-items-center"
             >
               <Icon className="size-4.5" />
-              {burst > 0 && <Burst key={burst} />}
             </motion.span>
             <span
               className={cn(
