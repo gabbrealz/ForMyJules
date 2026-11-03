@@ -20,6 +20,7 @@
     "#routes/*": "./src/routes/*.tsx",
     "#layouts/*": "./src/layouts/*.tsx",
     "#services/*": "./src/services/*.ts",
+    "#utils/*": "./src/utils/*.ts",
     "#features/*": "./src/features/*/index.ts"
   },
   "dependencies": {

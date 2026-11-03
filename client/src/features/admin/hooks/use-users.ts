@@ -15,6 +15,7 @@ const toAdminUser = (user: ListedUser): AdminUser => ({
   username: user.username,
   nickname: user.nickname,
   role: ROLE_LABELS[user.role],
+  createdAt: user.createdAt
 })
 
 const messageOf = (error: unknown, fallback: string) =>

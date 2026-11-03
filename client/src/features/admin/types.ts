@@ -7,6 +7,7 @@ export type AdminUser = {
   username: string
   nickname: string
   role: Role
+  createdAt: string
   avatarUrl?: string
 }
 

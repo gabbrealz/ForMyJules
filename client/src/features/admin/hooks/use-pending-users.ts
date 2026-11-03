@@ -9,6 +9,7 @@ const toAdminUser = (user: PendingUser): AdminUser => ({
   username: user.username,
   nickname: user.nickname,
   role: "Pending",
+  createdAt: user.createdAt,
 })
 
 const messageOf = (error: unknown, fallback: string) =>

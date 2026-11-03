@@ -14,6 +14,8 @@ import {
 } from "#components/ui/table"
 import type { AdminUser } from "#features/admin"
 
+import { formatToUserTime } from "#utils/date"
+
 export type UserAction = {
   /** Stable key for React. */
   key: string
@@ -34,7 +36,7 @@ type UsersTableProps = {
   emptyMessage?: string
 }
 
-const COLUMN_COUNT = 4
+const COLUMN_COUNT = 5
 
 export function UsersTable({
   users,
@@ -42,14 +44,15 @@ export function UsersTable({
   emptyMessage = "No users to show.",
 }: UsersTableProps) {
   return (
-    <div className="overflow-hidden rounded-xl bg-card shadow-xs ring-1 ring-foreground/10">
-      <Table>
+    <div className="overflow-hidden rounded-lg bg-card shadow-sm ring-1 ring-foreground/10">
+        <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
-            <TableHead className="h-11 px-4">User</TableHead>
-            <TableHead className="h-11 px-4">Nickname</TableHead>
-            <TableHead className="h-11 px-4">Role</TableHead>
-            <TableHead className="h-11 px-4 text-right">Actions</TableHead>
+            <TableHead className="h-8 px-4 text-center">User</TableHead>
+            <TableHead className="h-8 px-4 text-center">Nickname</TableHead>
+            <TableHead className="h-8 px-4 text-center">Role</TableHead>
+            <TableHead className="h-8 px-4 text-center">Registered At</TableHead>
+            <TableHead className="h-8 w-px px-4 text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -64,26 +67,25 @@ export function UsersTable({
             </TableRow>
           ) : (
             users.map((user) => {
-              const rowActions =
-                typeof actions === "function" ? actions(user) : actions
+              const rowActions = typeof actions === "function" ? actions(user) : actions
 
               return (
                 <TableRow key={user.id}>
                   <TableCell className="px-4 py-3">
-                    <UserCell
-                      username={user.username}
-                      avatarUrl={user.avatarUrl}
-                    />
+                    <UserCell username={user.username} avatarUrl={user.avatarUrl} />
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-center">
+                    {user.nickname || <span className="text-muted-foreground">—</span>}
                   </TableCell>
                   <TableCell className="px-4 py-3">
-                    {user.nickname || (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                    <div className="flex justify-center">
+                      <RoleBadge role={user.role} />
+                    </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <RoleBadge role={user.role} />
+                  <TableCell className="px-4 py-3 text-center">
+                    {formatToUserTime(user.createdAt)}
                   </TableCell>
-                  <TableCell className="px-4 py-3">
+                  <TableCell className="w-px px-4 py-3">
                     <div className="flex justify-end gap-2">
                       {rowActions.map(
                         ({
