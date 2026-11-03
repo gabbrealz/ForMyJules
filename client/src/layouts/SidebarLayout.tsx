@@ -70,7 +70,7 @@ function ResizableShell() {
           type="button"
           onClick={toggleSidebar}
           aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
-          className="absolute top-15 left-0 flex size-6 -translate-x-1/2 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="absolute top-15 left-0 flex size-6 -translate-x-1/2 cursor-pointer! items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&_*]:cursor-pointer!"
         >
           <ChevronsLeftIcon
             className={cn(
