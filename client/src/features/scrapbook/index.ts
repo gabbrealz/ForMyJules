@@ -1,4 +1,4 @@
-export type { Photo, PageDef } from "./services/scrapbook.ts"
+export type { PageDef } from "./services/scrapbook.ts"
 export { PAGES } from "./services/scrapbook.ts"
 
 export { PageContent } from "./components/page-content"
