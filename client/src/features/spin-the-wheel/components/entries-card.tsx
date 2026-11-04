@@ -29,7 +29,7 @@ export function EntriesCard({
   disabled = false,
 }: EntriesCardProps) {
   return (
-    <Card className="flex h-full min-h-[30rem] flex-col">
+    <Card className="flex size-full min-h-[30rem] max-w-[36rem] flex-col">
       <Tabs defaultValue="entries" className="flex min-h-0 flex-1 flex-col gap-4">
         <CardHeader>
           <TabsList className="w-full">

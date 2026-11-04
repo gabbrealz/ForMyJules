@@ -28,7 +28,7 @@ export function SpinButton({ spinning, disabled, onClick }: SpinButtonProps) {
       className={`
         absolute top-1/2 left-1/2 z-10 flex aspect-square w-[17%] -translate-x-1/2 -translate-y-1/2 items-center justify-center
         rounded-full border-4 border-card bg-primary font-heading font-extrabold
-        text-base @sm:text-lg @md:text-xl @lg:text-2xl tracking-wide text-primary-foreground shadow-lg
+        text-sm @sm:text-md @md:text-lg @lg:text-xl @xl:text-2xl tracking-wide text-primary-foreground shadow-lg
         focus-visible:ring-4 focus-visible:ring-ring/50 focus-visible:outline-none
         transition-transform duration-500 motion-reduce:transition-none ${
         spinning

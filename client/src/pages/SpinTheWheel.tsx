@@ -50,7 +50,7 @@ export default function SpinTheWheel() {
     <div className="mx-auto flex w-full max-w-6xl flex-col p-4 md:p-8">
       <PageHeader title="Spin the Wheel" subtitle="Add your entries, give the wheel a spin, and let fate decide." />
 
-      <div className="grid items-stretch gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <div className="grid items-stretch gap-8 xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]">
         <section
           aria-label="Wheel"
           className="flex flex-col items-center justify-center gap-5 pr-2 sm:pr-3"
@@ -62,17 +62,18 @@ export default function SpinTheWheel() {
             onSpinEnd={handleSpinEnd}
           />
         </section>
-
-        <EntriesCard
-          text={text}
-          onTextChange={setText}
-          entryCount={entries.length}
-          onShuffle={() => setText(entriesToText(shuffle(entries)))}
-          onSort={() => setText(entriesToText(sortEntries(entries)))}
-          results={results}
-          onClearResults={() => setResults([])}
-          disabled={spinning}
-        />
+        <div className="flex justify-center">
+          <EntriesCard
+            text={text}
+            onTextChange={setText}
+            entryCount={entries.length}
+            onShuffle={() => setText(entriesToText(shuffle(entries)))}
+            onSort={() => setText(entriesToText(sortEntries(entries)))}
+            results={results}
+            onClearResults={() => setResults([])}
+            disabled={spinning}
+          />
+        </div>
       </div>
 
       <WinnerDialog
