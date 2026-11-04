@@ -123,7 +123,7 @@ export function Wheel({
   const canSpin = entries.length > 0 && !spinning
 
   return (
-    <div className="@container relative mx-auto w-full max-w-[640px]">
+    <div className="@container relative mx-auto w-full max-w-[620px]">
       <canvas
         ref={canvasRef}
         onClick={spin}
