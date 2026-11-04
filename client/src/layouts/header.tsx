@@ -112,7 +112,7 @@ export function Header({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-sidebar-border bg-header px-3 text-sidebar-foreground backdrop-blur sm:px-4",
+        "sticky top-0 z-30 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-sidebar-border shadow-xs bg-header px-3 text-sidebar-foreground backdrop-blur sm:px-4",
         className,
       )}
     >
