@@ -1,44 +1,34 @@
 import type { ComponentProps } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import {
   BookHeartIcon,
   CameraIcon,
-  ChevronsUpDownIcon,
   FerrisWheelIcon,
   HouseIcon,
   ImagesIcon,
-  LogOutIcon,
   MusicIcon,
-  UserIcon,
+  PanelLeftCloseIcon,
+  PanelLeftOpenIcon,
   UserRoundCheckIcon,
   UsersIcon,
   type LucideIcon,
 } from "lucide-react"
 
 import { usePendingCount } from "#features/admin"
-import { useAuth, useLogout } from "#features/auth"
+import { useAuth } from "#features/auth"
 import { isAdmin } from "../features/auth/types.ts"
-import { Brand } from "#components/brand"
+import { cn } from "cn"
+
 import { NavItem, type NavPersonality } from "#components/nav-item"
-import { Avatar, AvatarFallback } from "#components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#components/ui/dropdown-menu"
+import { useRipple } from "#hooks/use-ripple"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
+  SidebarFooter,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarSeparator,
   useSidebar,
 } from "#components/ui/sidebar"
@@ -83,7 +73,7 @@ const ADMIN_NAV_ITEMS: (AppNavItem & { showPendingCount?: boolean })[] = [
     personality: "waddle",
   },
   {
-    label: "Pending Registrations",
+    label: "Registrations",
     to: "/admin/pending",
     icon: UserRoundCheckIcon,
     personality: "pop",
@@ -93,22 +83,6 @@ const ADMIN_NAV_ITEMS: (AppNavItem & { showPendingCount?: boolean })[] = [
 
 const isActivePath = (pathname: string, to: string) =>
   pathname === to || pathname.startsWith(`${to}/`)
-
-function ProfileAvatar({
-  name,
-  size,
-}: {
-  name: string
-  size?: "default" | "lg"
-}) {
-  return (
-    <Avatar size={size}>
-      <AvatarFallback className="bg-apricot font-heading font-semibold text-brown">
-        {name.charAt(0).toUpperCase()}
-      </AvatarFallback>
-    </Avatar>
-  )
-}
 
 // Its own component so the pending-count request is only made for admins.
 function AdminNavGroup({
@@ -144,13 +118,9 @@ function AdminNavGroup({
 
 export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
   const { user } = useAuth()
-  const logout = useLogout("/")
-  const { isMobile, setOpenMobile } = useSidebar()
-
-  const displayName = user?.nickname ?? "Guest"
-  const username = user?.username ?? "guest"
+  const { isMobile, setOpenMobile, open, toggleSidebar } = useSidebar()
+  const ripple = useRipple<HTMLButtonElement>()
 
   function closeMobileSidebar() {
     if (isMobile) setOpenMobile(false)
@@ -158,13 +128,6 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar {...props}>
-      {/* Collapsed: only the brand's first child (its icon) stays. */}
-      <SidebarHeader className="p-4 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
-        <div className="min-w-0 group-data-[collapsible=icon]:[&>*>:not(:first-child)]:hidden">
-          <Brand className="text-sidebar-foreground" />
-        </div>
-      </SidebarHeader>
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -186,72 +149,35 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
           <AdminNavGroup pathname={pathname} onNavigate={closeMobileSidebar} />
         )}
       </SidebarContent>
-
-      <SidebarFooter className="p-3 group-data-[collapsible=icon]:px-3.5">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuButton
-                    size="lg"
-                    className="rounded-xl transition-none"
-                  />
-                }
-              >
-                <ProfileAvatar name={displayName} />
-                <div className="grid min-w-0 flex-1 text-left leading-tight">
-                  <span className="truncate text-sm font-medium">
-                    {displayName}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    @{username}
-                  </span>
-                </div>
-                <ChevronsUpDownIcon className="ml-auto" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                align="start"
-                sideOffset={8}
-                className="w-64 rounded-xl"
-              >
-                {/* Mini profile card */}
-                <div className="flex items-center gap-3 rounded-lg bg-secondary p-3">
-                  <ProfileAvatar name={displayName} size="lg" />
-                  <div className="min-w-0">
-                    <p className="truncate font-heading text-sm font-semibold">
-                      {displayName}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      @{username}
-                    </p>
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="py-2"
-                  onClick={() => {
-                    closeMobileSidebar()
-                    navigate("/profile")
-                  }}
-                >
-                  <UserIcon />
-                  View Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  variant="destructive"
-                  className="py-2"
-                  onClick={logout}
-                >
-                  <LogOutIcon />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+      {/* Desktop only: the phone sidebar is a slide-over, there's nothing to collapse.
+        Right-aligned while expanded; centered on the icon rail (same axis as the
+        nav icons) once collapsed, with a divider under it. */}
+      {!isMobile && (
+        <SidebarFooter className="gap-2 p-2">
+          <SidebarSeparator className="hidden bg-sidebar-foreground/30 h-[1.5px] rounded-full group-data-[collapsible=icon]:block" />
+          <div className={cn("flex", open ? "justify-end" : "justify-center")}>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
+              aria-expanded={open}
+              {...ripple.handlers}
+              className="relative isolate flex size-8 cursor-pointer items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none"
+            >
+              <span
+                ref={ripple.layerRef}
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[inherit] text-sidebar-foreground"
+              />
+              {open ? (
+                <PanelLeftCloseIcon className="size-4.5" />
+              ) : (
+                <PanelLeftOpenIcon className="size-4.5" />
+              )}
+            </button>
+          </div>
+        </SidebarFooter>
+      )}
     </Sidebar>
   )
 }

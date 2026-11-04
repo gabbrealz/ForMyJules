@@ -39,6 +39,7 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-header: var(--header);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -61,6 +62,10 @@
 
 :root {
   --radius: 0.875rem;
+
+  /* Height of the app header (layouts/header.tsx). Anything that has to fit
+     "the viewport minus the header" reads this instead of hard-coding a number. */
+  --header-height: 3.5rem;
 
   /* Brand palette */
   --brand-brown: oklch(16.113% 0.00399 48.287); /* dark brown */
@@ -96,7 +101,8 @@
   --chart-3: oklch(0.65 0.08 55);
   --chart-4: oklch(0.5 0.06 52);
   --chart-5: oklch(0.34 0.045 52);
-  --sidebar: oklch(0.968 0.03 90);
+  --header: oklch(0.968 0.03 90);
+  --sidebar: oklch(0.978 0.016 82);
   --sidebar-foreground: oklch(0.29 0.035 52);
   --sidebar-primary: oklch(0.34 0.045 52);
   --sidebar-primary-foreground: oklch(0.985 0.012 80);
@@ -133,7 +139,7 @@
   --chart-3: oklch(0.68 0.08 58);
   --chart-4: oklch(0.55 0.06 55);
   --chart-5: oklch(0.42 0.045 52);
-  --sidebar: oklch(0.23 0.022 52);
+  --sidebar: oklch(0.21 0.02 52);
   --sidebar-foreground: oklch(0.95 0.02 85);
   --sidebar-primary: oklch(0.84 0.08 65);
   --sidebar-primary-foreground: oklch(0.24 0.03 52);
