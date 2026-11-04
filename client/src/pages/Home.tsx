@@ -1,7 +1,8 @@
 import { usePageTitle } from "#hooks/use-page-title"
+import { PageShell } from "#layouts/page-shell"
 
 export default function Home() {
   usePageTitle("Home")
 
-  return <></>
+  return <PageShell title="Home" />
 }

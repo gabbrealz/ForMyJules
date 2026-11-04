@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 
-import PageHeader from "#components/page-header"
 import { Badge } from "#components/ui/badge"
+import { PageShell } from "#layouts/page-shell"
 
 type AdminPageProps = {
   title: string
@@ -11,7 +11,8 @@ type AdminPageProps = {
 }
 
 // Shared frame for the admin pages: heading, short description and a count pill.
-// On desktop the layout is locked to the viewport height, so the page scrolls itself.
+// fitViewport locks the page to the space below the header on desktop, so it
+// scrolls itself.
 export function AdminPage({
   title,
   description,
@@ -19,13 +20,19 @@ export function AdminPage({
   children,
 }: AdminPageProps) {
   return (
-    <div className="w-full md:h-svh md:overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-6xl flex-col p-4 md:p-8">
-        <PageHeader title={title} subtitle={description} badge={
-          count === undefined ? undefined : <Badge variant="secondary" className="text-base py-3">{count}</Badge>
-        }/>
-        {children}
-      </div>
-    </div>
+    <PageShell
+      fitViewport
+      title={title}
+      subtitle={description}
+      badge={
+        count === undefined ? undefined : (
+          <Badge variant="secondary" className="py-3 text-base">
+            {count}
+          </Badge>
+        )
+      }
+    >
+      {children}
+    </PageShell>
   )
 }

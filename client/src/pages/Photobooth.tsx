@@ -25,7 +25,7 @@ import {
   type Experience,
   type PhotoLayout,
 } from "#features/photobooth"
-import PageHeader from "#components/page-header"
+import { PageShell } from "#layouts/page-shell"
 
 // Steps are 1-indexed to match the Stepper component.
 const STEPS = [
@@ -78,8 +78,10 @@ export default function Photobooth() {
   const back = () => setStep((current) => Math.max(current - 1, 1))
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col p-4 md:p-8">
-      <PageHeader title="Photobooth" subtitle="Choose a layout, set up the camera, and take your photos." />
+    <PageShell
+      title="Photobooth"
+      subtitle="Choose a layout, set up the camera, and take your photos."
+    >
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col p-4 md:p-8">
         <Stepper
           value={step}
@@ -146,6 +148,6 @@ export default function Photobooth() {
           </StepperPanel>
         </Stepper>
       </div>
-    </div>
+    </PageShell>
   )
 }

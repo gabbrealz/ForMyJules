@@ -5,7 +5,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { usePageTitle } from "#hooks/use-page-title"
 
-import PageHeader from "#components/page-header"
+import { PageShell } from "#layouts/page-shell"
 import { PageContent, Sheet, PAGES } from "#features/scrapbook"
 import { Button } from "#components/ui/button"
 
@@ -183,77 +183,79 @@ export default function Scrapbook() {
   const shift = orientation === "landscape" ? STANCE_SHIFT[stance] : 0
 
   return (
+    // fitViewport makes PageShell this page's own scroll container (md+): it fills
+    // the space below the header, has overflow-x-hidden and a stable scrollbar gutter.
     // The flipping pages and the half-empty box of a closed book can poke out past
-    // the page edge. overflow-x-hidden here (not on the stage) keeps that from ever
+    // the page edge. overflow-x-hidden there (not on the stage) keeps that from ever
     // producing a horizontal scrollbar without clipping anything near the book.
     // Vertically, the stage clips (see below) so flip shadows can't toggle the
     // scrollbar, and the stable gutter means a real scrollbar can't resize the layout.
-    <div className="flex w-full flex-col overflow-x-hidden md:h-svh md:overflow-y-auto md:[scrollbar-gutter:stable]">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8">
-        <PageHeader title="Scrapbook" subtitle="Flip through the moments we've kept." />
-
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
-          {/*
-            The book slides a quarter of its width to either side when a cover is
-            closed, so the stage is 1.5x the book's width: the book takes the middle
-            two thirds and a quarter-book of room is left on each side for the
-            sliding half. The max-width is the old one (a full spread fits the
-            viewport height) scaled by 1.5 so the book itself keeps the same size:
-            1.5 * (cap - 2 * pad) + 2 * pad = 1.5 * cap - pad.
-          */}
+    <PageShell
+      fitViewport
+      title="Scrapbook"
+      subtitle="Flip through the moments we've kept."
+    >
+      <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        {/*
+          The book slides a quarter of its width to either side when a cover is
+          closed, so the stage is 1.5x the book's width: the book takes the middle
+          two thirds and a quarter-book of room is left on each side for the
+          sliding half. The max-width is the old one (a full spread fits the
+          viewport height) scaled by 1.5 so the book itself keeps the same size:
+          1.5 * (cap - 2 * pad) + 2 * pad = 1.5 * cap - pad.
+        */}
+        <div
+          ref={stageRef}
+          role="group"
+          aria-label="Scrapbook pages"
+          className="relative w-full max-w-[calc(1.5*(100svh_-_var(--header-height)_-_10rem)*1.48_-_var(--stage-pad))] overflow-y-clip rounded-xl bg-accent/60 p-[var(--stage-pad)] [--stage-pad:0.75rem] sm:[--stage-pad:1.25rem] md:[--stage-pad:1.75rem] lg:[--stage-pad:2.25rem]"
+          onPointerDownCapture={handlePointerDown}
+          onPointerUpCapture={handlePointerUp}
+        >
+          {/* Two thirds of the stage = the book box, so the percentage shift is relative to the book. */}
           <div
-            ref={stageRef}
-            role="group"
-            aria-label="Scrapbook pages"
-            className="relative w-full max-w-[calc(1.5*(100svh_-_10rem)*1.48_-_var(--stage-pad))] overflow-y-clip rounded-xl bg-accent/60 p-[var(--stage-pad)] [--stage-pad:0.75rem] sm:[--stage-pad:1.25rem] md:[--stage-pad:1.75rem] lg:[--stage-pad:2.25rem]"
-            onPointerDownCapture={handlePointerDown}
-            onPointerUpCapture={handlePointerUp}
+            ref={shiftRef}
+            className="mx-auto w-2/3 transition-transform ease-in-out motion-reduce:transition-none"
+            style={{
+              maxWidth: BOOK_MAX_WIDTH,
+              transform: `translateX(${shift}%)`,
+              transitionDuration: `${FLIPBOOK_PROPS.flippingTime}ms`,
+            }}
           >
-            {/* Two thirds of the stage = the book box, so the percentage shift is relative to the book. */}
-            <div
-              ref={shiftRef}
-              className="mx-auto w-2/3 transition-transform ease-in-out motion-reduce:transition-none"
-              style={{
-                maxWidth: BOOK_MAX_WIDTH,
-                transform: `translateX(${shift}%)`,
-                transitionDuration: `${FLIPBOOK_PROPS.flippingTime}ms`,
-              }}
+            <HTMLFlipBook
+              ref={bookRef}
+              {...FLIPBOOK_PROPS}
+              onFlip={handleFlip}
+              onChangeState={handleChangeState}
+              onInit={syncOrientation}
+              onChangeOrientation={syncOrientation}
             >
-              <HTMLFlipBook
-                ref={bookRef}
-                {...FLIPBOOK_PROPS}
-                onFlip={handleFlip}
-                onChangeState={handleChangeState}
-                onInit={syncOrientation}
-                onChangeOrientation={syncOrientation}
-              >
-                {SHEETS}
-              </HTMLFlipBook>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              size="lg"
-              className="h-11 rounded-full px-5"
-              disabled={atStart}
-              onClick={() => flip(-1)}
-            >
-              <ChevronLeftIcon />
-              Previous
-            </Button>
-            <Button
-              size="lg"
-              className="h-11 rounded-full px-5"
-              disabled={atEnd}
-              onClick={() => flip(1)}
-            >
-              Next
-              <ChevronRightIcon />
-            </Button>
+              {SHEETS}
+            </HTMLFlipBook>
           </div>
         </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            size="lg"
+            className="h-11 rounded-full px-5"
+            disabled={atStart}
+            onClick={() => flip(-1)}
+          >
+            <ChevronLeftIcon />
+            Previous
+          </Button>
+          <Button
+            size="lg"
+            className="h-11 rounded-full px-5"
+            disabled={atEnd}
+            onClick={() => flip(1)}
+          >
+            Next
+            <ChevronRightIcon />
+          </Button>
+        </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

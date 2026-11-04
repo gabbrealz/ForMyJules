@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 
-import PageHeader from "#components/page-header"
+import { PageShell } from "#layouts/page-shell"
 import {
   DEFAULT_ENTRIES,
   EntriesCard,
@@ -47,9 +47,10 @@ export default function SpinTheWheel() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col p-4 md:p-8">
-      <PageHeader title="Spin the Wheel" subtitle="Add your entries, give the wheel a spin, and let fate decide." />
-
+    <PageShell
+      title="Spin the Wheel"
+      subtitle="Add your entries, give the wheel a spin, and let fate decide."
+    >
       <div className="grid items-stretch gap-8 xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]">
         <section
           aria-label="Wheel"
@@ -82,6 +83,6 @@ export default function SpinTheWheel() {
         onOpenChange={setDialogOpen}
         onRemove={handleRemoveWinner}
       />
-    </div>
+    </PageShell>
   )
 }
