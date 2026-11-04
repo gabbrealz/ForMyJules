@@ -1,12 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import type { PointerEvent } from "react"
+import type { CSSProperties, PointerEvent } from "react"
 import HTMLFlipBook from "react-pageflip"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { cn } from "cn"
 
 import { usePageTitle } from "#hooks/use-page-title"
+import { useIsMobile } from "#hooks/use-mobile"
 
 import { PageShell } from "#layouts/page-shell"
-import { PageContent, Sheet, PAGES } from "#features/scrapbook"
+import {
+  MOCK_LAST_UPDATED,
+  PageContent,
+  PAGES,
+  ScrapbookToolbar,
+  Sheet,
+} from "#features/scrapbook"
 import { Button } from "#components/ui/button"
 
 type Orientation = "portrait" | "landscape"
@@ -26,16 +34,27 @@ type FlipBookHandle = {
     | undefined
 }
 
-// Pages keep a 400x540 ratio. "stretch" sizes the book to its container, between
-// the min/max limits, and drops to a single page when the container is narrow.
+// Pages keep a 400x540 ratio.
+const PAGE_WIDTH = 400
+const PAGE_HEIGHT = 540
+// In the normal view a page is never wider than this.
+const NORMAL_MAX_PAGE_WIDTH = 520
+// Full screen has no such cap. react-pageflip reads its size limits once, when
+// it mounts, so they can't change when full screen is toggled. Its ceilings are
+// therefore set high enough for full screen, and the normal view's cap is
+// applied in CSS instead (BOOK_MAX_WIDTH, on the element around the book).
+const MAX_PAGE_WIDTH = 1600
+
+// "stretch" sizes the book to its container, between the min/max limits, and
+// drops to a single page when the container is narrow.
 const FLIPBOOK_PROPS = {
-  width: 400,
-  height: 540,
+  width: PAGE_WIDTH,
+  height: PAGE_HEIGHT,
   size: "stretch" as const,
   minWidth: 260,
-  maxWidth: 520,
+  maxWidth: MAX_PAGE_WIDTH,
   minHeight: 351,
-  maxHeight: 702,
+  maxHeight: Math.round((MAX_PAGE_WIDTH * PAGE_HEIGHT) / PAGE_WIDTH),
   showCover: true,
   usePortrait: true,
   drawShadow: true,
@@ -54,8 +73,29 @@ const FLIPBOOK_PROPS = {
   style: {},
 }
 
-// A spread is two pages wide, so this is the widest the book box can get.
-const BOOK_MAX_WIDTH = FLIPBOOK_PROPS.maxWidth * 2
+// A spread is two pages wide, so this is the widest the book box gets in the normal view.
+const BOOK_MAX_WIDTH = NORMAL_MAX_PAGE_WIDTH * 2
+
+/*
+  How wide the stage (the notebook wrapper) may get, so the book fits the
+  viewport height. A spread is 800x540, so book height = book width / 1.48. The
+  stage is 1.5x the book plus its padding (see below), hence the 1.5 and the
+  padding terms.
+
+  Both formulas subtract whatever else shares the column with the book:
+    - the page's own padding: 4rem (md:p-8 top and bottom)
+    - the toolbar row and its gap: 3rem
+    - the Previous / Next row and its gap: 4.25rem
+  Normal view also has the page header (title + subtitle), which this has
+  always only roughly budgeted for, so it keeps the old 10rem + the 3rem for the
+  toolbar. Full screen on desktop has no page header, so it can be exact: the
+  stage's whole height (book + padding) is what's left, with 0.25rem of slack
+  so rounding can't make the page scroll by a pixel.
+*/
+const NORMAL_MAX_STAGE_WIDTH =
+  "max-w-[calc(1.5*(100svh_-_var(--header-height)_-_13rem)*1.48_-_var(--stage-pad))]"
+const FULL_SCREEN_MAX_STAGE_WIDTH =
+  "max-w-[calc(1.5*(100svh_-_var(--header-height)_-_11.5rem_-_2*var(--stage-pad))*1.48_+_2*var(--stage-pad))]"
 
 const LAST_PAGE = PAGES.length - 1
 
@@ -90,6 +130,14 @@ const SHEETS = PAGES.map((page, index) => (
 
 export default function Scrapbook() {
   usePageTitle("Scrapbook")
+
+  const isMobile = useIsMobile()
+  const [isFullScreen, setIsFullScreen] = useState(false)
+  // Full screen means two different things:
+  // - mobile: the book fills the stage (no stage padding, no room reserved for sliding).
+  // - desktop: the page header goes away and the stage grows to the height that's left.
+  const fullScreenMobile = isFullScreen && isMobile
+  const fullScreenDesktop = isFullScreen && !isMobile
 
   const bookRef = useRef<FlipBookHandle>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -161,8 +209,8 @@ export default function Scrapbook() {
   }
 
   // react-pageflip only measures itself on window resize, but the sidebar in
-  // Layout can be dragged, which changes the available width without one.
-  // Nudge the book whenever the stage width changes.
+  // Layout can be dragged or collapsed, which changes the available width
+  // without one. Nudge the book whenever the stage width changes.
   useEffect(() => {
     const stage = stageRef.current
     if (!stage) return
@@ -179,6 +227,23 @@ export default function Scrapbook() {
     return () => observer.disconnect()
   }, [])
 
+  // Toggling full screen resizes the book (and crossing the mobile breakpoint
+  // can too). The observer above usually catches that, but not when the stage's
+  // width happens to stay the same, so nudge the book explicitly as well.
+  useEffect(() => {
+    window.dispatchEvent(new Event("resize"))
+  }, [isFullScreen, isMobile])
+
+  // Escape leaves full screen.
+  useEffect(() => {
+    if (!isFullScreen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsFullScreen(false)
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [isFullScreen])
+
   // A single page (portrait) is already centered, so only spreads get shifted.
   const shift = orientation === "landscape" ? STANCE_SHIFT[stance] : 0
 
@@ -190,48 +255,81 @@ export default function Scrapbook() {
     // producing a horizontal scrollbar without clipping anything near the book.
     // Vertically, the stage clips (see below) so flip shadows can't toggle the
     // scrollbar, and the stable gutter means a real scrollbar can't resize the layout.
+    //
+    // Desktop full screen drops the title (so no page header) and the container's
+    // max width, so the stage can use all the room the sidebar leaves.
     <PageShell
       fitViewport
-      title="Scrapbook"
+      title={fullScreenDesktop ? undefined : "Scrapbook"}
       subtitle="Flip through the moments we've kept."
+      className={fullScreenDesktop ? "max-w-none" : undefined}
     >
       <div className="flex flex-1 flex-col items-center justify-center gap-6">
         {/*
+          The toolbar and the stage share this column, so the toolbar lines up
+          with the stage's left and right edges. The column carries the stage's
+          max width and padding variable.
+
           The book slides a quarter of its width to either side when a cover is
           closed, so the stage is 1.5x the book's width: the book takes the middle
           two thirds and a quarter-book of room is left on each side for the
-          sliding half. The max-width is the old one (a full spread fits the
-          viewport height) scaled by 1.5 so the book itself keeps the same size:
-          1.5 * (cap - 2 * pad) + 2 * pad = 1.5 * cap - pad.
+          sliding half.
         */}
         <div
-          ref={stageRef}
-          role="group"
-          aria-label="Scrapbook pages"
-          className="relative w-full max-w-[calc(1.5*(100svh_-_var(--header-height)_-_10rem)*1.48_-_var(--stage-pad))] overflow-y-clip rounded-xl bg-accent/60 p-[var(--stage-pad)] [--stage-pad:0.75rem] sm:[--stage-pad:1.25rem] md:[--stage-pad:1.75rem] lg:[--stage-pad:2.25rem]"
-          onPointerDownCapture={handlePointerDown}
-          onPointerUpCapture={handlePointerUp}
+          className={cn(
+            "mx-auto flex w-full flex-col gap-3 [--stage-pad:0.75rem] sm:[--stage-pad:1.25rem] md:[--stage-pad:1.75rem] lg:[--stage-pad:2.25rem]",
+            fullScreenMobile
+              ? "max-w-none"
+              : fullScreenDesktop
+                ? FULL_SCREEN_MAX_STAGE_WIDTH
+                : NORMAL_MAX_STAGE_WIDTH,
+          )}
+          // Mobile full screen: no padding, so the book fills the stage edge to edge.
+          style={
+            fullScreenMobile
+              ? ({ "--stage-pad": "0px" } as CSSProperties)
+              : undefined
+          }
         >
-          {/* Two thirds of the stage = the book box, so the percentage shift is relative to the book. */}
+          <ScrapbookToolbar
+            lastUpdated={MOCK_LAST_UPDATED}
+            isFullScreen={isFullScreen}
+            onToggleFullScreen={() => setIsFullScreen((on) => !on)}
+          />
+
           <div
-            ref={shiftRef}
-            className="mx-auto w-2/3 transition-transform ease-in-out motion-reduce:transition-none"
-            style={{
-              maxWidth: BOOK_MAX_WIDTH,
-              transform: `translateX(${shift}%)`,
-              transitionDuration: `${FLIPBOOK_PROPS.flippingTime}ms`,
-            }}
+            ref={stageRef}
+            role="group"
+            aria-label="Scrapbook pages"
+            className="relative w-full overflow-y-clip rounded-xl bg-accent/60 p-[var(--stage-pad)]"
+            onPointerDownCapture={handlePointerDown}
+            onPointerUpCapture={handlePointerUp}
           >
-            <HTMLFlipBook
-              ref={bookRef}
-              {...FLIPBOOK_PROPS}
-              onFlip={handleFlip}
-              onChangeState={handleChangeState}
-              onInit={syncOrientation}
-              onChangeOrientation={syncOrientation}
+            {/* Two thirds of the stage = the book box, so the percentage shift is relative to the book.
+                Mobile full screen uses the whole stage; the book is a single page there. */}
+            <div
+              ref={shiftRef}
+              className={cn(
+                "mx-auto transition-transform ease-in-out motion-reduce:transition-none",
+                fullScreenMobile ? "w-full" : "w-2/3",
+              )}
+              style={{
+                maxWidth: isFullScreen ? undefined : BOOK_MAX_WIDTH,
+                transform: `translateX(${shift}%)`,
+                transitionDuration: `${FLIPBOOK_PROPS.flippingTime}ms`,
+              }}
             >
-              {SHEETS}
-            </HTMLFlipBook>
+              <HTMLFlipBook
+                ref={bookRef}
+                {...FLIPBOOK_PROPS}
+                onFlip={handleFlip}
+                onChangeState={handleChangeState}
+                onInit={syncOrientation}
+                onChangeOrientation={syncOrientation}
+              >
+                {SHEETS}
+              </HTMLFlipBook>
+            </div>
           </div>
         </div>
 

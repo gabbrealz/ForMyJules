@@ -9,3 +9,7 @@ export const PAGES: PageDef[] = [
   ...Array.from({ length: INNER_PAGE_COUNT }, (): PageDef => ({ kind: "blank" })),
   { kind: "back" },
 ]
+
+// Mock until the scrapbook is saved to the server. Noon UTC, so it reads as
+// the same calendar day in every timezone from UTC-12 to UTC+11.
+export const MOCK_LAST_UPDATED = new Date("2026-10-28T12:00:00Z")
