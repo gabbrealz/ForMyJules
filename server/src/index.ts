@@ -8,6 +8,7 @@ import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
 import photosRouter from './routes/photos';
 import uploadsRouter from './routes/sign-upload';
+import { attachWebSocketServer } from './sockets';
 
 async function main() {
   await mongoose.connect(config.mongoUri);
@@ -27,19 +28,19 @@ async function main() {
 
   // Sessions are stored in MongoDB (the default MemoryStore leaks memory and loses
   // every session on each restart/deploy).
-  app.use(
-    session({
-      name: SESSION_COOKIE_NAME,
-      secret: config.sessionSecret,
-      resave: false,
-      saveUninitialized: false, // no cookie is issued until we actually put something in the session
-      store: MongoStore.create({
-        mongoUrl: config.mongoUri,
-        ttl: config.sessionMaxAgeMs / 1000,
-      }),
-      cookie: { ...cookieOptions, maxAge: config.sessionMaxAgeMs },
+  // Kept in a variable so the WebSocket upgrade can run the exact same middleware.
+  const sessionParser = session({
+    name: SESSION_COOKIE_NAME,
+    secret: config.sessionSecret,
+    resave: false,
+    saveUninitialized: false, // no cookie is issued until we actually put something in the session
+    store: MongoStore.create({
+      mongoUrl: config.mongoUri,
+      ttl: config.sessionMaxAgeMs / 1000,
     }),
-  );
+    cookie: { ...cookieOptions, maxAge: config.sessionMaxAgeMs },
+  });
+  app.use(sessionParser);
 
   app.use('/api/auth', authRouter);
   app.use('/api/admin', adminRouter);
@@ -63,8 +64,18 @@ async function main() {
   });
 
   // Start Server
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(`Server is running at http://localhost:${config.port}`);
+  });
+
+  // WebSockets share the HTTP server (and its port) and the session middleware above.
+  const sockets = attachWebSocketServer(server, sessionParser);
+
+  // Render sends SIGTERM on deploy: close sockets with 1001 so clients reconnect immediately.
+  process.once('SIGTERM', () => {
+    sockets.close();
+    server.close(() => process.exit(0));
+    server.closeIdleConnections(); // otherwise idle keep-alive connections delay the exit
   });
 }
 
