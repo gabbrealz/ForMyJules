@@ -1,7 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 import type { CSSProperties, PointerEvent } from "react"
 import HTMLFlipBook from "react-pageflip"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import { cn } from "cn"
 
 import { usePageTitle } from "#hooks/use-page-title"
@@ -15,7 +20,6 @@ import {
   ScrapbookToolbar,
   Sheet,
 } from "#features/scrapbook"
-import { Button } from "#components/ui/button"
 
 type Orientation = "portrait" | "landscape"
 // Where the book rests: closed on the front cover, open on a spread, or closed on the back cover.
@@ -77,25 +81,32 @@ const FLIPBOOK_PROPS = {
 const BOOK_MAX_WIDTH = NORMAL_MAX_PAGE_WIDTH * 2
 
 /*
-  How wide the stage (the notebook wrapper) may get, so the book fits the
-  viewport height. A spread is 800x540, so book height = book width / 1.48. The
-  stage is 1.5x the book plus its padding (see below), hence the 1.5 and the
-  padding terms.
-
-  Both formulas subtract whatever else shares the column with the book:
-    - the page's own padding: 4rem (md:p-8 top and bottom)
-    - the toolbar row and its gap: 3rem
-    - the Previous / Next row and its gap: 4.25rem
-  Normal view also has the page header (title + subtitle), which this has
-  always only roughly budgeted for, so it keeps the old 10rem + the 3rem for the
-  toolbar. Full screen on desktop has no page header, so it can be exact: the
-  stage's whole height (book + padding) is what's left, with 0.25rem of slack
-  so rounding can't make the page scroll by a pixel.
+  Normal view: how wide the stage (the notebook wrapper) may get so the book fits
+  the viewport height. A spread is 800x540, so book height = book width / 1.48.
+  The stage is 1.5x the book plus its padding (a quarter-book of room on each
+  side for the closed book to slide into), hence the 1.5 and the padding terms.
+  It subtracts what else shares the page with the book: the page header (only
+  roughly budgeted, as always), the page padding, and the toolbar row with its
+  gap (3rem). The Previous / Next buttons live in that toolbar row, so they no
+  longer take a row of their own (the budget was 10rem when they did).
 */
 const NORMAL_MAX_STAGE_WIDTH =
-  "max-w-[calc(1.5*(100svh_-_var(--header-height)_-_13rem)*1.48_-_var(--stage-pad))]"
-const FULL_SCREEN_MAX_STAGE_WIDTH =
-  "max-w-[calc(1.5*(100svh_-_var(--header-height)_-_11.5rem_-_2*var(--stage-pad))*1.48_+_2*var(--stage-pad))]"
+  "max-w-[calc(1.5*(100svh_-_var(--header-height)_-_8.75rem)*1.48_-_var(--stage-pad))]"
+
+/*
+  Desktop full screen is measured, not budgeted. The page (PageShell `fill`)
+  is split by flex into: toolbar, stage (takes whatever is left). The stage's inner box is then measured, and the book is made as
+  large as fits it: as wide as the stage, or as wide as the stage's height
+  allows (a spread is 800x540, so width = height x 1.48), whichever is smaller.
+  The normal view's formula can't be reused: it is already fitted to the
+  viewport height, so it would land on the same size.
+*/
+const SPREAD_RATIO = (2 * PAGE_WIDTH) / PAGE_HEIGHT
+// Tighter than the normal view's 0.75 to 2.25rem, to give the book the room.
+const FULL_SCREEN_DESKTOP_STYLE = { "--stage-pad": "1.25rem" } as CSSProperties
+
+// Mobile full screen: no stage padding, so the book fills the stage edge to edge.
+const FULL_SCREEN_MOBILE_STYLE = { "--stage-pad": "0px" } as CSSProperties
 
 const LAST_PAGE = PAGES.length - 1
 
@@ -148,6 +159,8 @@ export default function Scrapbook() {
   const intentRef = useRef<Direction>(1)
   const pointerStartXRef = useRef<number | null>(null)
 
+  // Desktop full screen only: the width the book box gets (px), from the measured stage.
+  const [fitWidth, setFitWidth] = useState<number | null>(null)
   const [pageIndex, setPageIndex] = useState(0)
   const [stance, setStance] = useState<Stance>("front")
   const [orientation, setOrientation] = useState<Orientation>("landscape")
@@ -227,12 +240,38 @@ export default function Scrapbook() {
     return () => observer.disconnect()
   }, [])
 
+  // Desktop full screen: size the book to the room the stage actually has.
+  // Layout effect, so the book is never painted at the wrong size. The stage's
+  // height comes from flex (it takes what the toolbar and the Previous / Next
+  // row leave), never from the book, so this can't feed back on itself.
+  useLayoutEffect(() => {
+    if (!fullScreenDesktop) return
+    const stage = stageRef.current
+    if (!stage) return
+    const measure = () => {
+      const style = getComputedStyle(stage)
+      const width =
+        stage.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight)
+      const height =
+        stage.clientHeight -
+        parseFloat(style.paddingTop) -
+        parseFloat(style.paddingBottom)
+      setFitWidth(Math.floor(Math.min(width, height * SPREAD_RATIO)))
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(stage)
+    return () => observer.disconnect()
+  }, [fullScreenDesktop])
+
   // Toggling full screen resizes the book (and crossing the mobile breakpoint
   // can too). The observer above usually catches that, but not when the stage's
   // width happens to stay the same, so nudge the book explicitly as well.
   useEffect(() => {
     window.dispatchEvent(new Event("resize"))
-  }, [isFullScreen, isMobile])
+  }, [isFullScreen, isMobile, fitWidth])
 
   // Escape leaves full screen.
   useEffect(() => {
@@ -256,19 +295,26 @@ export default function Scrapbook() {
     // Vertically, the stage clips (see below) so flip shadows can't toggle the
     // scrollbar, and the stable gutter means a real scrollbar can't resize the layout.
     //
-    // Desktop full screen drops the title (so no page header) and the container's
-    // max width, so the stage can use all the room the sidebar leaves.
+    // Desktop full screen drops the title (so no page header) and uses PageShell's
+    // `fill` mode (no max width, tighter padding, content exactly as tall as the
+    // shell), so the stage can use all the room the sidebar leaves.
     <PageShell
       fitViewport
       title={fullScreenDesktop ? undefined : "Scrapbook"}
       subtitle="Flip through the moments we've kept."
-      className={fullScreenDesktop ? "max-w-none" : undefined}
+      fill={fullScreenDesktop}
     >
-      <div className="flex flex-1 flex-col items-center justify-center gap-6">
+      <div
+        className={cn(
+          "flex flex-1 flex-col items-center",
+          fullScreenDesktop ? "min-h-0" : "justify-center",
+        )}
+      >
         {/*
           The toolbar and the stage share this column, so the toolbar lines up
           with the stage's left and right edges. The column carries the stage's
-          max width and padding variable.
+          max width and padding variable (the stage can't, as the column's own
+          width is what has to be capped).
 
           The book slides a quarter of its width to either side when a cover is
           closed, so the stage is 1.5x the book's width: the book takes the middle
@@ -278,42 +324,55 @@ export default function Scrapbook() {
         <div
           className={cn(
             "mx-auto flex w-full flex-col gap-3 [--stage-pad:0.75rem] sm:[--stage-pad:1.25rem] md:[--stage-pad:1.75rem] lg:[--stage-pad:2.25rem]",
-            fullScreenMobile
-              ? "max-w-none"
-              : fullScreenDesktop
-                ? FULL_SCREEN_MAX_STAGE_WIDTH
-                : NORMAL_MAX_STAGE_WIDTH,
+            isFullScreen && "max-w-none",
+            fullScreenDesktop && "min-h-0 flex-1",
+            !isFullScreen && NORMAL_MAX_STAGE_WIDTH,
           )}
-          // Mobile full screen: no padding, so the book fills the stage edge to edge.
           style={
             fullScreenMobile
-              ? ({ "--stage-pad": "0px" } as CSSProperties)
-              : undefined
+              ? FULL_SCREEN_MOBILE_STYLE
+              : fullScreenDesktop
+                ? FULL_SCREEN_DESKTOP_STYLE
+                : undefined
           }
         >
           <ScrapbookToolbar
             lastUpdated={MOCK_LAST_UPDATED}
             isFullScreen={isFullScreen}
             onToggleFullScreen={() => setIsFullScreen((on) => !on)}
+            canGoPrevious={!atStart}
+            canGoNext={!atEnd}
+            onPrevious={() => flip(-1)}
+            onNext={() => flip(1)}
           />
 
           <div
             ref={stageRef}
             role="group"
             aria-label="Scrapbook pages"
-            className="relative w-full overflow-y-clip rounded-xl bg-accent/60 p-[var(--stage-pad)]"
+            className={cn(
+              "relative w-full overflow-y-clip rounded-xl bg-accent/60 p-[var(--stage-pad)]",
+              // Desktop full screen: the stage takes the height that's left and
+              // centers the book in it (the book's size is set by fitWidth).
+              fullScreenDesktop && "flex min-h-0 flex-1 items-center justify-center",
+            )}
             onPointerDownCapture={handlePointerDown}
             onPointerUpCapture={handlePointerUp}
           >
-            {/* Two thirds of the stage = the book box, so the percentage shift is relative to the book.
-                Mobile full screen uses the whole stage; the book is a single page there. */}
+            {/* Normally two thirds of the stage = the book box, so the percentage shift is relative to the book.
+                Mobile full screen uses the whole stage; desktop full screen sets the width from the measurement. */}
             <div
               ref={shiftRef}
               className={cn(
-                "mx-auto transition-transform ease-in-out motion-reduce:transition-none",
-                fullScreenMobile ? "w-full" : "w-2/3",
+                "transition-transform ease-in-out motion-reduce:transition-none",
+                fullScreenDesktop
+                  ? "shrink-0"
+                  : isFullScreen
+                    ? "mx-auto w-full"
+                    : "mx-auto w-2/3",
               )}
               style={{
+                width: fullScreenDesktop ? (fitWidth ?? "100%") : undefined,
                 maxWidth: isFullScreen ? undefined : BOOK_MAX_WIDTH,
                 transform: `translateX(${shift}%)`,
                 transitionDuration: `${FLIPBOOK_PROPS.flippingTime}ms`,
@@ -331,27 +390,6 @@ export default function Scrapbook() {
               </HTMLFlipBook>
             </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            size="lg"
-            className="h-11 rounded-full px-5"
-            disabled={atStart}
-            onClick={() => flip(-1)}
-          >
-            <ChevronLeftIcon />
-            Previous
-          </Button>
-          <Button
-            size="lg"
-            className="h-11 rounded-full px-5"
-            disabled={atEnd}
-            onClick={() => flip(1)}
-          >
-            Next
-            <ChevronRightIcon />
-          </Button>
         </div>
       </div>
     </PageShell>

@@ -16,6 +16,13 @@ type PageShellProps = {
    * scrollbar appearing can't resize the page's contents.
    */
   fitViewport?: boolean
+  /**
+   * With fitViewport, for a page that wants the whole space (the scrapbook's
+   * full screen): no max width, tighter padding, and the content box is exactly
+   * as tall as the shell, so children can fill it with flex-1 min-h-0 and be
+   * measured instead of guessed at.
+   */
+  fill?: boolean
   /** Extra classes for the content container, e.g. "max-w-4xl" to narrow it. */
   className?: string
   children?: ReactNode
@@ -30,6 +37,7 @@ export function PageShell({
   subtitle,
   badge,
   fitViewport = false,
+  fill = false,
   className,
   children,
 }: PageShellProps) {
@@ -43,7 +51,8 @@ export function PageShell({
     >
       <div
         className={cn(
-          "mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8",
+          "mx-auto flex w-full flex-1 flex-col",
+          fill ? "min-h-0 max-w-none p-4" : "max-w-6xl p-4 md:p-8",
           className,
         )}
       >
