@@ -12,6 +12,7 @@ import {
   sortEntries,
 } from "#features/spin-the-wheel"
 import type { SpinRecord, SpinResult } from "#features/spin-the-wheel"
+import { ANCHORS, LiveCursors, anchorProps } from "#features/live-cursor"
 import { usePageTitle } from "#hooks/use-page-title"
 
 export default function SpinTheWheel() {
@@ -56,15 +57,22 @@ export default function SpinTheWheel() {
           aria-label="Wheel"
           className="flex flex-col items-center justify-center gap-5 pr-2 sm:pr-3"
         >
-          <Wheel
-            entries={entries}
-            paused={dialogOpen}
-            onSpinStart={() => setSpinning(true)}
-            onSpinEnd={handleSpinEnd}
-          />
+          {/* Same box as the wheel, so a cursor over a slice lands on the same slice on any screen. */}
+          <div
+            className="w-full max-w-[620px]"
+            {...anchorProps(ANCHORS.spinWheel)}
+          >
+            <Wheel
+              entries={entries}
+              paused={dialogOpen}
+              onSpinStart={() => setSpinning(true)}
+              onSpinEnd={handleSpinEnd}
+            />
+          </div>
         </section>
         <div className="flex justify-center">
           <EntriesCard
+            {...anchorProps(ANCHORS.spinEntries)}
             text={text}
             onTextChange={setText}
             entryCount={entries.length}
@@ -83,6 +91,8 @@ export default function SpinTheWheel() {
         onOpenChange={setDialogOpen}
         onRemove={handleRemoveWinner}
       />
+
+      <LiveCursors />
     </PageShell>
   )
 }
