@@ -1,11 +1,11 @@
 import type { CameraFilter, Experience, PhotoLayout } from "./types"
 
 export const LAYOUTS: PhotoLayout[] = [
-  { id: "single", name: "Single", shots: 1 },
-  { id: "duo", name: "Duo", shots: 2 },
-  { id: "strip", name: "Strip", shots: 3 },
-  { id: "classic-strip", name: "Classic strip", shots: 4 },
-  { id: "grid", name: "Grid", shots: 4 },
+  { id: "single", name: "Single", shots: 1, columns: 1 },
+  { id: "duo", name: "Duo", shots: 2, columns: 1 },
+  { id: "strip", name: "Strip", shots: 3, columns: 1 },
+  { id: "classic-strip", name: "Classic strip", shots: 4, columns: 1 },
+  { id: "grid", name: "Grid", shots: 4, columns: 2 },
 ]
 
 export const FILTERS: CameraFilter[] = [
@@ -44,3 +44,18 @@ export const PHOTO_ASPECT = 4 / 3
 export function getFilter(id: string): CameraFilter {
   return FILTERS.find((filter) => filter.id === id) ?? FILTERS[0]
 }
+
+/** Lowercase hex, so they compare cleanly with <input type="color"> values. */
+export const FRAME_COLORS = [
+  { name: "White", value: "#ffffff" },
+  { name: "Cream", value: "#fdf6e3" },
+  { name: "Black", value: "#18181b" },
+  { name: "Rose", value: "#fbcfe8" },
+  { name: "Peach", value: "#fed7aa" },
+  { name: "Butter", value: "#fef08a" },
+  { name: "Mint", value: "#bbf7d0" },
+  { name: "Sky", value: "#bae6fd" },
+  { name: "Lavender", value: "#ddd6fe" },
+]
+
+export const DEFAULT_FRAME_COLOR = "#ffffff"

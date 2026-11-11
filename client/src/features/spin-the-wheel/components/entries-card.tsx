@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react"
 import { Badge } from "#components/ui/badge"
 import { Card, CardContent, CardHeader } from "#components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#components/ui/tabs"
@@ -5,7 +6,9 @@ import type { SpinRecord } from "../types"
 import { EntriesTab } from "./entries-tab"
 import { ResultsTab } from "./results-tab"
 
-interface EntriesCardProps {
+// Extra props (e.g. data attributes) are passed through to the card element.
+interface EntriesCardProps
+  extends Omit<ComponentProps<typeof Card>, "children" | "className"> {
   /** One entry per line; each line is edited in its own input. */
   text: string
   onTextChange: (text: string) => void
@@ -27,9 +30,13 @@ export function EntriesCard({
   results,
   onClearResults,
   disabled = false,
+  ...cardProps
 }: EntriesCardProps) {
   return (
-    <Card className="flex size-full min-h-[30rem] max-w-[36rem] flex-col">
+    <Card
+      {...cardProps}
+      className="flex size-full min-h-[30rem] max-w-[36rem] flex-col"
+    >
       <Tabs defaultValue="entries" className="flex min-h-0 flex-1 flex-col gap-4">
         <CardHeader>
           <TabsList className="w-full">

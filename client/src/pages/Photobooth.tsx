@@ -69,6 +69,13 @@ export default function Photobooth() {
   )
   const handleReset = useCallback(() => setPhotos([]), [])
 
+  // After saving a frame: drop the photos and go back to the start. The
+  // layout and experience are kept, so the next round is quick to set up.
+  const handleStartOver = useCallback(() => {
+    setPhotos([])
+    setStep(1)
+  }, [])
+
   // Later steps unlock as their prerequisites are met.
   const isComplete = layout !== null && photos.length >= layout.shots
   const isLocked = (target: number) =>
@@ -143,7 +150,14 @@ export default function Photobooth() {
             </StepperContent>
 
             <StepperContent value={4}>
-              <PickFrameStep />
+              {layout && (
+                <PickFrameStep
+                  layout={layout}
+                  photos={photos}
+                  onBack={back}
+                  onStartOver={handleStartOver}
+                />
+              )}
             </StepperContent>
           </StepperPanel>
         </Stepper>

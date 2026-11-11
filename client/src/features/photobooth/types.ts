@@ -3,6 +3,8 @@ export type PhotoLayout = {
   name: string
   /** How many photos this layout needs. */
   shots: number
+  /** Columns the photos are arranged in; rows follow from `shots`. */
+  columns: number
 }
 
 export type CameraFilter = {
