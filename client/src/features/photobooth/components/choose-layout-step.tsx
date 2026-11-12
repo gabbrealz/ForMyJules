@@ -10,6 +10,7 @@ import {
 
 import { LAYOUTS } from "../constants"
 import type { PhotoLayout } from "../types"
+import { FramePreview } from "./frame-preview"
 import { StepActions } from "./step-actions"
 
 type ChooseLayoutStepProps = {
@@ -43,8 +44,9 @@ export function ChooseLayoutStep({
                 variant={selected ? "default" : "outline"}
                 aria-pressed={selected}
                 onClick={() => onSelect(layout)}
-                className="h-auto flex-col gap-1 py-4"
+                className="h-auto flex-col gap-2 py-4"
               >
+                <FramePreview layout={layout} />
                 <span className="font-heading text-base font-bold">
                   {layout.name}
                 </span>
