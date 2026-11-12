@@ -1,14 +1,53 @@
 import { PHOTO_ASPECT } from "./constants"
 import type { PhotoLayout } from "./types"
 
-// All sizes are in canvas pixels. A 4-shot strip comes out ~1950px tall, which
-// stays under the 2048px edge that uploadPhoto downscales to, so the saved
-// image keeps the resolution drawn here.
-const CELL_WIDTH = 600
+// All sizes are canvas pixels. The tallest frame (4 rows) comes out ~1970px,
+// just under the 2048px edge uploadPhoto downscales to, so the saved image keeps
+// the resolution drawn here.
+const CELL_WIDTH = 560
 const CELL_HEIGHT = CELL_WIDTH / PHOTO_ASPECT
-const PADDING = 40
 const GAP = 24
-const CORNER_RADIUS = 12
+const PADDING_X = 48
+const PADDING_TOP = 40
+// Extra empty space under the photos, like the border of a printed photo strip.
+const PADDING_BOTTOM = 160
+
+export type FrameCell = {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export type FrameMetrics = {
+  width: number
+  height: number
+  /** One rect per photo, in layout order. */
+  cells: FrameCell[]
+}
+
+/**
+ * The frame's size and where each photo goes. Shared by the canvas renderer and
+ * the layout previews so they always show the same design.
+ */
+export function getFrameMetrics(layout: PhotoLayout): FrameMetrics {
+  const { columns, shots } = layout
+  const rows = Math.ceil(shots / columns)
+
+  const cells = Array.from({ length: shots }, (_, index) => ({
+    x: PADDING_X + (index % columns) * (CELL_WIDTH + GAP),
+    y: PADDING_TOP + Math.floor(index / columns) * (CELL_HEIGHT + GAP),
+    width: CELL_WIDTH,
+    height: CELL_HEIGHT,
+  }))
+
+  return {
+    width: PADDING_X * 2 + columns * CELL_WIDTH + (columns - 1) * GAP,
+    height:
+      PADDING_TOP + PADDING_BOTTOM + rows * CELL_HEIGHT + (rows - 1) * GAP,
+    cells,
+  }
+}
 
 /** Decodes the captured data URLs so they can be drawn on a canvas. */
 export function loadPhotos(sources: string[]): Promise<HTMLImageElement[]> {
@@ -23,9 +62,9 @@ export function loadPhotos(sources: string[]): Promise<HTMLImageElement[]> {
 }
 
 /**
- * Draws the frame: a `color` background with the photos laid out in
- * `layout.columns` columns. Resizing the canvas clears it, so every call
- * redraws from scratch.
+ * Draws the frame: a `color` background with the photos placed by
+ * getFrameMetrics, square-cornered. Resizing the canvas clears it, so every
+ * call redraws from scratch.
  */
 export function renderFrame(
   canvas: HTMLCanvasElement,
@@ -33,29 +72,20 @@ export function renderFrame(
   images: HTMLImageElement[],
   color: string,
 ) {
-  const columns = layout.columns
-  const rows = Math.ceil(layout.shots / columns)
-
-  canvas.width = PADDING * 2 + columns * CELL_WIDTH + (columns - 1) * GAP
-  canvas.height = PADDING * 2 + rows * CELL_HEIGHT + (rows - 1) * GAP
+  const { width, height, cells } = getFrameMetrics(layout)
+  canvas.width = width
+  canvas.height = height
 
   const context = canvas.getContext("2d")
   if (!context) return
 
   context.fillStyle = color
-  context.fillRect(0, 0, canvas.width, canvas.height)
+  context.fillRect(0, 0, width, height)
   context.imageSmoothingQuality = "high"
 
-  images.slice(0, layout.shots).forEach((image, index) => {
-    const x = PADDING + (index % columns) * (CELL_WIDTH + GAP)
-    const y = PADDING + Math.floor(index / columns) * (CELL_HEIGHT + GAP)
-
-    context.save()
-    context.beginPath()
-    context.roundRect(x, y, CELL_WIDTH, CELL_HEIGHT, CORNER_RADIUS)
-    context.clip()
-    context.drawImage(image, x, y, CELL_WIDTH, CELL_HEIGHT)
-    context.restore()
+  images.slice(0, cells.length).forEach((image, index) => {
+    const cell = cells[index]
+    context.drawImage(image, cell.x, cell.y, cell.width, cell.height)
   })
 }
 
