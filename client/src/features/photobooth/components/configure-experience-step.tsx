@@ -81,19 +81,21 @@ export function ConfigureExperienceStep({
               <FieldLabel>Time between photos</FieldLabel>
               <Badge variant="secondary">{experience.intervalSeconds}s</Badge>
             </div>
-            <Slider
-              aria-label="Time between photos in seconds"
-              min={MIN_INTERVAL}
-              max={MAX_INTERVAL}
-              step={1}
-              value={[experience.intervalSeconds]}
-              onValueChange={(next) =>
-                onChange({
-                  ...experience,
-                  intervalSeconds: typeof next === "number" ? next : next[0],
-                })
-              }
-            />
+            <div className="rounded-xl border bg-muted/40 px-4 py-3">
+              <Slider
+                aria-label="Time between photos in seconds"
+                min={MIN_INTERVAL}
+                max={MAX_INTERVAL}
+                step={1}
+                value={[experience.intervalSeconds]}
+                onValueChange={(next) =>
+                  onChange({
+                    ...experience,
+                    intervalSeconds: typeof next === "number" ? next : next[0],
+                  })
+                }
+              />
+            </div>
             <FieldDescription>
               A countdown runs for this long before each photo.
             </FieldDescription>
