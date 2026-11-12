@@ -7,8 +7,8 @@ import type { PhotoLayout } from "./types"
 const CELL_WIDTH = 560
 const CELL_HEIGHT = CELL_WIDTH / PHOTO_ASPECT
 const GAP = 24
-const PADDING_X = 48
-const PADDING_TOP = 40
+const PADDING_X = 56
+const PADDING_TOP = 48
 // Extra empty space under the photos, like the border of a printed photo strip.
 const PADDING_BOTTOM = 160
 
