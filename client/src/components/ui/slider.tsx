@@ -17,7 +17,7 @@ function Slider({
 
   return (
     <SliderPrimitive.Root
-      className={cn("data-horizontal:w-full data-vertical:h-full", className)}
+      className={cn("w-full data-vertical:h-full", className)}
       data-slot="slider"
       defaultValue={defaultValue}
       value={value}
@@ -27,13 +27,18 @@ function Slider({
       {...props}
     >
       <SliderPrimitive.Control className="relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-40 data-vertical:w-auto data-vertical:flex-col">
+        {/*
+          The horizontal size is set directly (h-2 w-full) instead of through
+          `data-horizontal:` variants: if Base UI doesn't emit that attribute, the
+          track collapses to zero height and looks transparent.
+        */}
         <SliderPrimitive.Track
           data-slot="slider-track"
-          className="relative grow overflow-hidden rounded-full bg-muted select-none data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1.5"
+          className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-foreground/20 select-none data-vertical:h-full data-vertical:w-2 data-[orientation=vertical]:h-full data-[orientation=vertical]:w-2"
         >
           <SliderPrimitive.Indicator
             data-slot="slider-range"
-            className="bg-primary select-none data-horizontal:h-full data-vertical:w-full"
+            className="h-full bg-primary select-none data-vertical:h-auto data-vertical:w-full data-[orientation=vertical]:h-auto data-[orientation=vertical]:w-full"
           />
         </SliderPrimitive.Track>
         {Array.from({ length: _values.length }, (_, index) => (
