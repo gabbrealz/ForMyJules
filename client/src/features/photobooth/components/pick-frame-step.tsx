@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { cn } from "cn"
-import {
-  ArrowLeftIcon,
-  CheckIcon,
-  RefreshCwIcon,
-  UploadIcon,
-} from "lucide-react"
+import { CheckIcon, RefreshCwIcon, UploadIcon } from "lucide-react"
 
 import { Badge } from "#components/ui/badge"
 import { Button } from "#components/ui/button"
@@ -33,6 +28,7 @@ import { HttpError } from "#services/http-client"
 import { DEFAULT_FRAME_COLOR, FRAME_COLORS } from "../constants"
 import { canvasToFile, loadPhotos, renderFrame } from "../render-frame"
 import type { PhotoLayout } from "../types"
+import { STEP_BUTTON_CLASS, StepActions } from "./step-actions"
 
 type PickFrameStepProps = {
   layout: PhotoLayout
@@ -152,7 +148,7 @@ export function PickFrameStep({
             role="img"
             aria-label="Preview of your framed photos"
             className={cn(
-              "h-auto max-h-[60svh] w-auto max-w-full rounded-md shadow-lg",
+              "h-auto max-h-[60svh] w-auto max-w-full shadow-lg",
               !ready && "hidden",
             )}
           />
@@ -218,37 +214,39 @@ export function PickFrameStep({
               <CheckIcon className="size-4" /> Saved to the gallery
             </p>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onStartOver}>
+              <Button
+                type="button"
+                variant="outline"
+                className={STEP_BUTTON_CLASS}
+                onClick={onStartOver}
+              >
                 <RefreshCwIcon /> Take more photos
               </Button>
-              <Button type="button" onClick={() => navigate("/gallery")}>
+              <Button
+                type="button"
+                className={STEP_BUTTON_CLASS}
+                onClick={() => navigate("/gallery")}
+              >
                 View gallery
               </Button>
             </div>
           </div>
         ) : (
-          <div className="flex w-full items-center justify-between gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBack}
-              disabled={isUploading}
-            >
-              <ArrowLeftIcon /> Back
-            </Button>
-            <Button
-              type="button"
-              onClick={save}
-              disabled={!ready || !canSave || isUploading}
-            >
-              {isUploading ? <Spinner /> : <UploadIcon />}
-              {isUploading
+          // Same component as the other steps, so Back and Save share one size.
+          <StepActions
+            onBack={onBack}
+            backDisabled={isUploading}
+            onNext={save}
+            nextDisabled={!ready || !canSave || isUploading}
+            nextLabel={
+              isUploading
                 ? "Saving…"
                 : status === "error"
                   ? "Try again"
-                  : "Save to gallery"}
-            </Button>
-          </div>
+                  : "Save to gallery"
+            }
+            nextIcon={isUploading ? <Spinner /> : <UploadIcon />}
+          />
         )}
       </CardFooter>
     </Card>
