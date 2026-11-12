@@ -5,7 +5,9 @@ export const LAYOUTS: PhotoLayout[] = [
   { id: "duo", name: "Duo", shots: 2, columns: 1 },
   { id: "strip", name: "Strip", shots: 3, columns: 1 },
   { id: "classic-strip", name: "Classic strip", shots: 4, columns: 1 },
-  { id: "grid", name: "Grid", shots: 4, columns: 2 },
+  { id: "grid", name: "3×2 Grid", shots: 6, columns: 2 },
+  // 4 rows by 2 columns.
+  { id: "grid-4x2", name: "4×2 Grid", shots: 8, columns: 2 },
 ]
 
 export const FILTERS: CameraFilter[] = [
