@@ -37,10 +37,6 @@ const CAMERA_BUTTON_CLASS = "h-14 min-w-44 px-10 has-[>svg]:px-10"
 type PhotoSlotsProps = {
   photos: string[]
   shots: number
-  /**
-   * "row": a strip of small thumbnails under the camera (narrow screens).
-   * "column": a panel beside the camera, sized from the camera's width (xl+).
-   */
   variant: "row" | "column"
 }
 
@@ -260,7 +256,7 @@ export function TakePhotosStep({
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="flex flex-col gap-y-4">
           {camera.error && (
             <div
               role="alert"
@@ -282,27 +278,26 @@ export function TakePhotosStep({
             {!isComplete && (
               <Button
                 type="button"
-                className={STEP_BUTTON_CLASS}
+                className={cn(STEP_BUTTON_CLASS, "h-12")}
                 onClick={openModal}
                 disabled={!camera.stream}
               >
-                <CameraIcon /> {taken === 0 ? "Start" : "Continue"}
+                <CameraIcon /> {taken === 0 ? "Open Camera" : "Continue"}
               </Button>
             )}
-            {renderRetake(STEP_BUTTON_CLASS)}
+            {renderRetake(cn(STEP_BUTTON_CLASS, "h-12"))}
           </div>
 
-          {/* At most 4 thumbnails per row, so the 8-photo layout wraps to two rows. */}
           <ol
-            className="mx-auto grid max-w-2xl gap-2"
+            className="mx-auto w-full grid max-w-2xl gap-2"
             style={{
-              gridTemplateColumns: `repeat(${Math.min(layout.shots, 4)}, minmax(0, 1fr))`,
+              gridTemplateColumns: `repeat(${layout.shots === 6 ? 3 : Math.min(layout.shots, 4)}, minmax(0, 1fr))`,
             }}
           >
             {Array.from({ length: layout.shots }, (_, index) => (
               <li
                 key={index}
-                className="aspect-4/3 overflow-hidden rounded-lg border bg-muted"
+                className="aspect-4/3 w-full overflow-hidden rounded-lg border bg-muted"
               >
                 {photos[index] ? (
                   <img
@@ -355,22 +350,6 @@ export function TakePhotosStep({
             </Button>
           </div>
 
-          {/*
-            Below xl: camera on top, photo strip underneath.
-            xl and up: the camera is centred in the screen and the photo panel
-            hangs off its right edge.
-
-            Sizing uses container query units, so the camera stays exactly 4:3
-            and fills the room available:
-            - xl+: this box is the size container. The camera is the largest
-              4:3 box that fits while leaving room for the photo panel on BOTH
-              sides (that symmetry is what keeps the camera centred). The
-              reserve per side is the panel's widest case, two cells of a
-              quarter of the camera's width, which is at most 2/3 of the
-              container height, plus the 1.5rem gap.
-            - below xl: the camera's own wrapper is the size container, so it
-              fits whatever height the photo strip leaves.
-          */}
           <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 xl:flex-row xl:items-center xl:justify-center xl:[container-type:size]">
             <div className="relative grid min-h-0 w-full flex-1 place-items-center max-xl:[container-type:size] xl:block xl:w-[min(calc(100cqw_-_2*(100cqh*2/3_+_1rem)),calc(100cqh*4/3))] xl:flex-none">
               <CameraPreview
