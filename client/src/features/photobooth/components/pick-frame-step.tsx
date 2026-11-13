@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { cn } from "cn"
-import { CheckIcon, RefreshCwIcon, UploadIcon } from "lucide-react"
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  DownloadIcon,
+  RefreshCwIcon,
+  UploadIcon,
+} from "lucide-react"
 
 import { Badge } from "#components/ui/badge"
 import { Button } from "#components/ui/button"
@@ -28,7 +34,16 @@ import { HttpError } from "#services/http-client"
 import { DEFAULT_FRAME_COLOR, FRAME_COLORS } from "../constants"
 import { canvasToFile, loadPhotos, renderFrame } from "../render-frame"
 import type { PhotoLayout } from "../types"
-import { STEP_BUTTON_CLASS, StepActions } from "./step-actions"
+import { STEP_BUTTON_CLASS } from "./step-actions"
+
+/**
+ * No offset, so the frame is outlined evenly on every side: a thin grey edge
+ * (visible on light and dark backgrounds) plus a soft dark glow.
+ */
+const FRAME_SHADOW = "0 0 0 1px rgba(128, 128, 128, 0.15), 0 0 24px 4px rgba(0, 0, 0, 0.25)";
+
+/** Full width on phones, where the footer buttons stack; natural width from sm up. */
+const FOOTER_BUTTON_CLASS = cn(STEP_BUTTON_CLASS, "w-full sm:w-auto")
 
 type PickFrameStepProps = {
   layout: PhotoLayout
@@ -96,7 +111,8 @@ export function PickFrameStep({
     }
   }, [photos])
 
-  // The preview canvas is also what gets uploaded, so they can't drift apart.
+  // The preview canvas is also what gets saved and downloaded, so they can't
+  // drift apart.
   useEffect(() => {
     const canvas = canvasRef.current
     if (canvas && images.length) renderFrame(canvas, layout, images, color)
@@ -129,26 +145,50 @@ export function PickFrameStep({
     }
   }
 
+  // Works for every role, guests included: it never touches the server.
+  const download = async () => {
+    const canvas = canvasRef.current
+    if (!canvas || !ready) return
+
+    try {
+      const file = await canvasToFile(canvas, `photobooth-${Date.now()}.png`)
+      const url = URL.createObjectURL(file)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = file.name
+      document.body.append(link)
+      link.click()
+      link.remove()
+      // Revoke later: some browsers need the URL alive while the download starts.
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (err) {
+      console.error("Error downloading photobooth frame:", err)
+      setError("Couldn't download the frame. Please try again.")
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="font-heading">Pick a frame</CardTitle>
         <CardDescription>
           {canSave
-            ? "Choose a colour for your frame, then save it to the gallery."
-            : "Choose a colour for your frame."}
+            ? "Choose a colour for your frame, then save it to the gallery or download it."
+            : "Choose a colour for your frame, then download it."}
         </CardDescription>
       </CardHeader>
 
       <CardContent className="grid gap-6 md:grid-cols-2">
-        <div className="relative grid min-h-48 place-items-center rounded-xl border bg-muted/50 p-4">
+        {/* Generous padding so the frame's shadow has room on every side. */}
+        <div className="relative grid min-h-48 place-items-center rounded-xl border bg-muted/50 p-5 sm:p-8">
           {!ready && !error && <Spinner className="size-6" />}
           <canvas
             ref={canvasRef}
             role="img"
             aria-label="Preview of your framed photos"
+            style={{ boxShadow: FRAME_SHADOW }}
             className={cn(
-              "h-auto max-h-[60svh] w-auto max-w-full shadow-lg",
+              "h-auto max-h-[60svh] w-auto max-w-full",
               !ready && "hidden",
             )}
           />
@@ -199,7 +239,7 @@ export function PickFrameStep({
           {!canSave && (
             <FieldDescription>
               Guest accounts are view-only, so this frame can't be saved to the
-              gallery.
+              gallery. You can still download it.
             </FieldDescription>
           )}
 
@@ -209,22 +249,22 @@ export function PickFrameStep({
 
       <CardFooter>
         {isDone ? (
-          <div className="flex w-full flex-wrap items-center justify-between gap-2">
+          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="flex items-center gap-2 text-sm font-medium">
               <CheckIcon className="size-4" /> Saved to the gallery
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 type="button"
                 variant="outline"
-                className={STEP_BUTTON_CLASS}
+                className={FOOTER_BUTTON_CLASS}
                 onClick={onStartOver}
               >
                 <RefreshCwIcon /> Take more photos
               </Button>
               <Button
                 type="button"
-                className={STEP_BUTTON_CLASS}
+                className={FOOTER_BUTTON_CLASS}
                 onClick={() => navigate("/gallery")}
               >
                 View gallery
@@ -232,21 +272,45 @@ export function PickFrameStep({
             </div>
           </div>
         ) : (
-          // Same component as the other steps, so Back and Save share one size.
-          <StepActions
-            onBack={onBack}
-            backDisabled={isUploading}
-            onNext={save}
-            nextDisabled={!ready || !canSave || isUploading}
-            nextLabel={
-              isUploading
-                ? "Saving…"
-                : status === "error"
-                  ? "Try again"
-                  : "Save to gallery"
-            }
-            nextIcon={isUploading ? <Spinner /> : <UploadIcon />}
-          />
+          // Phones: one full-width button per row, Save on top and Back at the
+          // bottom (the reversed order). sm and up: Back on the left, Download
+          // and Save together on the right.
+          <div className="flex w-full flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              className={FOOTER_BUTTON_CLASS}
+              onClick={onBack}
+              disabled={isUploading}
+            >
+              <ArrowLeftIcon /> Back
+            </Button>
+
+            <div className="flex flex-col-reverse gap-3 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                className={FOOTER_BUTTON_CLASS}
+                onClick={download}
+                disabled={!ready || isUploading}
+              >
+                <DownloadIcon /> Download
+              </Button>
+              <Button
+                type="button"
+                className={FOOTER_BUTTON_CLASS}
+                onClick={save}
+                disabled={!ready || !canSave || isUploading}
+              >
+                {isUploading ? <Spinner /> : <UploadIcon />}
+                {isUploading
+                  ? "Saving…"
+                  : status === "error"
+                    ? "Try again"
+                    : "Save to gallery"}
+              </Button>
+            </div>
+          </div>
         )}
       </CardFooter>
     </Card>
