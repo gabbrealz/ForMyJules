@@ -14,12 +14,12 @@ export default function Landing() {
 
   return (
     <Backdrop>
-      <div className="relative mx-auto flex min-h-svh w-full max-w-6xl flex-col px-6 py-8 sm:px-10">
+      <div className="relative mx-auto grid min-h-svh w-full max-w-6xl grid-rows-[1fr_auto_1fr] px-6 py-8 sm:flex sm:flex-col sm:px-10">
         <header>
           <Brand className="text-cream" />
         </header>
 
-        <div className="mt-auto pt-24 pb-10 motion-safe:animate-in motion-safe:duration-700 motion-safe:fade-in motion-safe:slide-in-from-bottom-4 sm:pb-16">
+        <div className="py-10 motion-safe:animate-in motion-safe:duration-700 motion-safe:fade-in motion-safe:slide-in-from-bottom-4 sm:mt-auto sm:pt-24 sm:pb-16">
           <h1 className="max-w-3xl font-heading text-5xl leading-[1.05] font-extrabold tracking-tight text-balance text-cream sm:text-7xl">
             A cozy corner of the internet, just for the two of us.
           </h1>
