@@ -13,7 +13,7 @@ export const PHOTO_PAGE_SIZE = 60
 export const GRID_GAP_PX = 12
 /** Thumbnails are 400px on the long edge, so ~200px columns stay sharp on 2x screens. */
 export const MIN_COLUMN_WIDTH_PX = 200
-export const MIN_COLUMNS = 2
+export const MIN_COLUMNS = 3
 export const MAX_COLUMNS = 6
 
 export function columnsForWidth(width: number): number {
