@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { User, toPublicUser, type PublicUser } from '../models/user';
 import type { LoginInput, SignUpInput } from '../validators/user';
 
-const BCRYPT_COST = 12;
+export const BCRYPT_COST = 12;
 
 // Compared against when the username doesn't exist, so "unknown user" and "wrong password"
 // take about the same time and can't be told apart by timing.

@@ -8,6 +8,7 @@ import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
 import photosRouter from './routes/photos';
 import uploadsRouter from './routes/sign-upload';
+import userRouter from './routes/user';
 import { attachWebSocketServer } from './sockets';
 
 async function main() {
@@ -46,6 +47,7 @@ async function main() {
   app.use('/api/admin', adminRouter);
   app.use('/api/photos', photosRouter);
   app.use('/api/uploads', uploadsRouter);
+  app.use('/api/users', userRouter);
 
   // Express 5 forwards rejected promises from async handlers here.
   app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {

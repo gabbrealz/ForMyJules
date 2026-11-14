@@ -45,3 +45,6 @@ export const loginLimiter = perIp(10, 15 * 60 * 1000, { skipSuccessfulRequests: 
 
 // Each signup runs a bcrypt hash and creates a row, so keep it slow: 8 per IP per hour.
 export const signUpLimiter = perIp(8, 60 * 60 * 1000);
+
+// Changing your own password runs a bcrypt compare, so cap it per user (use AFTER requireAuth).
+export const updateUserLimiter = perUser(20, 15 * 60 * 1000);

@@ -53,8 +53,12 @@ export const loginSchema = z.object({
 });
 
 // Admin: approving a pending user means choosing which role they get.
+// Roles an admin can hand out. `admin` is never assignable, and `pending_approval` is only
+// ever the starting state.
+export const assignableRoleSchema = z.enum(['partner', 'guest']);
+
 export const approveUserSchema = z.object({
-  role: z.enum(['partner', 'guest']),
+  role: assignableRoleSchema,
 });
 
 export const userIdParamSchema = z.object({
@@ -64,3 +68,25 @@ export const userIdParamSchema = z.object({
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ApproveUserInput = z.infer<typeof approveUserSchema>;
+
+// Account edit (self or admin). Only these fields can change; zod strips everything else,
+// so `username` can never be smuggled in. `role` is admin-only, which the controller enforces.
+export const updateUserSchema = z
+  .object({
+    nickname: nicknameSchema.optional(),
+    password: passwordSchema.optional(),
+    // Required (checked in the controller) when changing your OWN password.
+    currentPassword: z
+      .string()
+      .min(1, 'Current password is required')
+      .refine(withinPasswordByteLimit, PASSWORD_TOO_LONG)
+      .optional(),
+    // Admin only (checked in the controller). Only partner/guest accounts can change role (see the service).
+    role: assignableRoleSchema.optional(),
+  })
+  .refine(
+    (body) => body.nickname !== undefined || body.password !== undefined || body.role !== undefined,
+    { message: 'Provide at least one field to change: nickname, password or role' },
+  );
+
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;

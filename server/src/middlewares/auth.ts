@@ -71,3 +71,14 @@ export const requireRole =
 // Partners and admins can upload, edit and delete any photo. Guests can only view.
 // Managing user accounts is separate: those routes use requireAdmin.
 export const requireContributor = requireRole('admin', 'partner');
+
+// Use after requireAuth. Admins can act on any account; everyone else only on their own.
+// Reads the raw :id param, so run it before validation (non-owners get 403 whether or not the id exists).
+export const requireSelfOrAdmin: RequestHandler<{ id: string }> = (req, res, next) => {
+  const user = req.user;
+  if (user === undefined || (user.role !== 'admin' && user.id !== req.params.id.toLowerCase())) {
+    res.status(403).json({ error: 'You do not have permission to do this', code: 'forbidden' });
+    return;
+  }
+  next();
+};
