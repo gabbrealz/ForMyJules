@@ -41,7 +41,7 @@ import { STEP_BUTTON_CLASS } from "./step-actions"
  * No offset, so the frame is outlined evenly on every side: a thin grey edge
  * (visible on light and dark backgrounds) plus a soft dark glow.
  */
-const FRAME_SHADOW = "0 0 0 1px rgba(128, 128, 128, 0.15), 0 0 24px 4px rgba(0, 0, 0, 0.25)";
+const FRAME_SHADOW = "0 0 0 1px rgba(128, 128, 128, 0.15), 0 0 24px 4px rgba(0, 0, 0, 0.33)";
 
 /** Full width on phones, where the footer buttons stack; natural width from sm up. */
 const FOOTER_BUTTON_CLASS = cn(STEP_BUTTON_CLASS, "w-full sm:w-auto")
@@ -242,8 +242,7 @@ export function PickFrameStep({
       </CardHeader>
 
       <CardContent className="grid gap-6 md:grid-cols-2">
-        {/* Generous padding so the frame's shadow has room on every side. */}
-        <div className="relative grid min-h-48 place-items-center rounded-xl border bg-muted/50 p-5 sm:p-8">
+        <div className="relative grid min-h-48 place-items-center rounded-xl border bg-muted p-5 sm:p-8">
           {!ready && !error && <Spinner className="size-6" />}
           <canvas
             ref={canvasRef}
@@ -288,13 +287,13 @@ export function PickFrameStep({
                 value={color}
                 disabled={controlsLocked}
                 onChange={(event) => applyColor(event.target.value)}
-                className="h-10 w-20 shrink-0 cursor-pointer rounded-sm border bg-transparent p-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-10 w-20 shrink-0 cursor-pointer rounded-sm border bg-background p-1 disabled:cursor-not-allowed disabled:opacity-50"
               />
 
               {/* One bordered box: the hex input, with the copy button attached at the right. */}
               <div
                 className={cn(
-                  "flex flex-1 h-10 min-w-0 items-center overflow-hidden rounded-sm border focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
+                  "flex flex-1 h-10 min-w-0 items-center overflow-hidden rounded-sm border bg-background focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
                   isHexInvalid && "border-destructive",
                   controlsLocked && "opacity-50",
                 )}
