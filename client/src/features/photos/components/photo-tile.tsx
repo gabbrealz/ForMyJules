@@ -54,7 +54,7 @@ export function PhotoTile({ photo }: { photo: Photo }) {
       ) : (
         <img
           ref={imageRef}
-          src={photo.kind === "photobooth" ? photo.fullUrl : photo.thumbUrl}
+          src={photo.thumbUrl}
           alt={describe(photo)}
           width={photo.w}
           height={photo.h}

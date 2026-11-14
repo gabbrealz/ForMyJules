@@ -41,9 +41,9 @@ export function PhotoGrid({
   }, [photos, skeletonRows, columnCount])
 
   return (
-    <div ref={containerRef} className="flex items-start gap-3">
+    <div ref={containerRef} className="flex items-start gap-3 md:gap-4 xl:gap-5">
       {columns.map((column, index) => (
-        <div key={index} className="flex min-w-0 flex-1 flex-col gap-3">
+        <div key={index} className="flex min-w-0 flex-1 flex-col gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-8">
           {column.map((cell) =>
             cell.photo ? (
               <PhotoTile key={cell.key} photo={cell.photo} />
