@@ -252,7 +252,7 @@ export function TakePhotosStep({
             {layout.shots === 1
               ? "One photo, one countdown."
               : `${layout.shots} photos, one every ${experience.intervalSeconds} seconds.`}{" "}
-            Press start to open the camera.
+            Click <b>Open Camera</b> to start
           </CardDescription>
         </CardHeader>
 
@@ -289,7 +289,7 @@ export function TakePhotosStep({
           </div>
 
           <ol
-            className="mx-auto w-full grid max-w-2xl gap-2"
+            className="mx-auto w-full grid place-items-center max-w-2xl gap-2"
             style={{
               gridTemplateColumns: `repeat(${layout.shots === 6 ? 3 : Math.min(layout.shots, 4)}, minmax(0, 1fr))`,
             }}
@@ -297,7 +297,7 @@ export function TakePhotosStep({
             {Array.from({ length: layout.shots }, (_, index) => (
               <li
                 key={index}
-                className="aspect-4/3 w-full overflow-hidden rounded-lg border bg-muted"
+                className="aspect-4/3 w-full max-w-md overflow-hidden rounded-lg border bg-muted"
               >
                 {photos[index] ? (
                   <img
@@ -362,12 +362,6 @@ export function TakePhotosStep({
                   Photo {Math.min(taken + 1, layout.shots)} of {layout.shots}
                 </Badge>
 
-                {/*
-                  Sibling keys must be unique across the whole list. These used
-                  to be bare numbers (countdown / photos taken), which collide
-                  whenever the two values match, and React then mixes the two
-                  elements up.
-                */}
                 {isCounting && (
                   <div
                     key={`countdown-${countdown}`}
