@@ -17,7 +17,7 @@ export type UploadPhotoOptions = {
 }
 
 const MAX_FULL_EDGE = 2048
-const MAX_THUMB_EDGE = 400
+const MAX_THUMB_EDGE = 600
 const SERVER_ACCEPTED_TYPES = [
   "image/jpeg",
   "image/png",
@@ -124,7 +124,7 @@ export async function uploadPhoto(
             h: bitmap.height,
           }),
       compress
-        ? encode(bitmap, MAX_THUMB_EDGE, 0.8, { allowJpegFallback: false })
+        ? encode(bitmap, MAX_THUMB_EDGE, 0.75, { allowJpegFallback: false })
         : encode(bitmap, MAX_THUMB_EDGE, 0.9, { allowJpegFallback: false }),
       exifr.parse(file, ["DateTimeOriginal"]).catch(() => null), // read the capture date before it's lost
     ])
