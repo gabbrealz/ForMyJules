@@ -4,12 +4,12 @@ import { cn } from "cn"
 import {
   ArrowLeftIcon,
   CheckIcon,
+  CopyIcon,
   DownloadIcon,
   RefreshCwIcon,
   UploadIcon,
 } from "lucide-react"
 
-import { Badge } from "#components/ui/badge"
 import { Button } from "#components/ui/button"
 import {
   Card,
@@ -31,7 +31,8 @@ import { canManagePhotos, useRequiredUser } from "#features/auth"
 import { uploadPhoto } from "#features/photos"
 import { HttpError } from "#services/http-client"
 
-import { DEFAULT_FRAME_COLOR, FRAME_COLORS } from "../constants"
+import { DEFAULT_FRAME_COLOR } from "../constants"
+import { FRAME_COLORS } from "../frame-colors"
 import { canvasToFile, loadPhotos, renderFrame } from "../render-frame"
 import type { PhotoLayout } from "../types"
 import { STEP_BUTTON_CLASS } from "./step-actions"
@@ -44,6 +45,9 @@ const FRAME_SHADOW = "0 0 0 1px rgba(128, 128, 128, 0.15), 0 0 24px 4px rgba(0, 
 
 /** Full width on phones, where the footer buttons stack; natural width from sm up. */
 const FOOTER_BUTTON_CLASS = cn(STEP_BUTTON_CLASS, "w-full sm:w-auto")
+
+/** How long the copy button shows its "copied" check. */
+const COPIED_RESET_MS = 1500
 
 type PickFrameStepProps = {
   layout: PhotoLayout
@@ -72,6 +76,37 @@ function describeError(error: unknown): string {
     : "Upload failed. Please try again."
 }
 
+/**
+ * Accepts "#rgb", "#rrggbb" and the same without the "#". Returns the lowercase
+ * "#rrggbb" form that <input type="color"> and the canvas expect, or null.
+ */
+function parseHex(value: string): string | null {
+  const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value.trim())
+  if (!match) return null
+  let hex = match[1].toLowerCase()
+  if (hex.length === 3) hex = [...hex].map((char) => char + char).join("")
+  return `#${hex}`
+}
+
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    // No Clipboard API (e.g. an insecure context): fall back to execCommand.
+    const area = document.createElement("textarea")
+    area.value = text
+    area.setAttribute("readonly", "")
+    area.style.position = "fixed"
+    area.style.opacity = "0"
+    document.body.append(area)
+    area.select()
+    const copied = document.execCommand("copy")
+    area.remove()
+    return copied
+  }
+}
+
 export function PickFrameStep({
   layout,
   photos,
@@ -84,9 +119,14 @@ export function PickFrameStep({
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const copyTimerRef = useRef<number | undefined>(undefined)
 
   const [images, setImages] = useState<HTMLImageElement[]>([])
   const [color, setColor] = useState(DEFAULT_FRAME_COLOR)
+  // What's typed in the hex box. It can be half-typed or invalid, so it is
+  // kept apart from `color`, which only ever holds a valid "#rrggbb".
+  const [hexInput, setHexInput] = useState(DEFAULT_FRAME_COLOR.toUpperCase())
+  const [copied, setCopied] = useState(false)
   const [status, setStatus] = useState<UploadStatus>("idle")
   const [error, setError] = useState<string | null>(null)
 
@@ -94,6 +134,7 @@ export function PickFrameStep({
   const isUploading = status === "uploading"
   const isDone = status === "done"
   const controlsLocked = isUploading || isDone
+  const isHexInvalid = parseHex(hexInput) === null
 
   // Decode the captured photos once; colour changes only redraw.
   useEffect(() => {
@@ -120,6 +161,31 @@ export function PickFrameStep({
 
   // Cancel an in-flight upload if the person leaves the step.
   useEffect(() => () => abortRef.current?.abort(), [])
+
+  useEffect(() => () => window.clearTimeout(copyTimerRef.current), [])
+
+  // For the swatches and the colour picker, which always give a valid colour.
+  const applyColor = (value: string) => {
+    setColor(value)
+    setHexInput(value.toUpperCase())
+  }
+
+  // Typing: apply the colour as soon as the text is a valid hex code.
+  const handleHexChange = (value: string) => {
+    setHexInput(value)
+    const parsed = parseHex(value)
+    if (parsed) setColor(parsed)
+  }
+
+  const copyColor = async () => {
+    if (!(await copyText(color.toUpperCase()))) return
+    setCopied(true)
+    window.clearTimeout(copyTimerRef.current)
+    copyTimerRef.current = window.setTimeout(
+      () => setCopied(false),
+      COPIED_RESET_MS,
+    )
+  }
 
   const save = async () => {
     const canvas = canvasRef.current
@@ -193,12 +259,7 @@ export function PickFrameStep({
 
         <FieldGroup>
           <Field>
-            <div className="flex items-center justify-between">
-              <FieldLabel htmlFor="frame-color">Frame colour</FieldLabel>
-              <Badge variant="secondary" className="uppercase">
-                {color}
-              </Badge>
-            </div>
+            <FieldLabel htmlFor="frame-color-hex">Frame colour</FieldLabel>
 
             <div className="flex flex-wrap gap-2">
               {FRAME_COLORS.map(({ name, value }) => (
@@ -209,7 +270,7 @@ export function PickFrameStep({
                   aria-label={name}
                   aria-pressed={color.toLowerCase() === value}
                   disabled={controlsLocked}
-                  onClick={() => setColor(value)}
+                  onClick={() => applyColor(value)}
                   style={{ backgroundColor: value }}
                   className={cn(
                     "size-9 rounded-full border-2 border-border transition-transform hover:scale-110 disabled:pointer-events-none disabled:opacity-50",
@@ -220,16 +281,60 @@ export function PickFrameStep({
               ))}
             </div>
 
-            <input
-              id="frame-color"
-              type="color"
-              value={color}
-              disabled={controlsLocked}
-              onChange={(event) => setColor(event.target.value)}
-              className="h-10 w-full cursor-pointer rounded-md border bg-transparent p-1 disabled:cursor-not-allowed disabled:opacity-50"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                aria-label="Pick a frame colour"
+                value={color}
+                disabled={controlsLocked}
+                onChange={(event) => applyColor(event.target.value)}
+                className="h-10 w-20 shrink-0 cursor-pointer rounded-sm border bg-transparent p-1 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+
+              {/* One bordered box: the hex input, with the copy button attached at the right. */}
+              <div
+                className={cn(
+                  "flex flex-1 h-10 min-w-0 items-center overflow-hidden rounded-sm border focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
+                  isHexInvalid && "border-destructive",
+                  controlsLocked && "opacity-50",
+                )}
+              >
+                <input
+                  id="frame-color-hex"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={7}
+                  value={hexInput}
+                  disabled={controlsLocked}
+                  aria-invalid={isHexInvalid || undefined}
+                  onChange={(event) => handleHexChange(event.target.value)}
+                  // Drop half-typed or invalid text and show the colour in use.
+                  onBlur={() => setHexInput(color.toUpperCase())}
+                  className="h-full min-w-0 flex-1 bg-transparent px-3 font-mono text-sm uppercase outline-none disabled:cursor-not-allowed"
+                />
+                <div className="h-full border-l">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    title="Copy colour code"
+                    aria-label="Copy colour code"
+                    onClick={copyColor}
+                    className="size-10 rounded-none"
+                  >
+                    {copied ? <CheckIcon className="size-4" /> : <CopyIcon />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <span className="sr-only" role="status">
+              {copied ? "Colour code copied" : ""}
+            </span>
             <FieldDescription>
-              Pick a preset, or choose any colour you like.
+              Pick a preset, choose a colour, or type a hex code.
             </FieldDescription>
           </Field>
 
