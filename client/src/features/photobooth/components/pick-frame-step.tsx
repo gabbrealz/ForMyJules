@@ -132,10 +132,7 @@ export function PickFrameStep({
 
     try {
       const file = await canvasToFile(canvas, `photobooth-${Date.now()}.png`)
-      // Signs, uploads full + thumb straight to Cloudinary, then saves the
-      // metadata. `kind` is left out so the server defaults it to "photo"
-      // (the API only knows photo, graphic and sticker).
-      await uploadPhoto(file, { signal: controller.signal })
+      await uploadPhoto(file, { kind: "photobooth", signal: controller.signal })
       setStatus("done")
     } catch (err) {
       if (controller.signal.aborted) return

@@ -1,6 +1,6 @@
 // Shapes returned by the photo and upload endpoints. See API.md ("Shared object shapes").
 
-export type PhotoKind = "photo" | "graphic" | "sticker"
+export type PhotoKind = "photo" | "photobooth" | "graphic" | "sticker"
 
 export type Photo = {
   /** Upload id (a lowercase UUID), not the MongoDB _id. */
