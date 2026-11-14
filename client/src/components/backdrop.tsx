@@ -85,7 +85,7 @@ export function Backdrop({ children }: { children: ReactNode }) {
                   alt=""
                   draggable={false}
                   decoding="async"
-                  className="size-full rounded-2xl object-cover shadow-2xl select-none"
+                  className="size-full rounded-md object-cover shadow-2xl select-none"
                 />
               </picture>
             ))}
