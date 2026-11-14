@@ -287,13 +287,13 @@ export function PickFrameStep({
                 value={color}
                 disabled={controlsLocked}
                 onChange={(event) => applyColor(event.target.value)}
-                className="h-10 w-20 shrink-0 cursor-pointer rounded-sm border bg-background p-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-10 basis-1/3 cursor-pointer rounded-sm border bg-background p-1 disabled:cursor-not-allowed disabled:opacity-50"
               />
 
               {/* One bordered box: the hex input, with the copy button attached at the right. */}
               <div
                 className={cn(
-                  "flex flex-1 h-10 min-w-0 items-center overflow-hidden rounded-sm border bg-background focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
+                  "flex basis-2/3 h-10 min-w-0 items-center overflow-hidden rounded-sm border bg-background focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50",
                   isHexInvalid && "border-destructive",
                   controlsLocked && "opacity-50",
                 )}
