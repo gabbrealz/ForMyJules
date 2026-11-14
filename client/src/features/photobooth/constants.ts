@@ -30,6 +30,16 @@ export const FILTERS: CameraFilter[] = [
     css: "saturate(1.1) hue-rotate(15deg) brightness(1.05)",
   },
   { id: "vivid", name: "Vivid", css: "saturate(1.8) contrast(1.1)" },
+  {
+    id: "cinematic",
+    name: "Cinematic",
+    css: "contrast(1.25) saturate(0.9) brightness(0.95) hue-rotate(-5deg)",
+  },
+  {
+    id: "dreamy",
+    name: "Dreamy",
+    css: "brightness(1.1) saturate(1.2) contrast(0.95)",
+  },
 ]
 
 export const MIN_INTERVAL = 2
