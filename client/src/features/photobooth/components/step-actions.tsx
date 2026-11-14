@@ -8,7 +8,7 @@ import { Button } from "#components/ui/button"
  * icon size. `has-[>svg]:px-8` is needed because the button shrinks its padding
  * whenever it holds an icon.
  */
-export const STEP_BUTTON_CLASS = "h-10 min-w-36 px-8 has-[>svg]:px-8"
+export const STEP_BUTTON_CLASS = "h-10 min-w-32 px-8 has-[>svg]:px-8"
 
 type StepActionsProps = {
   onBack?: () => void
@@ -29,7 +29,7 @@ export function StepActions({
   nextIcon = <ArrowRightIcon />,
 }: StepActionsProps) {
   return (
-    <div className="flex w-full items-center justify-between gap-2">
+    <div className="flex w-full items-center justify-between gap-1">
       {onBack ? (
         <Button
           type="button"
