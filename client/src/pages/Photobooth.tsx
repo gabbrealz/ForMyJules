@@ -89,7 +89,7 @@ export default function Photobooth() {
       title="Photobooth"
       subtitle="Choose a layout, set up the camera, and take your photos."
     >
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col p-4 md:p-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8">
         <Stepper
           value={step}
           onValueChange={setStep}
