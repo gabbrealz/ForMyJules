@@ -8,7 +8,8 @@ import type {
   UpdateUserInput,
 } from "../types.ts"
 
-// /api/admin: every call needs a logged-in admin (403 otherwise).
+// Every call needs a logged-in admin (403 otherwise), except updateUser, which
+// uses the shared /api/users endpoint (admins may edit any account there).
 export const adminApi = {
   /**
    * Every account except the admin's (partner, guest and pending), oldest
@@ -66,13 +67,8 @@ export const adminApi = {
     ),
 
   /**
-   * Changes a partner's or guest's nickname and/or role.
-   *
-   * NOTE: this endpoint is not in API.md yet. It assumes
-   * `PATCH /api/admin/users/:id` with `{ nickname?, role? }` that responds
-   * `200 { user: PublicUser }`. Adjust here if the real contract differs.
-   * Errors: 400 (validation, see HttpError.details), 404 if there is no such
-   * user.
+   * Changes an account's nickname, role and/or password
+   * `role` is admin only and applies to partner and guest accounts.
    */
   async updateUser(
     id: string,
@@ -80,7 +76,7 @@ export const adminApi = {
     opts?: RequestOptions,
   ): Promise<UpdatedUser> {
     const { user } = await http.patch<{ user: UpdatedUser }>(
-      `/api/admin/users/${encodeURIComponent(id)}`,
+      `/api/users/${encodeURIComponent(id)}`,
       changes,
       opts,
     )

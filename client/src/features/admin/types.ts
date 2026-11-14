@@ -30,13 +30,24 @@ export type ListedUser = User<Exclude<UserRole, "admin">> & {
 }
 
 /**
- * Fields an admin can change on an existing account
- * (PATCH /api/admin/users/:id). Send at least one.
+ * Body of PATCH /api/users/:id. Send at least one field. `username` can't be
+ * changed. `role` is admin only, and only for partner and guest accounts
+ * (pending accounts are approved instead; the admin's role is fixed).
  */
 export type UpdateUserInput = {
   nickname?: string
   role?: ApprovableRole
+  password?: string
+  /**
+   * Required only when changing your OWN password. An admin resetting
+   * someone else's password doesn't send it.
+   */
+  currentPassword?: string
 }
 
-/** The account as PATCH /api/admin/users/:id returns it (no `createdAt`). */
-export type UpdatedUser = User<ApprovableRole>
+/**
+ * The account as PATCH /api/users/:id returns it (no `createdAt`). Same roles
+ * as ListedUser: the admin never appears in this list, and a pending account
+ * stays pending when only its nickname changes.
+ */
+export type UpdatedUser = User<Exclude<UserRole, "admin">>
