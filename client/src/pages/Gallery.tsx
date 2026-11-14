@@ -9,7 +9,7 @@ export default function Gallery() {
   const feed = usePhotoFeed()
 
   return (
-    <PageShell title="Gallery">
+    <PageShell title="Gallery" subtitle="Where our memories are frozen in time.">
       <GalleryToolbar
         canUpload={canManagePhotos(user)}
         onUploaded={feed.prepend}
