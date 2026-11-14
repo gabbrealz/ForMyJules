@@ -1,5 +1,6 @@
 export type { AuthUser, Role, User, UserRole } from "./types.ts"
 export { isAdmin, canManagePhotos } from "./types.ts"
+export { MAX_NICKNAME_LENGTH, errorMessage } from "./utils.ts"
 
 // Presentation
 export { AuthProvider } from "./components/auth-provider.tsx"

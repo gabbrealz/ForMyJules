@@ -1,9 +1,11 @@
+import { useState } from "react"
 import { UserRoundCheckIcon, XIcon } from "lucide-react"
 
 import { Button } from "#components/ui/button"
 
 import {
   AdminPage,
+  ApproveGuestDialog,
   UsersTable,
   usePendingUsers,
   type AdminUser,
@@ -12,6 +14,9 @@ import {
 
 export default function AdminPending() {
   const { users, loading, error, isBusy, approve, reject, reload } = usePendingUsers()
+
+  // The registration waiting on the "approve as guest" confirmation, or null.
+  const [guestTarget, setGuestTarget] = useState<AdminUser | null>(null)
 
   // Approving needs a role, so there is one approve button per role the API allows.
   const actionsFor = (user: AdminUser): UserAction[] => {
@@ -22,7 +27,8 @@ export default function AdminPending() {
         label: "Approve as guest",
         icon: UserRoundCheckIcon,
         disabled,
-        onClick: (u) => void approve(u, "guest"),
+        // Opens the confirmation; the dialog does the approving.
+        onClick: setGuestTarget,
       },
       {
         key: "reject",
@@ -56,6 +62,12 @@ export default function AdminPending() {
         users={users}
         actions={actionsFor}
         emptyMessage={loading ? "Loading..." : "No pending registrations."}
+      />
+
+      <ApproveGuestDialog
+        user={guestTarget}
+        onConfirm={(user) => approve(user, "guest")}
+        onClose={() => setGuestTarget(null)}
       />
     </AdminPage>
   )

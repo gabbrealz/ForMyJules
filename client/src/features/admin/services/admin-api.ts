@@ -1,6 +1,12 @@
 import { http, type RequestOptions } from "#services/http-client"
 import type { AuthUser } from "#features/auth"
-import type { ApprovableRole, ListedUser, PendingUser } from "../types.ts"
+import type {
+  ApprovableRole,
+  ListedUser,
+  PendingUser,
+  UpdatedUser,
+  UpdateUserInput,
+} from "../types.ts"
 
 // /api/admin: every call needs a logged-in admin (403 otherwise).
 export const adminApi = {
@@ -58,6 +64,28 @@ export const adminApi = {
       undefined,
       opts,
     ),
+
+  /**
+   * Changes a partner's or guest's nickname and/or role.
+   *
+   * NOTE: this endpoint is not in API.md yet. It assumes
+   * `PATCH /api/admin/users/:id` with `{ nickname?, role? }` that responds
+   * `200 { user: PublicUser }`. Adjust here if the real contract differs.
+   * Errors: 400 (validation, see HttpError.details), 404 if there is no such
+   * user.
+   */
+  async updateUser(
+    id: string,
+    changes: UpdateUserInput,
+    opts?: RequestOptions,
+  ): Promise<UpdatedUser> {
+    const { user } = await http.patch<{ user: UpdatedUser }>(
+      `/api/admin/users/${encodeURIComponent(id)}`,
+      changes,
+      opts,
+    )
+    return user
+  },
 
   /**
    * Permanently deletes a partner, guest or pending account (can't be undone;

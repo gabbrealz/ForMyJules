@@ -5,19 +5,18 @@ import { ConfirmDeleteDialog } from "#components/confirm-delete-dialog"
 import { Button } from "#components/ui/button"
 import {
   AdminPage,
+  EditUserDialog,
   UsersTable,
   useUsers,
   type AdminUser,
   type UserAction,
 } from "#features/admin"
 
-// TODO: wire this up. It receives the row's user once you add a parameter.
-function handleEdit() {
-  // Intentionally empty for now.
-}
-
 export default function AdminUsers() {
-  const { users, loading, error, reload, deleteUser } = useUsers()
+  const { users, loading, error, reload, updateUser, deleteUser } = useUsers()
+
+  // The user being edited, or null when the edit dialog is closed.
+  const [editing, setEditing] = useState<AdminUser | null>(null)
 
   // `open` is separate from `target` so the dialog keeps its text while it
   // animates closed.
@@ -25,7 +24,7 @@ export default function AdminUsers() {
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const actions: UserAction[] = [
-    { key: "edit", label: "Edit", icon: PencilIcon, onClick: handleEdit },
+    { key: "edit", label: "Edit", icon: PencilIcon, onClick: setEditing },
     {
       key: "delete",
       label: "Delete",
@@ -63,6 +62,12 @@ export default function AdminUsers() {
       )}
 
       <UsersTable users={users} actions={actions} emptyMessage={emptyMessage} />
+
+      <EditUserDialog
+        user={editing}
+        onSave={updateUser}
+        onClose={() => setEditing(null)}
+      />
 
       <ConfirmDeleteDialog
         open={dialogOpen}

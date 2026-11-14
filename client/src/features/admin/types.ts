@@ -28,3 +28,15 @@ export type ListedUser = User<Exclude<UserRole, "admin">> & {
   /** ISO 8601 */
   createdAt: string
 }
+
+/**
+ * Fields an admin can change on an existing account
+ * (PATCH /api/admin/users/:id). Send at least one.
+ */
+export type UpdateUserInput = {
+  nickname?: string
+  role?: ApprovableRole
+}
+
+/** The account as PATCH /api/admin/users/:id returns it (no `createdAt`). */
+export type UpdatedUser = User<ApprovableRole>
