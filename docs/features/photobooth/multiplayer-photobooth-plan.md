@@ -137,17 +137,15 @@ Each phase can be tested with two or more browser windows. WebRTC comes last so 
 6. **Adaptation and robustness:** quality tiers from stats, reconnect, hidden-tab handling, leader hand-over.
 7. **Hardening:** rate and size limits, message validation tests, privacy check.
 
-## 11. Assumptions and risks
-
-**Assumptions** (change them if wrong):
-
-- The leader also picks the frame colour in step 4.
-- People who join mid-round wait for the next round.
-- In separate-cells mode, background removal is optional and set by the leader.
-
-**Risks**
+## 11. Risks
 
 - **Four-person mesh load:** each person encodes once but uploads to up to three peers and decodes three streams. If it's too heavy in Phase 0, lower the tiers or cap the session at three.
 - **TURN usage:** relayed traffic multiplies in a mesh. Check Open Relay's free allowance against a realistic session.
 - **Render:** spin-down and bandwidth limits (section 5).
 - **Safari:** test WebRTC and canvas capture early.
+
+## 12. Other Notes
+
+- The leader also picks the frame colour in step 4.
+- People who join mid-round wait for the next round.
+- In separate-cells mode, background removal is optional and set by the leader.
