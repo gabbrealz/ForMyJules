@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "postinstall": "node scripts/setup-mediapipe.mjs",
+    "setup:mediapipe": "node scripts/setup-mediapipe.mjs"
   },
   "imports": {
     "#components/*": "./src/components/*.tsx",
@@ -27,6 +29,7 @@
     "@base-ui/react": "^1.9.0",
     "@fontsource-variable/dm-sans": "^5.3.0",
     "@fontsource-variable/nunito": "^5.3.0",
+    "@mediapipe/tasks-vision": "^1.2.3",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-table": "^9.3.1",
     "class-variance-authority": "^0.7.1",
