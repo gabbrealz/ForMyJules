@@ -27,6 +27,8 @@ import {
 } from "#features/photobooth"
 import { PageShell } from "#layouts/page-shell"
 
+import { usePreloadBackgroundRemoval } from "#features/photobooth"
+
 // Steps are 1-indexed to match the Stepper component.
 const STEPS = [
   { step: 1, title: "Layout", description: "Choose a layout" },
@@ -39,6 +41,7 @@ const INDICATORS = { completed: <CheckIcon className="size-3.5" /> }
 
 export default function Photobooth() {
   usePageTitle("Photobooth")
+  usePreloadBackgroundRemoval()
 
   const [step, setStep] = useState(1)
   const [layout, setLayout] = useState<PhotoLayout | null>(null)

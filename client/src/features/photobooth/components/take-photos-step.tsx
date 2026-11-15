@@ -37,6 +37,10 @@ const CAMERA_BUTTON_CLASS = "h-14 min-w-44 px-10 has-[>svg]:px-10"
 type PhotoSlotsProps = {
   photos: string[]
   shots: number
+  /**
+   * "row": a strip of small thumbnails under the camera (narrow screens).
+   * "column": a panel beside the camera, sized from the camera's width (xl+).
+   */
   variant: "row" | "column"
 }
 
@@ -132,8 +136,9 @@ export function TakePhotosStep({
   onBack,
   onNext,
 }: TakePhotosStepProps) {
-  // Points at the <video> inside the modal, which is the only live preview.
-  const videoRef = useRef<HTMLVideoElement>(null)
+  // The camera preview in the modal fills this with what photos are taken from:
+  // the background-removed canvas when that's on, otherwise the <video>.
+  const captureRef = useRef<HTMLVideoElement | HTMLCanvasElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [countdown, setCountdown] = useState(experience.intervalSeconds)
@@ -148,10 +153,15 @@ export function TakePhotosStep({
 
   // Crops the centre of the feed to 4:3 and mirrors it, matching the preview.
   const capture = useCallback((): boolean => {
-    const video = videoRef.current
-    if (!video || !video.videoWidth) return false
+    const source = captureRef.current
+    if (!source) return false
 
-    const { videoWidth, videoHeight } = video
+    // A video and a canvas report their size differently.
+    const isVideo = source instanceof HTMLVideoElement
+    const videoWidth = isVideo ? source.videoWidth : source.width
+    const videoHeight = isVideo ? source.videoHeight : source.height
+    if (!videoWidth || !videoHeight) return false
+
     let sw = videoWidth
     let sh = videoHeight
     if (videoWidth / videoHeight > PHOTO_ASPECT) sw = videoHeight * PHOTO_ASPECT
@@ -168,7 +178,9 @@ export function TakePhotosStep({
     context.filter = filter
     context.translate(sw, 0)
     context.scale(-1, 1)
-    context.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh)
+    // With the background removed the source is transparent outside the person,
+    // and the PNG keeps that.
+    context.drawImage(source, sx, sy, sw, sh, 0, 0, sw, sh)
 
     onCapture(canvas.toDataURL("image/png"))
     setFlashId((id) => id + 1) // the only place a flash is triggered
@@ -355,7 +367,8 @@ export function TakePhotosStep({
               <CameraPreview
                 camera={camera}
                 filter={filter}
-                videoRef={videoRef}
+                captureRef={captureRef}
+                removeBackground={experience.removeBackground}
                 className="w-[min(100cqw,calc(100cqh*4/3))] xl:w-full"
               >
                 <Badge variant="secondary" className="absolute top-3 left-3">

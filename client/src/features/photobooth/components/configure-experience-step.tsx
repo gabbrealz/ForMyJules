@@ -17,6 +17,7 @@ import {
   FieldLabel,
 } from "#components/ui/field"
 import { Slider } from "#components/ui/slider"
+import { Switch } from "#components/ui/switch"
 
 import { FILTERS, MAX_INTERVAL, MIN_INTERVAL, getFilter } from "../constants"
 import type { CameraState } from "../hooks/use-camera"
@@ -70,7 +71,7 @@ function SecondsInput({ id, value, onChange }: SecondsInputProps) {
   }
 
   return (
-    <div className="flex h-10 w-24 shrink-0 items-center overflow-hidden rounded-xl border bg-background focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
+    <div className="flex h-10 w-28 shrink-0 items-center overflow-hidden rounded-md border bg-background focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
       <input
         id={id}
         type="number"
@@ -86,7 +87,7 @@ function SecondsInput({ id, value, onChange }: SecondsInputProps) {
           if (event.key === "Enter") commit()
         }}
         // The native spinner is hidden; the buttons on the right replace it.
-        className="h-full min-w-0 flex-1 [appearance:textfield] bg-transparent pr-1 pl-3 text-right tabular-nums outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="h-full min-w-0 flex-1 [appearance:textfield] bg-transparent pr-1 pl-3 text-right text-sm tabular-nums outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <span aria-hidden className="pr-2 text-sm text-muted-foreground">
         s
@@ -146,6 +147,7 @@ export function ConfigureExperienceStep({
         <CameraPreview
           camera={camera}
           filter={getFilter(experience.filterId).css}
+          removeBackground={experience.removeBackground}
         />
 
         <FieldGroup>
@@ -199,6 +201,26 @@ export function ConfigureExperienceStep({
             <FieldDescription>
               A countdown runs for this long before each photo.
             </FieldDescription>
+          </Field>
+
+          <Field>
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <FieldLabel htmlFor="remove-background">
+                  Remove background
+                </FieldLabel>
+                <FieldDescription>
+                  Cuts the background live.
+                </FieldDescription>
+              </div>
+              <Switch
+                id="remove-background"
+                checked={experience.removeBackground}
+                onCheckedChange={(checked) =>
+                  onChange({ ...experience, removeBackground: checked })
+                }
+              />
+            </div>
           </Field>
         </FieldGroup>
       </CardContent>
