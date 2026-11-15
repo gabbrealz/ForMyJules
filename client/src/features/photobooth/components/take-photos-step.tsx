@@ -25,7 +25,7 @@ import {
   DialogTitle,
 } from "#components/ui/dialog"
 
-import { PHOTO_ASPECT, getFilter } from "../constants"
+import { PHOTO_ASPECT, getFilter, getIntervalSeconds } from "../constants"
 import type { CameraState } from "../hooks/use-camera"
 import type { Experience, PhotoLayout } from "../types"
 import { CameraPreview } from "./camera-preview"
@@ -141,7 +141,10 @@ export function TakePhotosStep({
   const captureRef = useRef<HTMLVideoElement | HTMLCanvasElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
-  const [countdown, setCountdown] = useState(experience.intervalSeconds)
+
+  const intervalSeconds = getIntervalSeconds(experience.intervalId)
+  const [countdown, setCountdown] = useState(intervalSeconds)
+
   // 0 means no flash. Each capture bumps it, which mounts a fresh flash element.
   const [flashId, setFlashId] = useState(0)
 
@@ -203,7 +206,7 @@ export function TakePhotosStep({
       }
       // After the last photo, stop for good so nothing resumes by itself.
       if (taken + 1 >= layout.shots) setIsRunning(false)
-      else setCountdown(experience.intervalSeconds)
+      else setCountdown(intervalSeconds)
     }, 1000)
 
     return () => window.clearTimeout(id)
@@ -213,7 +216,7 @@ export function TakePhotosStep({
     taken,
     capture,
     layout.shots,
-    experience.intervalSeconds,
+    intervalSeconds,
   ])
 
   // Closing the modal for any reason (X, Escape, Done) stops the session. The
@@ -225,19 +228,19 @@ export function TakePhotosStep({
   }, [])
 
   const openModal = () => {
-    setCountdown(experience.intervalSeconds)
+    setCountdown(intervalSeconds)
     setIsRunning(false)
     setIsOpen(true)
   }
 
   const start = () => {
-    setCountdown(experience.intervalSeconds)
+    setCountdown(intervalSeconds)
     setIsRunning(true)
   }
 
   const reset = () => {
     setIsRunning(false)
-    setCountdown(experience.intervalSeconds)
+    setCountdown(intervalSeconds)
     setFlashId(0)
     onReset()
   }
@@ -263,7 +266,7 @@ export function TakePhotosStep({
           <CardDescription>
             {layout.shots === 1
               ? "One photo, one countdown."
-              : `${layout.shots} photos, one every ${experience.intervalSeconds} seconds.`}{" "}
+              : `${layout.shots} photos, one every ${intervalSeconds} seconds.`}{" "}
             Click <b>Open Camera</b> to start
           </CardDescription>
         </CardHeader>

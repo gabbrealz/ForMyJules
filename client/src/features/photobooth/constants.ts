@@ -1,4 +1,4 @@
-import type { CameraFilter, Experience, PhotoLayout } from "./types"
+import type { CameraFilter, TimeInterval, Experience, PhotoLayout } from "./types"
 
 export const LAYOUTS: PhotoLayout[] = [
   { id: "single", name: "Single", shots: 1, columns: 1 },
@@ -11,43 +11,33 @@ export const LAYOUTS: PhotoLayout[] = [
 ]
 
 export const FILTERS: CameraFilter[] = [
-  { id: "none", name: "Natural", css: "none" },
-  { id: "mono", name: "Mono", css: "grayscale(1) contrast(1.1)" },
-  { id: "sepia", name: "Sepia", css: "sepia(0.9)" },
+  { id: "none", name: "Original", css: "none" },
+  { id: "mono", name: "B&W", css: "grayscale(1) contrast(1.1)" },
+  { id: "sepia", name: "Sepia", css: "sepia(0.8)" },
   {
     id: "vintage",
     name: "Vintage",
     css: "sepia(0.4) contrast(1.1) saturate(1.3) hue-rotate(-10deg)",
-  },
-  {
-    id: "warm",
-    name: "Warm",
-    css: "saturate(1.3) sepia(0.2) brightness(1.05)",
-  },
-  {
-    id: "cool",
-    name: "Cool",
-    css: "saturate(1.1) hue-rotate(15deg) brightness(1.05)",
   },
   { id: "vivid", name: "Vivid", css: "saturate(1.8) contrast(1.1)" },
   {
     id: "cinematic",
     name: "Cinematic",
     css: "contrast(1.25) saturate(0.9) brightness(0.95) hue-rotate(-5deg)",
-  },
-  {
-    id: "dreamy",
-    name: "Dreamy",
-    css: "brightness(1.1) saturate(1.2) contrast(0.95)",
-  },
+  }
 ]
 
-export const MIN_INTERVAL = 2
-export const MAX_INTERVAL = 10
+export const INTERVALS: TimeInterval[] = [
+  { id: "three", seconds: 3 },
+  { id: "five", seconds: 5 },
+  { id: "seven", seconds: 7 },
+  { id: "nine", seconds: 10 },
+]
 
 export const DEFAULT_EXPERIENCE: Experience = {
   filterId: "none",
-  intervalSeconds: 3,
+  intervalId: "five",
+  removeBackground: false
 }
 
 /** Preview and captured photos share this ratio so what you see is what you get. */
@@ -55,6 +45,10 @@ export const PHOTO_ASPECT = 4 / 3
 
 export function getFilter(id: string): CameraFilter {
   return FILTERS.find((filter) => filter.id === id) ?? FILTERS[0]
+}
+
+export function getIntervalSeconds(id: string): number {
+  return INTERVALS.find((interval) => interval.id === id)?.seconds ?? INTERVALS[0].seconds
 }
 
 /** Lowercase hex, so they compare cleanly with <input type="color"> values. */

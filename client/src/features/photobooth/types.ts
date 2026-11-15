@@ -14,10 +14,14 @@ export type CameraFilter = {
   css: string
 }
 
+export type TimeInterval = {
+  id: string
+  seconds: number
+}
+
 export type Experience = {
   filterId: string
-  /** Seconds of countdown before each photo. */
-  intervalSeconds: number
+  intervalId: string
   /** Cut the person out of the camera background (live, on the GPU). */
   removeBackground: boolean
 }
