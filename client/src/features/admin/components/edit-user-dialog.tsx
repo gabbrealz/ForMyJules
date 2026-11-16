@@ -170,10 +170,10 @@ function EditUserForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="grid gap-4">
-      <DialogHeader>
+    <form onSubmit={handleSubmit} noValidate className="grid gap-8">
+      <DialogHeader className="gap-1">
         <DialogTitle className="mx-auto text-xl">Edit User</DialogTitle>
-        <DialogDescription>
+        <DialogDescription className="mx-auto">
           You can update this account's nickname or role.
         </DialogDescription>
       </DialogHeader>
