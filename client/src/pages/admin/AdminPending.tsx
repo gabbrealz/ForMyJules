@@ -43,7 +43,7 @@ export default function AdminPending() {
 
   return (
     <AdminPage
-      title="Pending Registrations"
+      title="Registrations"
       description="New sign-ups waiting for your approval."
       count={loading ? undefined : users.length}
     >
