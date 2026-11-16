@@ -9,12 +9,13 @@ Only me and my girlfriend will use this web app, but we also allow guest users (
 1. Signup with admin approval process
 2. Photobooth
     - Choose frame layout -> Configure filters and time between pictures -> Take photos -> Customize frame design
+    - Can go `Solo` or `With Others`. WebRTC is used for P2P camera feed communication
 3. Virtual scrapbook
     - Canva-like feature where users can upload assets or choose from what's already uploaded then design scrapbook pages.
 4. Gallery
     - Users can upload images, and they will be displayed like a Gallery wall (like Pinterest).
 5. Spin the wheel
-    - Similar to wheelofnames but designed for couples
+    - Similar to `wheelofnames` but designed for couples
 6. Music Locker (Mini Spotify)
     - Users can create playlists, search, and play songs.
 7. Game inspired by Pou but cat-themed
@@ -99,6 +100,10 @@ src
 ```
 
 ### Other Tech
-- MongoDB (w/ MongoDB Atlas)
-- Cloudinary
+- MongoDB (w/ MongoDB Atlas): NoSQL Database
+- Cloudinary: File storage
+- Metered Open Relay: WebRTC
 
+## Budget
+
+I have no credit card. I run on home network from an ISP. All cloud services/providers I use must have a free tier
