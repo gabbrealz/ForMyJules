@@ -124,8 +124,8 @@ export async function uploadPhoto(
             h: bitmap.height,
           }),
       compress
-        ? encode(bitmap, MAX_THUMB_EDGE, 0.75, { allowJpegFallback: false })
-        : encode(bitmap, MAX_THUMB_EDGE, 0.9, { allowJpegFallback: false }),
+        ? encode(bitmap, MAX_THUMB_EDGE, 0.8, { allowJpegFallback: false })
+        : encode(bitmap, MAX_THUMB_EDGE, 0.95, { allowJpegFallback: false }),
       exifr.parse(file, ["DateTimeOriginal"]).catch(() => null), // read the capture date before it's lost
     ])
 
