@@ -5,6 +5,101 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ==========================================================================
+   1. PALETTE: the calico cat
+   --------------------------------------------------------------------------
+   Five hues sampled from the pixel-art cat, each with an 11-step shade scale
+   (50 = lightest, 950 = darkest). The swatch that was sampled straight from
+   the image sits at its natural step and is marked "(sampled)"; the other
+   steps are the same hue with lightness/chroma stepped up and down.
+
+     Cocoa     the outline        #573c31 -> cocoa-800
+     Smoke     the grey patches   #766669 -> smoke-500
+     Marigold  the orange patches #ffba45 -> marigold-400
+     Peach     ears and belly     #f9dec9 -> peach-200
+     Blush     the cheek          #fcd8d8 -> blush-200
+     Milk      the white chest    #fffeff (single shade)
+
+   Declared with `@theme static` so every shade is always emitted and usable
+   as a utility (bg-cocoa-800, text-marigold-400, border-peach-200, ...).
+   Components should still prefer the semantic tokens in section 3.
+   ========================================================================== */
+@theme static {
+  /* Cocoa: the outline. Warm dark brown; text, dark surfaces. */
+  --color-cocoa-50: oklch(0.98 0.006 43.1); /* #fcf7f5 */
+  --color-cocoa-100: oklch(0.955 0.011 43.1); /* #f7eeeb */
+  --color-cocoa-200: oklch(0.915 0.017 43.1); /* #ede0da */
+  --color-cocoa-300: oklch(0.86 0.023 43.1); /* #dfccc5 */
+  --color-cocoa-400: oklch(0.797 0.03 43.1); /* #ceb7ae */
+  --color-cocoa-500: oklch(0.693 0.036 43.1); /* #b1968b */
+  --color-cocoa-600: oklch(0.59 0.04 43.1); /* #93766a */
+  --color-cocoa-700: oklch(0.487 0.043 43.1); /* #75584c */
+  --color-cocoa-800: oklch(0.384 0.043 43.1); /* #573c31 (sampled) */
+  --color-cocoa-900: oklch(0.297 0.036 43.1); /* #3d271e */
+  --color-cocoa-950: oklch(0.21 0.03 43.1); /* #24140d */
+
+  /* Smoke: the grey-mauve patches. Quiet neutral for borders and muted text. */
+  --color-smoke-50: oklch(0.975 0.007 5.1); /* #fbf5f6 */
+  --color-smoke-100: oklch(0.935 0.01 5.1); /* #f0e7e8 */
+  --color-smoke-200: oklch(0.855 0.015 5.1); /* #d9cbce */
+  --color-smoke-300: oklch(0.756 0.018 5.1); /* #baabae */
+  --color-smoke-400: oklch(0.661 0.02 5.1); /* #9e8e91 */
+  --color-smoke-500: oklch(0.526 0.021 5.1); /* #766669 (sampled) */
+  --color-smoke-600: oklch(0.461 0.02 5.1); /* #635457 */
+  --color-smoke-700: oklch(0.396 0.018 5.1); /* #4f4345 */
+  --color-smoke-800: oklch(0.331 0.016 5.1); /* #3d3234 */
+  --color-smoke-900: oklch(0.275 0.013 5.1); /* #2d2527 */
+  --color-smoke-950: oklch(0.22 0.01 5.1); /* #1f191a */
+
+  /* Marigold: the orange patches. The signature accent. */
+  --color-marigold-50: oklch(0.987 0.01 76.7); /* #fffaf3 */
+  --color-marigold-100: oklch(0.968 0.026 76.7); /* #fff3e2 */
+  --color-marigold-200: oklch(0.935 0.054 76.7); /* #fee6c2 */
+  --color-marigold-300: oklch(0.887 0.098 76.7); /* #ffd28f */
+  --color-marigold-400: oklch(0.834 0.15 76.7); /* #ffba45 (sampled) */
+  --color-marigold-500: oklch(0.727 0.15 76.7); /* #db980b */
+  --color-marigold-600: oklch(0.62 0.129 76.7); /* #b17a05 */
+  --color-marigold-700: oklch(0.513 0.106 76.7); /* #895d05 */
+  --color-marigold-800: oklch(0.407 0.085 76.7); /* #634200 */
+  --color-marigold-900: oklch(0.31 0.065 76.7); /* #422b00 */
+  --color-marigold-950: oklch(0.22 0.046 76.7); /* #261700 */
+
+  /* Peach: ears and belly. Warm paper tones for page and surfaces. */
+  --color-peach-50: oklch(0.981 0.008 60.1); /* #fdf8f3 */
+  --color-peach-100: oklch(0.957 0.018 60.1); /* #fbeee5 */
+  --color-peach-200: oklch(0.917 0.041 60.1); /* #f9dec9 (sampled) */
+  --color-peach-300: oklch(0.862 0.053 60.1); /* #edcaaf */
+  --color-peach-400: oklch(0.801 0.062 60.1); /* #dcb697 */
+  --color-peach-500: oklch(0.701 0.062 60.1); /* #bc9678 */
+  --color-peach-600: oklch(0.6 0.055 60.1); /* #99795f */
+  --color-peach-700: oklch(0.5 0.045 60.1); /* #775d49 */
+  --color-peach-800: oklch(0.4 0.037 60.1); /* #574333 */
+  --color-peach-900: oklch(0.31 0.029 60.1); /* #3b2d22 */
+  --color-peach-950: oklch(0.22 0.023 60.1); /* #221810 */
+
+  /* Blush: the cheek. Only 200 is in the image; the deeper steps carry the
+     same hue up to a rose red, which is what destructive actions use. */
+  --color-blush-50: oklch(0.978 0.008 17.9); /* #fdf6f6 */
+  --color-blush-100: oklch(0.953 0.02 17.9); /* #fdeaea */
+  --color-blush-200: oklch(0.912 0.04 17.9); /* #fcd8d8 (sampled) */
+  --color-blush-300: oklch(0.858 0.072 17.9); /* #fcbebf */
+  --color-blush-400: oklch(0.798 0.113 17.9); /* #fd9fa2 */
+  --color-blush-500: oklch(0.699 0.145 17.9); /* #ea757c */
+  --color-blush-600: oklch(0.599 0.161 17.9); /* #ce4f5b */
+  --color-blush-700: oklch(0.5 0.145 17.9); /* #a63743 */
+  --color-blush-800: oklch(0.4 0.121 17.9); /* #7c242e */
+  --color-blush-900: oklch(0.31 0.089 17.9); /* #54191f */
+  --color-blush-950: oklch(0.22 0.064 17.9); /* #330a0f */
+
+  /* Milk: the white chest. Cards and popovers in light mode. */
+  --color-milk: oklch(0.998 0.002 326); /* #fffeff (sampled) */
+}
+
+/* ==========================================================================
+   2. TAILWIND TOKEN REGISTRATION
+   Maps the semantic CSS variables in section 3 to utilities (bg-background,
+   text-primary, ...). No color values live here.
+   ========================================================================== */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -49,7 +144,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Brand palette: constant in light and dark mode (e.g. text on photo backdrops).
+  /* Brand colors: constant in light and dark mode (e.g. text on photo backdrops).
      Usage: bg-brown, text-cream, bg-vanilla/60, bg-apricot, ... */
   --color-brown: var(--brand-brown);
   --color-cream: var(--brand-cream);
@@ -60,6 +155,10 @@
   --font-heading: "Nunito Variable", "DM Sans Variable", sans-serif;
 }
 
+/* ==========================================================================
+   3. SEMANTIC TOKENS: palette -> roles
+   Every role below points at a palette shade from section 1.
+   ========================================================================== */
 :root {
   --radius: 0.875rem;
 
@@ -67,86 +166,88 @@
      "the viewport minus the header" reads this instead of hard-coding a number. */
   --header-height: 3.5rem;
 
-  /* Brand palette */
-  --brand-brown: oklch(16.113% 0.00399 48.287); /* dark brown */
-  --brand-cream: oklch(0.985 0.012 80); /* pastel cream */
-  --brand-vanilla: oklch(0.95 0.055 95); /* vanilla cream */
-  --brand-apricot: oklch(0.89 0.07 65); /* apricot cream */
+  /* Brand colors (same in both modes) */
+  --brand-brown: var(--color-cocoa-950); /* dark brown: photo backdrop, text on light fills */
+  --brand-cream: var(--color-peach-50); /* text over the photo backdrop */
+  --brand-vanilla: var(--color-peach-100); /* soft cream fill / button */
+  --brand-apricot: var(--color-marigold-300); /* calico orange fill / hover */
 
   /* Light mode (primary design target) */
-  --background: oklch(0.985 0.012 80);
-  --foreground: oklch(0.29 0.035 52);
-  --card: oklch(0.996 0.006 80);
-  --card-foreground: oklch(0.29 0.035 52);
-  --popover: oklch(0.996 0.006 80);
-  --popover-foreground: oklch(0.29 0.035 52);
-  --primary: oklch(0.34 0.045 52);
-  --primary-foreground: oklch(0.985 0.012 80);
-  --secondary: oklch(0.95 0.055 95);
-  --secondary-foreground: oklch(0.34 0.045 52);
-  --muted: oklch(0.962 0.02 85);
-  --muted-foreground: oklch(0.52 0.04 58);
-  --accent: oklch(0.91 0.06 65);
-  --accent-foreground: oklch(0.3 0.04 52);
-  --destructive: oklch(0.58 0.2 25);
-  --destructive-foreground: oklch(0.985 0.012 80);
-  --border: oklch(0.91 0.03 80);
-  --input: oklch(0.89 0.035 78);
+  --background: var(--color-blush-50);
+  --foreground: var(--color-cocoa-900);
+  --card: var(--color-milk);
+  --card-foreground: var(--color-cocoa-900);
+  --popover: var(--color-milk);
+  --popover-foreground: var(--color-cocoa-900);
+  /* Primary stays dark: `text-primary` is also used for link text. */
+  --primary: var(--color-cocoa-800);
+  --primary-foreground: var(--color-milk);
+  --secondary: var(--color-peach-200);
+  --secondary-foreground: var(--color-cocoa-800);
+  --muted: var(--color-peach-100);
+  --muted-foreground: var(--color-smoke-600);
+  --accent: var(--color-marigold-200);
+  --accent-foreground: var(--color-cocoa-900);
+  --destructive: var(--color-blush-700);
+  --destructive-foreground: var(--color-milk);
+  --border: var(--color-peach-200);
+  --input: var(--color-peach-300);
   /* Form fields: a tinted well with a ~3:1 border so inputs read as their own object on cards */
-  --field: oklch(0.945 0.035 82);
-  --field-border: oklch(0.66 0.06 62);
-  --ring: oklch(0.72 0.1 60);
-  --chart-1: oklch(0.89 0.07 65);
-  --chart-2: oklch(0.8 0.09 62);
-  --chart-3: oklch(0.65 0.08 55);
-  --chart-4: oklch(0.5 0.06 52);
-  --chart-5: oklch(0.34 0.045 52);
-  --header: oklch(0.968 0.03 90);
-  --sidebar: oklch(0.978 0.016 82);
-  --sidebar-foreground: oklch(0.29 0.035 52);
-  --sidebar-primary: oklch(0.34 0.045 52);
-  --sidebar-primary-foreground: oklch(0.985 0.012 80);
-  --sidebar-accent: oklch(0.91 0.06 65);
-  --sidebar-accent-foreground: oklch(0.3 0.04 52);
-  --sidebar-border: oklch(0.91 0.035 82);
-  --sidebar-ring: oklch(0.72 0.1 60);
+  --field: var(--color-peach-100);
+  --field-border: var(--color-smoke-400);
+  --ring: var(--color-marigold-500);
+  --chart-1: var(--color-marigold-400);
+  --chart-2: var(--color-smoke-500);
+  --chart-3: var(--color-blush-400);
+  --chart-4: var(--color-peach-500);
+  --chart-5: var(--color-cocoa-800);
+  --header: var(--color-peach-100);
+  --sidebar: var(--color-peach-50);
+  --sidebar-foreground: var(--color-cocoa-900);
+  --sidebar-primary: var(--color-cocoa-800);
+  --sidebar-primary-foreground: var(--color-milk);
+  --sidebar-accent: var(--color-marigold-200);
+  --sidebar-accent-foreground: var(--color-cocoa-900);
+  --sidebar-border: var(--color-peach-200);
+  --sidebar-ring: var(--color-marigold-500);
 }
 
 .dark {
-  --background: oklch(0.2 0.02 52);
-  --foreground: oklch(0.95 0.02 85);
-  --card: oklch(0.25 0.025 52);
-  --card-foreground: oklch(0.95 0.02 85);
-  --popover: oklch(0.27 0.026 52);
-  --popover-foreground: oklch(0.95 0.02 85);
-  --primary: oklch(0.84 0.08 65);
-  --primary-foreground: oklch(0.24 0.03 52);
-  --secondary: oklch(0.32 0.035 55);
-  --secondary-foreground: oklch(0.95 0.03 90);
-  --muted: oklch(0.3 0.025 55);
-  --muted-foreground: oklch(0.74 0.04 70);
-  --accent: oklch(0.36 0.045 58);
-  --accent-foreground: oklch(0.95 0.03 85);
-  --destructive: oklch(0.7 0.18 22);
-  --destructive-foreground: oklch(0.2 0.02 52);
-  --border: oklch(1 0.02 80 / 12%);
-  --input: oklch(1 0.02 80 / 16%);
-  --field: oklch(0.2 0.02 52);
-  --field-border: oklch(0.56 0.05 62);
-  --ring: oklch(0.7 0.09 62);
-  --chart-1: oklch(0.89 0.07 65);
-  --chart-2: oklch(0.8 0.09 62);
-  --chart-3: oklch(0.68 0.08 58);
-  --chart-4: oklch(0.55 0.06 55);
-  --chart-5: oklch(0.42 0.045 52);
-  --sidebar: oklch(0.21 0.02 52);
-  --sidebar-foreground: oklch(0.95 0.02 85);
-  --sidebar-primary: oklch(0.84 0.08 65);
-  --sidebar-primary-foreground: oklch(0.24 0.03 52);
-  --sidebar-accent: oklch(0.34 0.04 58);
-  --sidebar-accent-foreground: oklch(0.95 0.03 85);
-  --sidebar-border: oklch(1 0.02 80 / 10%);
-  --sidebar-ring: oklch(0.7 0.09 62);
+  --background: var(--color-cocoa-950);
+  --foreground: var(--color-peach-100);
+  --card: var(--color-cocoa-900);
+  --card-foreground: var(--color-peach-100);
+  --popover: var(--color-cocoa-900);
+  --popover-foreground: var(--color-peach-100);
+  --primary: var(--color-marigold-400);
+  --primary-foreground: var(--color-cocoa-950);
+  --secondary: var(--color-cocoa-800);
+  --secondary-foreground: var(--color-peach-100);
+  --muted: var(--color-cocoa-800);
+  --muted-foreground: var(--color-peach-300);
+  --accent: var(--color-cocoa-700);
+  --accent-foreground: var(--color-peach-50);
+  --destructive: var(--color-blush-400);
+  --destructive-foreground: var(--color-cocoa-950);
+  --border: oklch(from var(--color-milk) l c h / 12%);
+  --input: oklch(from var(--color-milk) l c h / 16%);
+  --field: var(--color-cocoa-950);
+  --field-border: var(--color-smoke-400);
+  --ring: var(--color-marigold-500);
+  --chart-1: var(--color-marigold-400);
+  --chart-2: var(--color-smoke-300);
+  --chart-3: var(--color-blush-400);
+  --chart-4: var(--color-peach-400);
+  --chart-5: var(--color-cocoa-500);
+  --header: var(--color-cocoa-900);
+  --sidebar: var(--color-cocoa-950);
+  --sidebar-foreground: var(--color-peach-100);
+  --sidebar-primary: var(--color-marigold-400);
+  --sidebar-primary-foreground: var(--color-cocoa-950);
+  --sidebar-accent: var(--color-cocoa-800);
+  --sidebar-accent-foreground: var(--color-peach-100);
+  --sidebar-border: oklch(from var(--color-milk) l c h / 10%);
+  --sidebar-ring: var(--color-marigold-500);
 }
 
 @layer base {
