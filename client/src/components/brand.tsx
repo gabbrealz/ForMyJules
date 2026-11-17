@@ -1,13 +1,13 @@
 import { cn } from "cn"
-import { CatIcon } from "lucide-react"
 
+import logo from "#assets/brand/calico_cat.png"
 import { APP_NAME } from "#config/brand"
 
 export function Brand({ className }: { className?: string }) {
   return (
-    <div className={cn("flex min-w-0 items-center gap-2.5", className)}>
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-apricot text-brown">
-        <CatIcon className="size-5" />
+    <div className={cn("flex min-w-0 items-center gap-2", className)}>
+      <span className="flex justify-center items-center p-1.5 bg-peach-200 border border-peach-300 rounded-sm">
+        <img src={logo} alt="Logo" className="size-7" />
       </span>
       <span className="truncate font-heading text-lg font-bold tracking-tight">
         {APP_NAME}

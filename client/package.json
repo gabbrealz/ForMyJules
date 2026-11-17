@@ -15,6 +15,7 @@
     "setup:mediapipe": "node scripts/setup-mediapipe.mjs"
   },
   "imports": {
+    "#assets/*": "./src/assets/*",
     "#components/*": "./src/components/*.tsx",
     "#pages/*": "./src/pages/*.tsx",
     "#hooks/*": "./src/hooks/*.ts",
