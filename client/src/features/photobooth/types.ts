@@ -1,3 +1,10 @@
+/**
+ * How the photobooth is being used. Chosen once, before the stepper, and kept
+ * for the whole visit: `solo` is the local photobooth, `with-others` joins the
+ * shared multiplayer session.
+ */
+export type PhotoboothMode = "solo" | "with-others"
+
 export type PhotoLayout = {
   id: string
   name: string

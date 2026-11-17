@@ -17,12 +17,15 @@ import {
 } from "#components/ui/stepper"
 import {
   ChooseLayoutStep,
+  ChooseModeScreen,
   ConfigureExperienceStep,
   DEFAULT_EXPERIENCE,
+  PhotoboothModeContext,
   PickFrameStep,
   TakePhotosStep,
   useCamera,
   type Experience,
+  type PhotoboothMode,
   type PhotoLayout,
 } from "#features/photobooth"
 import { PageShell } from "#layouts/page-shell"
@@ -43,6 +46,32 @@ export default function Photobooth() {
   usePageTitle("Photobooth")
   usePreloadBackgroundRemoval()
 
+  // Chosen once per visit, before the stepper. It is held here, above the
+  // stepper, so it survives every step change and "start over".
+  const [mode, setMode] = useState<PhotoboothMode | null>(null)
+
+  if (mode === null) {
+    return (
+      <PageShell
+        title="Photobooth"
+        subtitle="Choose how you'd like to take your photos."
+      >
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8">
+          <ChooseModeScreen onSelect={setMode} />
+        </div>
+      </PageShell>
+    )
+  }
+
+  // Steps read the mode with `usePhotoboothMode()`, not through props.
+  return (
+    <PhotoboothModeContext.Provider value={mode}>
+      <PhotoboothSteps />
+    </PhotoboothModeContext.Provider>
+  )
+}
+
+function PhotoboothSteps() {
   const [step, setStep] = useState(1)
   const [layout, setLayout] = useState<PhotoLayout | null>(null)
   const [experience, setExperience] = useState<Experience>(DEFAULT_EXPERIENCE)
