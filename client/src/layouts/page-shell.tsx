@@ -4,10 +4,8 @@ import { cn } from "cn"
 import PageHeader from "#components/page-header"
 
 type PageShellProps = {
-  /** Page title. Omit it for a page that draws its own heading. */
   title?: string
   subtitle?: string
-  /** Shown next to the title (e.g. a count). */
   badge?: ReactNode
   /**
    * For pages whose size depends on the viewport (the scrapbook book). On md+
@@ -23,7 +21,6 @@ type PageShellProps = {
    * measured instead of guessed at.
    */
   fill?: boolean
-  /** Extra classes for the content container, e.g. "max-w-4xl" to narrow it. */
   className?: string
   children?: ReactNode
 }
