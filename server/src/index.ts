@@ -4,6 +4,7 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import mongoose from 'mongoose';
 import { SESSION_COOKIE_NAME, config, cookieOptions } from './config';
+import { requestLogger } from './middlewares/logger';
 import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
 import photosRouter from './routes/photos';
@@ -27,6 +28,9 @@ async function main() {
 
   // Middleware to parse JSON
   app.use(express.json());
+
+  // Middleware for console logging requests
+  app.use(requestLogger);
 
   // Sessions are stored in MongoDB (the default MemoryStore leaks memory and loses
   // every session on each restart/deploy).
