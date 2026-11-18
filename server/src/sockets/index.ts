@@ -4,21 +4,25 @@ import type { Request, RequestHandler, Response } from 'express';
 import { WebSocketServer, type RawData, type WebSocket } from 'ws';
 import { config } from '../config';
 import { User, toPublicUser, type PublicUser } from '../models/user';
+import { decodeBinaryFrame } from './binary';
 import {
   WS_HEARTBEAT_INTERVAL_MS,
   WS_MAX_CONNECTIONS_PER_USER,
   WS_MAX_CONNECTIONS_TOTAL,
   WS_MAX_PAYLOAD_BYTES,
+  WS_MAX_TEXT_BYTES,
+  WS_MAX_TEXT_CEILING_BYTES,
   WS_PATH,
 } from './constants';
 import * as hub from './hub';
 import { liveCursor } from './live-cursor';
+import { photobooth } from './photobooth';
 import type { SocketConnection, SocketFeature } from './types';
 
 export { disconnectUser } from './hub';
 
 // Register new features here. Each one gets its own `f` namespace on the shared socket.
-const featureList: SocketFeature[] = [liveCursor];
+const featureList: SocketFeature[] = [liveCursor, photobooth];
 const features = new Map<string, SocketFeature>(featureList.map((f) => [f.name, f]));
 
 const canUse = (feature: SocketFeature, conn: SocketConnection): boolean =>
@@ -36,6 +40,12 @@ function safely(label: string, fn: () => void): void {
 function reject(socket: Duplex, status: number, message: string): void {
   socket.write(`HTTP/1.1 ${status} ${message}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
   socket.destroy();
+}
+
+function toBuffer(data: RawData): Buffer {
+  if (Buffer.isBuffer(data)) return data;
+  if (Array.isArray(data)) return Buffer.concat(data);
+  return Buffer.from(data);
 }
 
 // Runs the same express-session middleware as HTTP routes against the upgrade request.
@@ -70,18 +80,55 @@ export function attachWebSocketServer(server: Server, sessionParser: RequestHand
   const wss = new WebSocketServer({
     noServer: true,
     maxPayload: WS_MAX_PAYLOAD_BYTES,
-    perMessageDeflate: false, // tiny messages; compression only costs CPU and memory
+    // Sized for the largest binary frame; text messages get their own, smaller caps below.
+    perMessageDeflate: false, // tiny messages and already-compressed images: only costs CPU and memory
   });
 
   // WebSockets are not covered by CORS, so check Origin ourselves.
   const allowedOrigins = new Set([new URL(config.frontendUrl).origin]);
 
   function onMessage(conn: SocketConnection, data: RawData, isBinary: boolean): void {
-    if (isBinary || !hub.takeToken(conn)) return;
+    if (!hub.takeToken(conn)) return;
+    if (isBinary) onBinary(conn, toBuffer(data));
+    else onText(conn, toBuffer(data));
+  }
+
+  // Binary frames: [u16 header length][JSON header with `f`][payload]. Only features that declare
+  // `maxBinaryBytes` and `onBinary` get them.
+  function onBinary(conn: SocketConnection, frame: Buffer): void {
+    if (!hub.takeBytes(conn, frame.length)) return; // over budget: dropped, the sender retries
+
+    const decoded = decodeBinaryFrame(frame);
+    if (!decoded || typeof decoded.header !== 'object' || decoded.header === null) {
+      hub.strike(conn);
+      return;
+    }
+
+    const { header, payload } = decoded;
+    const feature = 'f' in header && typeof header.f === 'string' ? features.get(header.f) : undefined;
+    if (!feature?.onBinary || feature.maxBinaryBytes === undefined) {
+      hub.strike(conn);
+      return;
+    }
+    if (!canUse(feature, conn)) return;
+    if (frame.length > feature.maxBinaryBytes) {
+      hub.strike(conn);
+      return;
+    }
+
+    const { onBinary: handle } = feature;
+    safely(`${feature.name}.onBinary`, () => handle.call(feature, conn, header, payload));
+  }
+
+  function onText(conn: SocketConnection, raw: Buffer): void {
+    if (raw.length > WS_MAX_TEXT_CEILING_BYTES) {
+      hub.strike(conn);
+      return;
+    }
 
     let message: unknown;
     try {
-      message = JSON.parse(data.toString());
+      message = JSON.parse(raw.toString());
     } catch {
       hub.strike(conn);
       return;
@@ -98,6 +145,10 @@ export function attachWebSocketServer(server: Server, sessionParser: RequestHand
       return;
     }
     if (!canUse(feature, conn)) return;
+    if (raw.length > (feature.maxTextBytes ?? WS_MAX_TEXT_BYTES)) {
+      hub.strike(conn);
+      return;
+    }
 
     safely(`${feature.name}.onMessage`, () => feature.onMessage(conn, message));
   }
