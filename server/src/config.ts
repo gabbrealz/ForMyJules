@@ -4,6 +4,9 @@ const required = (name: string): string => {
   return value;
 };
 
+// Optional string env var. Unset or empty means "not configured".
+const optional = (name: string): string | undefined => process.env[name] || undefined;
+
 // Optional numeric env var. Falls back when unset, empty, or not a positive number.
 const positiveNumber = (name: string, fallback: number): number => {
   const value = Number(process.env[name]);
@@ -42,6 +45,14 @@ export const config = {
     cloudName: required('CLOUDINARY_CLOUD_NAME'),
     apiKey: required('CLOUDINARY_API_KEY'),
     apiSecret: required('CLOUDINARY_API_SECRET'), // never sent to the browser
+  },
+
+  // Metered Open Relay (free TURN for the multiplayer photobooth preview). Both values are
+  // optional: without them the ICE endpoint hands out STUN only, which works on most home
+  // networks but not on ones that block peer-to-peer. The API key never leaves the server.
+  rtc: {
+    meteredAppName: optional('METERED_APP_NAME'), // the "<app>" in https://<app>.metered.live
+    meteredApiKey: optional('METERED_API_KEY'),
   },
 
   storage: {

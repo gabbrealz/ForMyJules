@@ -40,6 +40,10 @@ export const createPhotoLimiter = perUser(200, 15 * 60 * 1000);
 // Each delete makes one Cloudinary Admin API call as well (separate counter again).
 export const deletePhotoLimiter = perUser(200, 15 * 60 * 1000);
 
+// Browsers fetch ICE servers once per photobooth visit; the answer is cached server-side, so this
+// only guards against a runaway client.
+export const iceServersLimiter = perUser(60, 15 * 60 * 1000);
+
 // Brute-force guard: 10 failed logins per IP per 15 minutes. Successful logins don't count.
 export const loginLimiter = perIp(10, 15 * 60 * 1000, { skipSuccessfulRequests: true });
 

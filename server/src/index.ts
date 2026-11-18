@@ -7,6 +7,7 @@ import { SESSION_COOKIE_NAME, config, cookieOptions } from './config';
 import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
 import photosRouter from './routes/photos';
+import rtcRouter from './routes/rtc';
 import uploadsRouter from './routes/sign-upload';
 import userRouter from './routes/user';
 import { attachWebSocketServer } from './sockets';
@@ -46,6 +47,7 @@ async function main() {
   app.use('/api/auth', authRouter);
   app.use('/api/admin', adminRouter);
   app.use('/api/photos', photosRouter);
+  app.use('/api/rtc', rtcRouter);
   app.use('/api/uploads', uploadsRouter);
   app.use('/api/users', userRouter);
 
