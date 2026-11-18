@@ -10,6 +10,9 @@ export interface SocketConnection {
   strikes: number;
   tokens: number;
   refilledAt: number;
+  /** Budget for incoming binary bytes (see WS_BYTE_BUCKET_*). */
+  byteTokens: number;
+  byteRefilledAt: number;
 }
 
 /**
@@ -24,8 +27,20 @@ export interface SocketFeature {
   readonly name: string;
   /** Roles allowed to use the feature. Omit to allow any approved user. */
   readonly roles?: readonly UserRole[];
+  /** Largest text message accepted. Defaults to WS_MAX_TEXT_BYTES. */
+  readonly maxTextBytes?: number;
+  /**
+   * Largest binary frame accepted (header included). Leave it out and binary frames for this
+   * feature are refused. Set it together with `onBinary`.
+   */
+  readonly maxBinaryBytes?: number;
   onConnect?(conn: SocketConnection): void;
   /** `message` is parsed JSON of unknown shape: validate it. */
   onMessage(conn: SocketConnection, message: unknown): void;
+  /**
+   * `header` is parsed JSON of unknown shape: validate it. `payload` is a view into the received
+   * frame, so copy it if it must outlive this call.
+   */
+  onBinary?(conn: SocketConnection, header: unknown, payload: Buffer): void;
   onClose?(conn: SocketConnection): void;
 }

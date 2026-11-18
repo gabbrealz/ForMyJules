@@ -3,8 +3,11 @@ import type { PublicUser } from '../models/user';
 import {
   WS_BUCKET_CAPACITY,
   WS_BUCKET_REFILL_PER_SEC,
+  WS_BYTE_BUCKET_CAPACITY,
+  WS_BYTE_BUCKET_REFILL_PER_SEC,
   WS_CLOSE_UNAUTHORIZED,
   WS_MAX_BUFFERED_BYTES,
+  WS_MAX_RELIABLE_BUFFERED_BYTES,
   WS_MAX_STRIKES,
 } from './constants';
 import type { SocketConnection } from './types';
@@ -23,6 +26,8 @@ export function register(ws: WebSocket, user: PublicUser): SocketConnection {
     strikes: 0,
     tokens: WS_BUCKET_CAPACITY,
     refilledAt: Date.now(),
+    byteTokens: WS_BYTE_BUCKET_CAPACITY,
+    byteRefilledAt: Date.now(),
   };
   connections.set(conn.id, conn);
   return conn;
@@ -45,6 +50,20 @@ export function send(conn: SocketConnection, json: string): void {
   ws.send(json);
 }
 
+/**
+ * Like `send`, but for messages that must not be dropped (session state, relayed photos). Only
+ * gives up when the socket is closed or its buffer is hopelessly backed up. Returns whether the
+ * message was handed to the socket, so callers can tell the sender to retry.
+ */
+export function sendReliable(conn: SocketConnection, data: string | Buffer): boolean {
+  const { ws } = conn;
+  if (ws.readyState !== WebSocket.OPEN || ws.bufferedAmount > WS_MAX_RELIABLE_BUFFERED_BYTES) {
+    return false;
+  }
+  ws.send(data, { binary: typeof data !== 'string' });
+  return true;
+}
+
 /** Token bucket shared by all features. Returns false when the connection is over its limit. */
 export function takeToken(conn: SocketConnection): boolean {
   const now = Date.now();
@@ -53,6 +72,17 @@ export function takeToken(conn: SocketConnection): boolean {
   conn.refilledAt = now;
   if (conn.tokens < 1) return false;
   conn.tokens -= 1;
+  return true;
+}
+
+/** Budget for incoming binary bytes. Returns false when the frame should be dropped. */
+export function takeBytes(conn: SocketConnection, bytes: number): boolean {
+  const now = Date.now();
+  const refill = ((now - conn.byteRefilledAt) / 1000) * WS_BYTE_BUCKET_REFILL_PER_SEC;
+  conn.byteTokens = Math.min(WS_BYTE_BUCKET_CAPACITY, conn.byteTokens + refill);
+  conn.byteRefilledAt = now;
+  if (conn.byteTokens < bytes) return false;
+  conn.byteTokens -= bytes;
   return true;
 }
 
