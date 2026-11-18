@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react"
+import { cn } from "cn"
 
 // How long each photo takes to travel across the screen. Higher = slower.
 const SECONDS_PER_SLIDE = 30
@@ -77,8 +78,10 @@ export function Backdrop({ children }: { children: ReactNode }) {
               // The right margin is the gap between photos.
               <picture
                 key={i}
-                className="mr-4 block aspect-[3/4] h-full shrink-0 md:mr-6 md:aspect-[4/3]"
-              >
+                className={cn(
+                  "mr-4 block aspect-3/4 h-full shrink-0 md:mr-6 md:aspect-4/3",
+                  "mask-[linear-gradient(to_bottom,black_70%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)]"
+              )}>
                 <source media={MOBILE_MEDIA} srcSet={slide.mobile} />
                 <img
                   src={slide.wide}
