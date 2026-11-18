@@ -7,6 +7,7 @@ import {
   BOOTH_MAX_FINAL_SHARES,
   BOOTH_MAX_MEMBERS,
   BOOTH_MAX_STILL_ATTEMPTS_PER_SHOT,
+  BOOTH_MIN_MEMBERS,
   BOOTH_START_LEAD_MS,
   BOOTH_STILL_EARLY_TOLERANCE_MS,
   type BoothIntervalId,
@@ -17,6 +18,7 @@ import type {
   BoothDeniedReason,
   BoothFinal,
   BoothImageMime,
+  BoothPhase,
   BoothRole,
   BoothRound,
   BoothState,
@@ -29,7 +31,9 @@ import type {
 // Rules, from the plan:
 // - Members are kept in join order. The leader is the earliest-joined ACTIVE member.
 // - Joining while a round is in progress puts you in 'waiting' until the round ends.
-// - Everyone present leaving resets the session.
+// - The session starts in a lobby. The leader moves the group out of it with `begin`, which needs
+//   at least 2 people. Config, `go` and `start` are refused while in the lobby.
+// - Everyone present leaving resets the session, back to the lobby.
 
 export type Result = { ok: true } | { ok: false; reason: BoothDeniedReason };
 export type JoinResult =
@@ -68,6 +72,7 @@ export class BoothSession {
   private readonly now: () => number;
 
   private version = 0;
+  private phase: BoothPhase = 'lobby';
   private step: BoothStep = 1;
   private members: MemberRecord[] = [];
   private config: BoothConfig = defaultConfig();
@@ -91,6 +96,7 @@ export class BoothSession {
   toState(): BoothState {
     return {
       v: this.version,
+      phase: this.phase,
       step: this.step,
       leaderId: this.leaderId(),
       members: this.members.map(({ id, name, role, status, ready }) => ({
@@ -224,9 +230,25 @@ export class BoothSession {
 
   // --- Leader controls ---------------------------------------------------------------------
 
+  /** Leader only: leaves the lobby for step 1. Needs at least BOOTH_MIN_MEMBERS people present. */
+  begin(id: number): Result {
+    const leader = this.requireLeader(id);
+    if (!leader.ok) return leader;
+    if (this.phase !== 'lobby') return deny('bad_step');
+    if (this.members.filter((m) => m.status === 'active').length < BOOTH_MIN_MEMBERS) {
+      return deny('too_few');
+    }
+
+    this.phase = 'flow';
+    this.step = 1;
+    this.bump();
+    return OK;
+  }
+
   patchConfig(id: number, patch: BoothConfigPatchInput): Result {
     const leader = this.requireLeader(id);
     if (!leader.ok) return leader;
+    if (this.phase === 'lobby') return deny('in_lobby');
 
     // Once the countdown has started only the frame colour may change, and only at the frame step.
     if (this.round !== null) {
@@ -250,6 +272,7 @@ export class BoothSession {
   go(id: number, step: BoothStep): Result {
     const leader = this.requireLeader(id);
     if (!leader.ok) return leader;
+    if (this.phase === 'lobby') return deny('in_lobby');
 
     if (this.round !== null) {
       if (step === 4 && this.round.status === 'complete') return OK;
@@ -275,6 +298,7 @@ export class BoothSession {
   start(id: number): Result {
     const leader = this.requireLeader(id);
     if (!leader.ok) return leader;
+    if (this.phase === 'lobby') return deny('in_lobby');
     if (this.round !== null) return deny('locked');
     if (this.step !== 3) return deny('bad_step');
 
@@ -502,6 +526,7 @@ export class BoothSession {
   private reset(): void {
     this.members = [];
     this.config = defaultConfig();
+    this.phase = 'lobby';
     this.step = 1;
     this.resetRound();
     this.step = 1;

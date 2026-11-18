@@ -50,6 +50,7 @@ export const boothMessageSchema = z.discriminatedUnion('t', [
   z.object({ t: z.literal('leave') }),
   z.object({ t: z.literal('sync'), c: z.number().finite() }),
   z.object({ t: z.literal('ready'), ready: z.boolean() }),
+  z.object({ t: z.literal('begin') }),
   z.object({ t: z.literal('config'), patch: configPatchSchema }),
   z.object({
     t: z.literal('go'),

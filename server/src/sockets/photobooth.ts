@@ -174,6 +174,9 @@ export const photobooth: SocketFeature = {
       case 'ready':
         apply(conn, 'ready', () => session.setReady(conn.id, msg.ready));
         return;
+      case 'begin':
+        apply(conn, 'begin', () => session.begin(conn.id));
+        return;
       case 'config':
         apply(conn, 'config', () => session.patchConfig(conn.id, msg.patch));
         return;

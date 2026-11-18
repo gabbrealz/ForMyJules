@@ -5,6 +5,9 @@ import { WS_MAX_BINARY_BYTES, WS_MAX_TEXT_CEILING_BYTES } from './constants';
 
 export const BOOTH_MAX_MEMBERS = 4;
 
+// The lobby cannot begin with fewer people than this.
+export const BOOTH_MIN_MEMBERS = 2;
+
 // --- Catalog -------------------------------------------------------------------------------
 // Mirrors LAYOUTS, FILTERS and INTERVALS in client/src/features/photobooth/constants.ts.
 // The server needs them to validate the leader's choices and to know how many shots a round has.

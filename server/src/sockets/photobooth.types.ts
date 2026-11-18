@@ -13,6 +13,13 @@ export type BoothScene = 'one-scene' | 'separate-cells';
 /** Mirrors the stepper: 1 layout, 2 experience, 3 photos, 4 frame. */
 export type BoothStep = 1 | 2 | 3 | 4;
 
+/**
+ * 'lobby': people are joining and nothing can be configured yet. The leader moves the group into
+ * 'flow' (the four steps) with `begin`, once at least 2 people are present. Late joiners after
+ * that go straight into the flow. The session returns to 'lobby' only when everyone has left.
+ */
+export type BoothPhase = 'lobby' | 'flow';
+
 export type BoothRole = 'admin' | 'partner' | 'guest';
 
 export type BoothImageMime = 'image/png' | 'image/webp' | 'image/jpeg';
@@ -86,6 +93,8 @@ export interface BoothFinal {
 export interface BoothState {
   /** Increases on every change. */
   v: number;
+  phase: BoothPhase;
+  /** Stays 1 in the lobby. */
   step: BoothStep;
   /** The earliest-joined active member. Null only when the session is empty. */
   leaderId: number | null;
@@ -101,6 +110,10 @@ export type BoothDeniedReason =
   | 'not_leader'
   /** Not allowed while a round is in progress. */
   | 'locked'
+  /** Not allowed until the leader has moved the group out of the lobby. */
+  | 'in_lobby'
+  /** The lobby needs at least 2 people before it can begin. */
+  | 'too_few'
   | 'bad_step'
   | 'no_layout'
   | 'not_ready'
@@ -134,6 +147,8 @@ export type BoothClientMessage =
   | { f: 'booth'; t: 'sync'; c: number }
   | { f: 'booth'; t: 'ready'; ready: boolean }
   // Leader only from here, except where noted.
+  /** Leaves the lobby for step 1. Refused with 'too_few' unless at least 2 people are present. */
+  | { f: 'booth'; t: 'begin' }
   | { f: 'booth'; t: 'config'; patch: BoothConfigPatch }
   | { f: 'booth'; t: 'go'; step: BoothStep }
   | { f: 'booth'; t: 'start' }
