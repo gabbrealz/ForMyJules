@@ -1,0 +1,294 @@
+import { useEffect, useRef, useState } from "react"
+
+import { boothChannel } from "../session/booth-channel"
+import { useBoothSessionContext } from "../session/booth-session-context"
+import type { BoothRtcSignal } from "../session/types"
+import { fetchIceServers } from "./ice-servers"
+
+export type PreviewState = "connecting" | "connected" | "failed"
+
+/** Someone else's live camera. `stream` is null until their video starts arriving. */
+export type RemotePreview = { stream: MediaStream | null; state: PreviewState }
+
+/** A modest preview: the full-quality photo travels separately, as a still. */
+const MAX_PREVIEW_BITRATE = 600_000
+const MAX_PREVIEW_FRAMERATE = 20
+
+type Peer = {
+  pc: RTCPeerConnection
+  sender: RTCRtpSender
+  /** The side with the higher id gives way when both send an offer at once. */
+  polite: boolean
+  makingOffer: boolean
+  ignoreOffer: boolean
+  restarted: boolean
+  stream: MediaStream | null
+  state: PreviewState
+  /** Signals are handled one at a time, in the order they arrived. */
+  queue: Promise<void>
+}
+
+/**
+ * A live video link to every other person in the booth (a full mesh: at most 4 people, so at most
+ * 3 links each). Only the preview travels this way; photos go over the WebSocket.
+ *
+ * Signalling goes through the booth channel (`rtc` messages). Connections follow "perfect
+ * negotiation", so both sides can start at once without a fight over who offers. Everyone sends
+ * and receives on one video transceiver, so a person without a camera yet can still see the others,
+ * and the camera can be swapped in later without renegotiating.
+ *
+ * Failure is quiet: a link that can't be made shows as 'failed' and the photobooth carries on,
+ * because the photos never depended on the preview.
+ */
+export function usePeerMesh(
+  enabled: boolean,
+  localStream: MediaStream | null,
+): ReadonlyMap<number, RemotePreview> {
+  const { me, state } = useBoothSessionContext()
+  const [previews, setPreviews] = useState<ReadonlyMap<number, RemotePreview>>(
+    () => new Map(),
+  )
+
+  // Read from inside the long-lived effect below without restarting it.
+  const memberIds = (state?.members ?? [])
+    .map((member) => member.id)
+    .filter((id) => id !== me)
+  const memberKey = memberIds.join(",")
+  const memberIdsRef = useRef<number[]>(memberIds)
+  const localStreamRef = useRef<MediaStream | null>(localStream)
+  const syncRef = useRef<(() => void) | null>(null)
+  const applyLocalRef = useRef<(() => void) | null>(null)
+  useEffect(() => {
+    memberIdsRef.current = memberKey ? memberKey.split(",").map(Number) : []
+    localStreamRef.current = localStream
+    syncRef.current?.()
+    applyLocalRef.current?.()
+  }, [memberKey, localStream])
+
+  useEffect(() => {
+    if (!enabled || me === null) return
+    const myId = me
+
+    const controller = new AbortController()
+    const peers = new Map<number, Peer>()
+    const early: { from: number; signal: BoothRtcSignal }[] = []
+    let iceServers: RTCIceServer[] | null = null
+    let closed = false
+
+    const publish = () => {
+      setPreviews(
+        new Map(
+          [...peers].map(([id, peer]) => [
+            id,
+            { stream: peer.stream, state: peer.state },
+          ]),
+        ),
+      )
+    }
+
+    const send = (to: number, signal: BoothRtcSignal) => {
+      boothChannel.send({ f: "booth", t: "rtc", to, signal })
+    }
+
+    const sendDescription = (to: number, description: RTCSessionDescription | null) => {
+      if (!description) return
+      send(to, {
+        kind: "description",
+        type: description.type,
+        sdp: description.sdp,
+      })
+    }
+
+    const limitBitrate = async (peer: Peer) => {
+      try {
+        const parameters = peer.sender.getParameters()
+        if (!parameters.encodings?.length) parameters.encodings = [{}]
+        parameters.encodings[0].maxBitrate = MAX_PREVIEW_BITRATE
+        parameters.encodings[0].maxFramerate = MAX_PREVIEW_FRAMERATE
+        await peer.sender.setParameters(parameters)
+      } catch {
+        // Not every browser allows it; the preview just uses what it likes.
+      }
+    }
+
+    const createPeer = (id: number): Peer | null => {
+      if (!iceServers || closed) return null
+
+      const pc = new RTCPeerConnection({ iceServers })
+      const transceiver = pc.addTransceiver("video", { direction: "sendrecv" })
+      const peer: Peer = {
+        pc,
+        sender: transceiver.sender,
+        polite: myId > id,
+        makingOffer: false,
+        ignoreOffer: false,
+        restarted: false,
+        stream: null,
+        state: "connecting",
+        queue: Promise.resolve(),
+      }
+
+      pc.onnegotiationneeded = async () => {
+        try {
+          peer.makingOffer = true
+          await pc.setLocalDescription()
+          sendDescription(id, pc.localDescription)
+        } catch (error) {
+          console.warn("Preview negotiation failed:", error)
+        } finally {
+          peer.makingOffer = false
+        }
+      }
+
+      pc.onicecandidate = ({ candidate }) => {
+        if (!candidate) return
+        const json = candidate.toJSON()
+        if (!json.candidate) return
+        send(id, {
+          kind: "candidate",
+          candidate: json.candidate,
+          sdpMid: json.sdpMid ?? null,
+          sdpMLineIndex: json.sdpMLineIndex ?? null,
+          usernameFragment: json.usernameFragment ?? null,
+        })
+      }
+
+      pc.ontrack = ({ track, streams }) => {
+        peer.stream = streams[0] ?? new MediaStream([track])
+        publish()
+      }
+
+      pc.onconnectionstatechange = () => {
+        const { connectionState } = pc
+        if (connectionState === "connected") {
+          peer.state = "connected"
+          void limitBitrate(peer)
+        } else if (connectionState === "failed") {
+          // One more try (a new set of candidate pairs) before giving up.
+          if (!peer.restarted) {
+            peer.restarted = true
+            pc.restartIce()
+            return
+          }
+          peer.state = "failed"
+        } else if (connectionState === "connecting" || connectionState === "new") {
+          peer.state = "connecting"
+        }
+        publish()
+      }
+
+      void peer.sender.replaceTrack(localStreamRef.current?.getVideoTracks()[0] ?? null)
+      peers.set(id, peer)
+      publish()
+      return peer
+    }
+
+    const closePeer = (id: number) => {
+      const peer = peers.get(id)
+      if (!peer) return
+      peer.pc.onnegotiationneeded = null
+      peer.pc.onicecandidate = null
+      peer.pc.ontrack = null
+      peer.pc.onconnectionstatechange = null
+      peer.pc.close()
+      peers.delete(id)
+    }
+
+    /** Make the set of links match the people who are here now. */
+    const sync = () => {
+      if (!iceServers || closed) return
+      const wanted = new Set(memberIdsRef.current)
+      let changed = false
+      for (const id of [...peers.keys()]) {
+        if (!wanted.has(id)) {
+          closePeer(id)
+          changed = true
+        }
+      }
+      for (const id of wanted) {
+        if (!peers.has(id)) createPeer(id)
+      }
+      if (changed) publish()
+    }
+
+    const applyLocal = () => {
+      const track = localStreamRef.current?.getVideoTracks()[0] ?? null
+      for (const peer of peers.values()) void peer.sender.replaceTrack(track)
+    }
+
+    const handle = async (from: number, signal: BoothRtcSignal) => {
+      const peer =
+        peers.get(from) ??
+        (memberIdsRef.current.includes(from) ? createPeer(from) : null)
+      if (!peer) return
+
+      peer.queue = peer.queue.then(async () => {
+        const { pc } = peer
+        try {
+          if (signal.kind === "description") {
+            const offerCollision =
+              signal.type === "offer" &&
+              (peer.makingOffer || pc.signalingState !== "stable")
+            peer.ignoreOffer = !peer.polite && offerCollision
+            if (peer.ignoreOffer) return
+
+            await pc.setRemoteDescription({ type: signal.type, sdp: signal.sdp })
+            if (signal.type === "offer") {
+              await pc.setLocalDescription()
+              sendDescription(from, pc.localDescription)
+            }
+          } else {
+            try {
+              await pc.addIceCandidate({
+                candidate: signal.candidate,
+                sdpMid: signal.sdpMid ?? undefined,
+                sdpMLineIndex: signal.sdpMLineIndex ?? undefined,
+                usernameFragment: signal.usernameFragment ?? undefined,
+              })
+            } catch (error) {
+              // Candidates that belong to an offer we ignored are expected to fail.
+              if (!peer.ignoreOffer) throw error
+            }
+          }
+        } catch (error) {
+          console.warn("Preview signalling failed:", error)
+        }
+      })
+    }
+
+    const unsubscribe = boothChannel.subscribe((message) => {
+      if (message.t !== "rtc") return
+      if (!iceServers) {
+        early.push({ from: message.from, signal: message.signal })
+        return
+      }
+      void handle(message.from, message.signal)
+    })
+
+    syncRef.current = sync
+    applyLocalRef.current = applyLocal
+
+    fetchIceServers(controller.signal)
+      .then((servers) => {
+        if (closed) return
+        iceServers = servers
+        sync()
+        for (const item of early.splice(0)) void handle(item.from, item.signal)
+      })
+      .catch(() => {
+        // Aborted: the effect is being torn down.
+      })
+
+    return () => {
+      closed = true
+      controller.abort()
+      unsubscribe()
+      syncRef.current = null
+      applyLocalRef.current = null
+      for (const id of [...peers.keys()]) closePeer(id)
+      setPreviews(new Map())
+    }
+  }, [enabled, me])
+
+  return previews
+}

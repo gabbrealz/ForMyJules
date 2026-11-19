@@ -31,10 +31,12 @@ import { CameraPreview } from "../components/camera-preview"
 import { STEP_BUTTON_CLASS, StepActions } from "../components/step-actions"
 import { LAYOUTS, getFilter, getIntervalSeconds } from "../constants"
 import type { CameraState } from "../hooks/use-camera"
+import type { RemotePreview } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
 import { captureStill } from "./capture-still"
 import { describeDenied } from "./denied-message"
 import { GroupRoster } from "./group-roster"
+import { RemotePreviews } from "./remote-previews"
 import { getRoundProgress, shotCount } from "./round-timeline"
 import type { GroupStills } from "./use-group-stills"
 import { useAutoReady } from "./use-auto-ready"
@@ -47,6 +49,7 @@ const CAMERA_BUTTON_CLASS = "h-14 min-w-44 px-10 has-[>svg]:px-10"
 type GroupPhotosStepProps = {
   camera: CameraState
   stills: GroupStills
+  previews: ReadonlyMap<number, RemotePreview>
 }
 
 /**
@@ -54,7 +57,11 @@ type GroupPhotosStepProps = {
  * starts one countdown that all screens share. Each camera takes shot i at the same agreed moment
  * and sends the full-size still to everyone else.
  */
-export function GroupPhotosStep({ camera, stills }: GroupPhotosStepProps) {
+export function GroupPhotosStep({
+  camera,
+  stills,
+  previews,
+}: GroupPhotosStepProps) {
   const { state, me, self, isLeader, denied, actions } =
     useBoothSessionContext()
 
@@ -309,6 +316,11 @@ export function GroupPhotosStep({ camera, stills }: GroupPhotosStepProps) {
                 {progress && progress.kind !== "finished" ? progress.secondsLeft : ""}
               </span>
             </CameraPreview>
+
+            <RemotePreviews
+              previews={previews}
+              className="w-full max-w-3xl [&>li]:max-h-28"
+            />
 
             <ol className="flex flex-wrap justify-center gap-2">
               {slots.map(({ shot, mine }) => (

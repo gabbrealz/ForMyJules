@@ -14,10 +14,12 @@ import { CameraPreview } from "../components/camera-preview"
 import { StepActions } from "../components/step-actions"
 import { FILTERS, INTERVALS, getFilter } from "../constants"
 import type { CameraState } from "../hooks/use-camera"
+import type { RemotePreview } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
 import type { BoothScene } from "../session/types"
 import { describeDenied } from "./denied-message"
 import { GroupRoster } from "./group-roster"
+import { RemotePreviews } from "./remote-previews"
 import { WaitingForLeader } from "./waiting-for-leader"
 
 const SCENES: { id: BoothScene; name: string; hint: string }[] = [
@@ -37,7 +39,13 @@ const SCENES: { id: BoothScene; name: string; hint: string }[] = [
  * Step 2 of the group flow. Each person checks their own camera; the leader's choices are shown to
  * everyone as they are made, so what you see is what the group will get.
  */
-export function GroupExperienceStep({ camera }: { camera: CameraState }) {
+export function GroupExperienceStep({
+  camera,
+  previews,
+}: {
+  camera: CameraState
+  previews: ReadonlyMap<number, RemotePreview>
+}) {
   const { state, isLeader, denied, actions } = useBoothSessionContext()
   if (!state) return null
 
@@ -60,11 +68,14 @@ export function GroupExperienceStep({ camera }: { camera: CameraState }) {
         <GroupRoster />
 
         <div className="grid gap-6 @lg:grid-cols-2">
-          <CameraPreview
-            camera={camera}
-            filter={getFilter(config.filterId).css}
-            removeBackground={config.removeBackground}
-          />
+          <div className="flex flex-col gap-3">
+            <CameraPreview
+              camera={camera}
+              filter={getFilter(config.filterId).css}
+              removeBackground={config.removeBackground}
+            />
+            <RemotePreviews previews={previews} />
+          </div>
 
           <FieldGroup>
             <Field>

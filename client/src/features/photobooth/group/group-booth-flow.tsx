@@ -15,6 +15,7 @@ import {
 } from "#components/ui/stepper"
 
 import { useCamera } from "../hooks/use-camera"
+import { usePeerMesh } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
 import type { BoothStep } from "../session/types"
 import { GroupExperienceStep } from "./group-experience-step"
@@ -44,6 +45,9 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
   // Like the solo flow: the camera only runs while a step needs it, and the stream carries over
   // from the experience step to the photos step.
   const camera = useCamera(step === 2 || step === 3)
+  // Live previews of the others, while cameras are on. Links are made at step 2, so they are
+  // already up when the countdown starts.
+  const previews = usePeerMesh(step === 2 || step === 3, camera.stream)
   // Held here, above the steps, so stills still arriving at the frame step aren't lost.
   const stills = useGroupStills()
 
@@ -94,10 +98,14 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
             <GroupLayoutStep />
           </StepperContent>
           <StepperContent value={2}>
-            <GroupExperienceStep camera={camera} />
+            <GroupExperienceStep camera={camera} previews={previews} />
           </StepperContent>
           <StepperContent value={3}>
-            <GroupPhotosStep camera={camera} stills={stills} />
+            <GroupPhotosStep
+              camera={camera}
+              stills={stills}
+              previews={previews}
+            />
           </StepperContent>
           <StepperContent value={4}>
             <GroupFrameStep stills={stills} />
