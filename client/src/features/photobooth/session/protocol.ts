@@ -1,5 +1,6 @@
 import type {
   BoothConfig,
+  BoothCursorPos,
   BoothDeniedReason,
   BoothFinal,
   BoothImageMime,
@@ -185,6 +186,19 @@ function parseSignal(value: unknown): BoothRtcSignal | null {
   return null
 }
 
+const ANCHOR_PATTERN = /^[a-z0-9_-]{1,32}$/i
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
+
+function parseCursorPos(value: unknown): BoothCursorPos | null {
+  if (!isRecord(value)) return null
+  const { a, x, y, fx, fy } = value
+  if (!isNumber(fx) || !isNumber(fy)) return null
+  if (a === null) return { a: null, fx: clamp01(fx), fy: clamp01(fy) }
+  if (!isString(a) || !ANCHOR_PATTERN.test(a)) return null
+  if (!isNumber(x) || !isNumber(y)) return null
+  return { a, x: clamp01(x), y: clamp01(y), fx: clamp01(fx), fy: clamp01(fy) }
+}
+
 /** Returns the message if it is a well-formed booth message, otherwise null. */
 export function parseBoothMessage(value: unknown): BoothServerMessage | null {
   if (!isRecord(value) || value.f !== BOOTH_FEATURE) return null
@@ -225,6 +239,16 @@ export function parseBoothMessage(value: unknown): BoothServerMessage | null {
     case "still-failed":
       return isNumber(value.shot)
         ? { f: BOOTH_FEATURE, t: "still-failed", shot: value.shot }
+        : null
+    case "cursor": {
+      const pos = parseCursorPos(value.pos)
+      return isId(value.id) && pos
+        ? { f: BOOTH_FEATURE, t: "cursor", id: value.id, pos }
+        : null
+    }
+    case "cursor-leave":
+      return isId(value.id)
+        ? { f: BOOTH_FEATURE, t: "cursor-leave", id: value.id }
         : null
     default:
       return null

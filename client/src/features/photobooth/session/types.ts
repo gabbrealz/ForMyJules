@@ -104,6 +104,14 @@ export type BoothConfigPatch = Partial<Omit<BoothConfig, "layoutId">> & {
   layoutId?: string
 }
 
+/**
+ * Where the leader's pointer is. Same shape as the live-cursor feature's CursorPos: `x`/`y` are
+ * fractions of the anchor element's box, `fx`/`fy` fractions of the page; `a` is null off-anchor.
+ */
+export type BoothCursorPos =
+  | { a: string; x: number; y: number; fx: number; fy: number }
+  | { a: null; fx: number; fy: number }
+
 export type BoothRtcSignal =
   | {
       kind: "description"
@@ -134,6 +142,9 @@ export type BoothClientMessage =
   | { f: "booth"; t: "continue" }
   | { f: "booth"; t: "retake" }
   | { f: "booth"; t: "new-round" }
+  /** Leader only: where my pointer is. Lossy, rate-limited by the server. */
+  | { f: "booth"; t: "cursor"; pos: BoothCursorPos }
+  | { f: "booth"; t: "cursor-leave" }
   /** Any member: I have received this member's still. */
   | { f: "booth"; t: "still-ack"; from: number; shot: number }
   // Any member from here.
@@ -160,6 +171,9 @@ export type BoothServerMessage =
   | { f: "booth"; t: "rtc"; from: number; signal: BoothRtcSignal }
   | { f: "booth"; t: "still-ack"; shot: number; by: number }
   | { f: "booth"; t: "still-failed"; shot: number }
+  /** The leader's pointer; `id` is the leader's member id. */
+  | { f: "booth"; t: "cursor"; id: number; pos: BoothCursorPos }
+  | { f: "booth"; t: "cursor-leave"; id: number }
 
 export type BoothStillServerHeader = {
   f: "booth"
