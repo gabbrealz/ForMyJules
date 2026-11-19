@@ -12,6 +12,8 @@ export const ANCHOR_ATTRIBUTE = "data-anchor"
 export const ANCHORS = {
   spinWheel: "spin-wheel",
   spinEntries: "spin-entries",
+  /** The content area of the group photobooth, so the leader's cursor lines up on every screen. */
+  boothStage: "booth-stage",
 } as const
 
 export type AnchorName = (typeof ANCHORS)[keyof typeof ANCHORS]
