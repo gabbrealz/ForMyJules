@@ -16,6 +16,8 @@ import {
   StepperTrigger,
 } from "#components/ui/stepper"
 import {
+  BoothLobby,
+  BoothSessionProvider,
   ChooseLayoutStep,
   ChooseModeScreen,
   ConfigureExperienceStep,
@@ -23,6 +25,7 @@ import {
   PhotoboothModeContext,
   PickFrameStep,
   TakePhotosStep,
+  useBoothSessionContext,
   useCamera,
   type Experience,
   type PhotoboothMode,
@@ -63,11 +66,43 @@ export default function Photobooth() {
     )
   }
 
-  // Steps read the mode with `usePhotoboothMode()`, not through props.
+  // Steps read the mode with `usePhotoboothMode()`, not through props. Only "with others" joins
+  // the shared session; solo never opens it.
   return (
     <PhotoboothModeContext.Provider value={mode}>
-      <PhotoboothSteps />
+      {mode === "with-others" ? (
+        <BoothSessionProvider>
+          <GroupPhotobooth onExit={() => setMode(null)} />
+        </BoothSessionProvider>
+      ) : (
+        <PhotoboothSteps />
+      )}
     </PhotoboothModeContext.Provider>
+  )
+}
+
+/** "With others": the waiting room first, then the shared steps once the leader starts. */
+function GroupPhotobooth({ onExit }: { onExit: () => void }) {
+  const { state } = useBoothSessionContext()
+
+  if (state?.phase !== "flow") {
+    return (
+      <PageShell
+        title="Photobooth"
+        subtitle="Wait for everyone to join, then the leader starts."
+      >
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8">
+          <BoothLobby onExit={onExit} />
+        </div>
+      </PageShell>
+    )
+  }
+
+  // Temporary: the shared steps are the next piece.
+  return (
+    <PageShell title="Photobooth" subtitle="The group steps are coming next.">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8" />
+    </PageShell>
   )
 }
 
