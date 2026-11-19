@@ -17,6 +17,15 @@ export type SocketStatus =
 
 export type MessageHandler = (message: unknown) => void
 
+/**
+ * A binary frame is [u16 header length][JSON header][payload]; the header names its feature in
+ * `f`, like text messages. `payload` is a view into the received frame: copy it to keep it.
+ */
+export type BinaryHandler = (header: unknown, payload: Uint8Array) => void
+
+/** Must match WS_MAX_BINARY_HEADER_BYTES on the server. */
+const MAX_BINARY_HEADER_BYTES = 1024
+
 export type SocketClientOptions = {
   /** Full ws:// or wss:// URL, including the path. */
   url: string
@@ -60,6 +69,7 @@ export class SocketClient {
   private retryTimer: ReturnType<typeof setTimeout> | undefined
   private idleTimer: ReturnType<typeof setTimeout> | undefined
   private readonly handlers = new Map<string, Set<MessageHandler>>()
+  private readonly binaryHandlers = new Map<string, Set<BinaryHandler>>()
   private readonly statusListeners = new Set<() => void>()
   private readonly unauthorizedListeners = new Set<() => void>()
 
@@ -115,12 +125,44 @@ export class SocketClient {
     }
   }
 
+  /** Listens to the binary frames whose header's `f` field equals `feature`. The header is unvalidated. */
+  subscribeBinary(feature: string, handler: BinaryHandler): () => void {
+    let set = this.binaryHandlers.get(feature)
+    if (!set) {
+      set = new Set()
+      this.binaryHandlers.set(feature, set)
+    }
+    set.add(handler)
+    return () => {
+      set.delete(handler)
+    }
+  }
+
   /** Returns false (and drops the message) when the socket isn't open. */
   send(message: { readonly f: string }): boolean {
     const { socket } = this
     if (!socket || socket.readyState !== WebSocket.OPEN) return false
     socket.send(JSON.stringify(message))
     return true
+  }
+
+  /** Sends one binary frame. Returns false (and drops it) when the socket isn't open or the header is too big. */
+  sendBinary(header: { readonly f: string }, payload: Blob | BufferSource): boolean {
+    const { socket } = this
+    if (!socket || socket.readyState !== WebSocket.OPEN) return false
+
+    const headerBytes = new TextEncoder().encode(JSON.stringify(header))
+    if (headerBytes.length === 0 || headerBytes.length > MAX_BINARY_HEADER_BYTES) return false
+
+    const prefix = new Uint8Array(2)
+    new DataView(prefix.buffer).setUint16(0, headerBytes.length)
+    socket.send(new Blob([prefix, headerBytes, payload]))
+    return true
+  }
+
+  /** Bytes queued to send. Wait for it to drain before sending more big frames. */
+  getBufferedAmount(): number {
+    return this.socket?.bufferedAmount ?? 0
   }
 
   private release(): void {
@@ -135,6 +177,7 @@ export class SocketClient {
     this.setStatus(this.attempt === 0 ? "connecting" : "reconnecting")
 
     const socket = new WebSocket(this.options.url)
+    socket.binaryType = "arraybuffer"
     this.socket = socket
     let opened = false
 
@@ -208,7 +251,40 @@ export class SocketClient {
     this.setStatus("idle")
   }
 
+  private dispatchBinary(data: ArrayBuffer): void {
+    if (data.byteLength < 2) return
+    const view = new DataView(data)
+    const headerLength = view.getUint16(0)
+    if (headerLength === 0 || 2 + headerLength > data.byteLength) return
+
+    let header: unknown
+    try {
+      header = JSON.parse(
+        new TextDecoder().decode(new Uint8Array(data, 2, headerLength)),
+      )
+    } catch {
+      return
+    }
+    if (typeof header !== "object" || header === null) return
+
+    const feature = (header as { f?: unknown }).f
+    if (typeof feature !== "string") return
+
+    const payload = new Uint8Array(data, 2 + headerLength)
+    for (const handler of this.binaryHandlers.get(feature) ?? []) {
+      try {
+        handler(header, payload)
+      } catch (error) {
+        console.error(`[socket] "${feature}" binary handler failed`, error)
+      }
+    }
+  }
+
   private dispatch(data: unknown): void {
+    if (data instanceof ArrayBuffer) {
+      this.dispatchBinary(data)
+      return
+    }
     if (typeof data !== "string") return
 
     let message: unknown

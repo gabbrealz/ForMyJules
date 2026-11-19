@@ -2,7 +2,11 @@ import { WS_URL } from "#config/env"
 import { HttpError, http } from "#services/http-client"
 import { SocketClient } from "./socket-client.ts"
 
-export type { MessageHandler, SocketStatus } from "./socket-client.ts"
+export type {
+  BinaryHandler,
+  MessageHandler,
+  SocketStatus,
+} from "./socket-client.ts"
 
 // Must match WS_PATH on the server (sockets/constants.ts).
 const WS_PATH = "/ws"
