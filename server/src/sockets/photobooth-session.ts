@@ -209,7 +209,9 @@ export class BoothSession {
         // Stills only live in the leader's memory, so a round without a shared final image is lost
         // and gets retaken by the next leader. Once the final image has been shared everyone
         // already has it, so the round carries on and only the leadership changes.
-        if (!this.final) this.resetRound();
+        // Every client already has every still once the round is complete, so only a round that
+        // was cut short is lost.
+        if (!this.final && this.round.status !== 'complete') this.resetRound();
       } else if (gone.status === 'active' && this.step === 3 && this.round.status === 'running') {
         this.stopRound();
       }
@@ -385,6 +387,15 @@ export class BoothSession {
     return OK;
   }
 
+  /** Active members of the round's roster other than `from`: they all receive its stills. */
+  stillRecipientIds(from: number): number[] {
+    const round = this.round;
+    if (!round) return [];
+    return this.members
+      .filter((m) => m.status === 'active' && m.id !== from && round.roster.includes(m.id))
+      .map((m) => m.id);
+  }
+
   /** Keeps the leader's final image in memory (never on disk) so members can fetch it again. */
   setFinal(id: number, mime: BoothImageMime, bytes: Buffer): Result {
     const leader = this.requireLeader(id);
@@ -408,7 +419,12 @@ export class BoothSession {
     const member = this.members.find((m) => m.id === id);
     if (!member || member.status !== 'active') return deny('not_member');
     if (member.role !== 'admin' && member.role !== 'partner') return deny('cannot_save');
-    if (!this.final) return deny('no_final');
+    if (!this.final) {
+      if (this.round?.status !== 'complete') return deny('no_final');
+      // Every client draws the frame itself, so no image was relayed: just record the save state.
+      this.finalSeq += 1;
+      this.final = { id: this.finalSeq, mime: 'image/png', size: 0, save: { status: 'none', by: null } };
+    }
     if (this.final.save.status === 'saved') return deny('already_saved');
     if (this.final.save.status === 'saving') return deny('busy');
 
@@ -444,7 +460,8 @@ export class BoothSession {
   /**
    * Whether `id` may send a still for `shot` right now, and counts the attempt. The shot must
    * already exist on the server's timeline (or have been scheduled before the stop cut-off), so
-   * shots scheduled after a stop are refused here. The leader never sends stills over the socket.
+   * shots scheduled after a stop are refused here. Every member, the leader included, sends its
+   * stills to everyone else, so each client can draw the frame itself.
    */
   checkStill(id: number, shot: number): Result {
     const member = this.members.find((m) => m.id === id);
@@ -452,7 +469,6 @@ export class BoothSession {
     if (!member) return deny('not_member');
     if (!round || round.status === 'complete') return deny('no_round');
     if (member.status !== 'active' || !round.roster.includes(id)) return deny('not_member');
-    if (this.leaderId() === id) return deny('bad_step');
     if (shot >= round.shots) return deny('bad_step');
 
     const existing =

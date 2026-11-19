@@ -209,13 +209,14 @@ export const photobooth: SocketFeature = {
         return;
 
       case 'still-ack': {
-        // The leader confirms it received a member's still; pass that on so the sender stops retrying.
-        if (!session.isLeader(conn.id)) {
-          deny(conn, 'still-ack', 'not_leader');
+        // A receiver confirms it has a member's still; pass that on, saying who, so the sender
+        // can stop retrying once everyone has it.
+        if (!session.isActiveMember(conn.id)) {
+          deny(conn, 'still-ack', 'not_member');
           return;
         }
         if (session.isActiveMember(msg.from)) {
-          sendTo(msg.from, encode({ f: FEATURE, t: 'still-ack', shot: msg.shot }));
+          sendTo(msg.from, encode({ f: FEATURE, t: 'still-ack', shot: msg.shot, by: conn.id }));
         }
         return;
       }
@@ -258,31 +259,30 @@ export const photobooth: SocketFeature = {
     const header = parsed.data;
 
     if (header.t === 'still') {
-      // A member's full-quality still goes to the leader only, which composes the final image.
+      // A full-quality still goes to every other member of the round, so each client can draw
+      // the frame itself.
       const check = session.checkStill(conn.id, header.shot);
       if (!check.ok) {
         deny(conn, 'still', check.reason);
         return;
       }
 
-      const leaderId = session.leaderId();
-      const relayed =
-        leaderId !== null &&
-        sendTo(
-          leaderId,
-          encodeBinaryFrame(
-            {
-              f: FEATURE,
-              t: 'still',
-              from: conn.id,
-              shot: header.shot,
-              mime: header.mime,
-            } satisfies BoothBinaryServerHeader,
-            payload,
-          ),
-        );
-      // No ack will come, so say so: the sender retries after a short wait.
-      if (!relayed) hub.sendReliable(conn, encode({ f: FEATURE, t: 'still-failed', shot: header.shot }));
+      const frame = encodeBinaryFrame(
+        {
+          f: FEATURE,
+          t: 'still',
+          from: conn.id,
+          shot: header.shot,
+          mime: header.mime,
+        } satisfies BoothBinaryServerHeader,
+        payload,
+      );
+      const recipients = session.stillRecipientIds(conn.id);
+      const failed = recipients.filter((id) => !sendTo(id, frame));
+      // Someone did not get it, so say so: the sender retries (receivers ignore duplicates).
+      if (recipients.length === 0 || failed.length > 0) {
+        hub.sendReliable(conn, encode({ f: FEATURE, t: 'still-failed', shot: header.shot }));
+      }
       return;
     }
 

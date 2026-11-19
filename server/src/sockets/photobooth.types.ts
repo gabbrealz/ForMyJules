@@ -159,7 +159,7 @@ export type BoothClientMessage =
   | { f: 'booth'; t: 'retake' }
   /** From step 4: back to step 1 for another round. */
   | { f: 'booth'; t: 'new-round' }
-  /** The leader has received this member's still. */
+  /** I have received this member's still. Every receiver sends one. */
   | { f: 'booth'; t: 'still-ack'; from: number; shot: number }
   // Any member from here.
   /** Asks the server to send the current final image again (a relay was dropped, or a reconnect). */
@@ -173,7 +173,7 @@ export type BoothClientMessage =
 // --- Client -> server (binary headers) -----------------------------------------------------
 
 export type BoothBinaryClientHeader =
-  /** A non-leader's full-quality still for one shot. Relayed to the leader only. */
+  /** Anyone's full-quality still for one shot. Relayed to every other member of the round. */
   | { f: 'booth'; t: 'still'; shot: number; mime: 'image/png' | 'image/webp' }
   /** The leader's finished image. Relayed to every other active member. */
   | { f: 'booth'; t: 'final'; mime: BoothImageMime };
@@ -189,14 +189,14 @@ export type BoothServerMessage =
   /** A request was refused. A fresh `state` follows, so the UI can fall back to it. */
   | { f: 'booth'; t: 'denied'; for: string; reason: BoothDeniedReason }
   | { f: 'booth'; t: 'rtc'; from: number; signal: BoothRtcSignal }
-  /** To a still's sender: the leader has it. */
-  | { f: 'booth'; t: 'still-ack'; shot: number }
-  /** To a still's sender: the server could not hand it to the leader. Retry after a short wait. */
+  /** To a still's sender: member `by` has it. Done once every other member has acked. */
+  | { f: 'booth'; t: 'still-ack'; shot: number; by: number }
+  /** To a still's sender: the server could not hand it to everyone. Retry after a short wait. */
   | { f: 'booth'; t: 'still-failed'; shot: number };
 
 // --- Server -> client (binary headers) -----------------------------------------------------
 
 export type BoothBinaryServerHeader =
-  /** To the leader only. */
+  /** To every other member of the round. */
   | { f: 'booth'; t: 'still'; from: number; shot: number; mime: 'image/png' | 'image/webp' }
   | { f: 'booth'; t: 'final'; id: number; mime: BoothImageMime };
