@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { boothBinaryHeaderSchema, boothMessageSchema } from '../validators/photobooth';
 import { encodeBinaryFrame } from './binary';
+import { CURSOR_MIN_INTERVAL_MS } from './constants';
 import * as hub from './hub';
 import {
   BOOTH_FINAL_GET_MIN_INTERVAL_MS,
@@ -99,6 +100,17 @@ function syncSaveTimer(): void {
 // --- Membership ----------------------------------------------------------------------------
 
 const lastFinalGetAt = new Map<number, number>();
+const lastCursorAt = new Map<number, number>();
+
+// The leader's pointer, for everyone else to see. Lossy like the live cursors: a dropped move is
+// replaced by the next one, so it uses the plain `send`, which skips backed-up sockets.
+function relayLeaderCursor(from: SocketConnection, message: BoothServerMessage): void {
+  const json = encode(message);
+  for (const id of session.memberIds()) {
+    const conn = hub.connections.get(id);
+    if (conn && id !== from.id) hub.send(conn, json);
+  }
+}
 
 function join(conn: SocketConnection): void {
   const result = session.join(conn.id, conn.user);
@@ -116,6 +128,7 @@ function join(conn: SocketConnection): void {
 function leave(conn: SocketConnection): void {
   if (!session.isMember(conn.id)) return;
   lastFinalGetAt.delete(conn.id);
+  lastCursorAt.delete(conn.id);
   session.leave(conn.id); // always changes the state for a member
   broadcastState();
   syncSaveTimer();
@@ -176,6 +189,21 @@ export const photobooth: SocketFeature = {
         return;
       case 'begin':
         apply(conn, 'begin', () => session.begin(conn.id));
+        return;
+      case 'cursor': {
+        // Only the leader's pointer is shared. A message from someone who has just stopped being
+        // the leader is dropped silently, and so are moves arriving faster than the limit.
+        if (!session.isLeader(conn.id)) return;
+        const now = Date.now();
+        if (now - (lastCursorAt.get(conn.id) ?? 0) < CURSOR_MIN_INTERVAL_MS) return;
+        lastCursorAt.set(conn.id, now);
+        relayLeaderCursor(conn, { f: FEATURE, t: 'cursor', id: conn.id, pos: msg.pos });
+        return;
+      }
+      case 'cursor-leave':
+        if (session.isLeader(conn.id)) {
+          relayLeaderCursor(conn, { f: FEATURE, t: 'cursor-leave', id: conn.id });
+        }
         return;
       case 'config':
         apply(conn, 'config', () => session.patchConfig(conn.id, msg.patch));

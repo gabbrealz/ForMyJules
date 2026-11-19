@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ANCHOR_REGEX, unit } from './live-cursor';
 import {
   BOOTH_FILTER_IDS,
   BOOTH_INTERVAL_IDS,
@@ -29,6 +30,13 @@ const configPatchSchema = z
   })
   .refine((patch) => Object.keys(patch).length > 0, { message: 'Empty patch' });
 
+// Where the leader's pointer is: the live-cursor feature's position (fractions of an anchor's box,
+// plus fractions of the page as a fallback).
+const cursorPosSchema = z.union([
+  z.object({ a: z.string().regex(ANCHOR_REGEX), x: unit, y: unit, fx: unit, fy: unit }),
+  z.object({ a: z.null(), fx: unit, fy: unit }),
+]);
+
 const rtcSignalSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('description'),
@@ -51,6 +59,8 @@ export const boothMessageSchema = z.discriminatedUnion('t', [
   z.object({ t: z.literal('sync'), c: z.number().finite() }),
   z.object({ t: z.literal('ready'), ready: z.boolean() }),
   z.object({ t: z.literal('begin') }),
+  z.object({ t: z.literal('cursor'), pos: cursorPosSchema }),
+  z.object({ t: z.literal('cursor-leave') }),
   z.object({ t: z.literal('config'), patch: configPatchSchema }),
   z.object({
     t: z.literal('go'),

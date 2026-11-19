@@ -127,6 +127,11 @@ export type BoothDeniedReason =
 
 export type BoothConfigPatch = Partial<Omit<BoothConfig, 'layoutId'>> & { layoutId?: string };
 
+/** Where the leader's pointer is. The same shape as the live-cursor feature's CursorPos. */
+export type BoothCursorPos =
+  | { a: string; x: number; y: number; fx: number; fy: number }
+  | { a: null; fx: number; fy: number };
+
 export type BoothRtcSignal =
   | { kind: 'description'; type: 'offer' | 'answer' | 'pranswer' | 'rollback'; sdp?: string }
   | {
@@ -168,7 +173,11 @@ export type BoothClientMessage =
   | { f: 'booth'; t: 'save-claim' }
   | { f: 'booth'; t: 'save-done' }
   | { f: 'booth'; t: 'save-fail' }
-  | { f: 'booth'; t: 'rtc'; to: number; signal: BoothRtcSignal };
+  | { f: 'booth'; t: 'rtc'; to: number; signal: BoothRtcSignal }
+  /** Leader only: where my pointer is. Relayed to everyone else, and not part of the state. */
+  | { f: 'booth'; t: 'cursor'; pos: BoothCursorPos }
+  /** Leader only: my pointer left the page. */
+  | { f: 'booth'; t: 'cursor-leave' };
 
 // --- Client -> server (binary headers) -----------------------------------------------------
 
@@ -189,6 +198,9 @@ export type BoothServerMessage =
   /** A request was refused. A fresh `state` follows, so the UI can fall back to it. */
   | { f: 'booth'; t: 'denied'; for: string; reason: BoothDeniedReason }
   | { f: 'booth'; t: 'rtc'; from: number; signal: BoothRtcSignal }
+  /** The leader's pointer. Lossy: a dropped move is replaced by the next one. */
+  | { f: 'booth'; t: 'cursor'; id: number; pos: BoothCursorPos }
+  | { f: 'booth'; t: 'cursor-leave'; id: number }
   /** To a still's sender: member `by` has it. Done once every other member has acked. */
   | { f: 'booth'; t: 'still-ack'; shot: number; by: number }
   /** To a still's sender: the server could not hand it to everyone. Retry after a short wait. */

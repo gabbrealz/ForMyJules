@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const ANCHOR_REGEX = /^[a-z0-9_-]{1,32}$/i;
 
 // Clamp to [0, 1] and round to 4 decimals. `.finite()` matters because JSON.parse('1e999') is Infinity.
-const unit = z
+export const unit = z
   .number()
   .finite()
   .transform((v) => Math.round(Math.min(1, Math.max(0, v)) * 10_000) / 10_000);
