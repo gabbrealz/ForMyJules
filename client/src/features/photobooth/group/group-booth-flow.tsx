@@ -54,9 +54,11 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
   if (!state) return null
 
   const hasLayout = state.config.layoutId !== null
-  const roundComplete = state.round?.status === "complete"
+  // The server only lets the leader jump between steps 1 to 3 while there is no round. Once there
+  // is one, the buttons inside the steps (Next, Retake, Take more photos) move the group instead,
+  // and the frame step is reached only through the photos step's Next.
   const isLocked = (target: number) =>
-    !isLeader || (target >= 2 && !hasLayout) || (target >= 4 && !roundComplete)
+    !isLeader || state.round !== null || target >= 4 || (target >= 2 && !hasLayout)
 
   return (
     <div className="flex flex-col gap-4">

@@ -76,7 +76,8 @@ export function GroupFrameStep({ stills }: { stills: GroupStills }) {
   const navigate = useNavigate()
   const user = useRequiredUser()
   const canSave = canManagePhotos(user)
-  const { state, me, isLeader, denied, actions } = useBoothSessionContext()
+  const { state, me, self, isLeader, denied, actions } =
+    useBoothSessionContext()
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const abortRef = useRef<AbortController | null>(null)
@@ -223,6 +224,20 @@ export function GroupFrameStep({ stills }: { stills: GroupStills }) {
 
   if (!state || !layout || !round) return null
 
+  // Joined after the round began: there are no stills for this person to draw from.
+  if (self?.status === "waiting") {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-heading">Pick a frame</CardTitle>
+          <CardDescription>
+            A round is already in progress. You'll join the next one.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
+
   const isSaving = saveStatus === "saving"
   const savingByMe = isSaving && final?.save.by === me
   const isDone = saveStatus === "saved"
@@ -353,10 +368,11 @@ export function GroupFrameStep({ stills }: { stills: GroupStills }) {
                 type="button"
                 variant="outline"
                 className={FOOTER_BUTTON_CLASS}
-                onClick={() => actions.go(3)}
+                // The server has no way back to the photos step except throwing the round away.
+                onClick={actions.retake}
                 disabled={isSaving}
               >
-                <ArrowLeftIcon /> Back
+                <ArrowLeftIcon /> Retake photos
               </Button>
             ) : (
               <WaitingForLeader what="to continue" />

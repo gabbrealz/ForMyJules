@@ -37,11 +37,18 @@ import { captureStill } from "./capture-still"
 import { describeDenied } from "./denied-message"
 import { GroupRoster } from "./group-roster"
 import { RemotePreviews } from "./remote-previews"
-import { getRoundProgress, shotCount } from "./round-timeline"
+import { captureAt, getRoundProgress, shotCount } from "./round-timeline"
 import type { GroupStills } from "./use-group-stills"
 import { useAutoReady } from "./use-auto-ready"
 import { useServerNow, useShotScheduler } from "./use-round-clock"
 import { WaitingForLeader } from "./waiting-for-leader"
+
+/**
+ * The server moves a round to 'complete' only when the leader goes to the frame step, so the
+ * clients work out for themselves when the last shot is past. The margin keeps the leader from
+ * asking a moment before the server agrees.
+ */
+const FINISH_MARGIN_MS = 300
 
 /** The camera window's buttons: bigger than the step buttons. */
 const CAMERA_BUTTON_CLASS = "h-14 min-w-44 px-10 has-[>svg]:px-10"
@@ -80,8 +87,13 @@ export function GroupPhotosStep({
   const inRound = round !== null && me !== null && round.roster.includes(me)
   const canShoot = isOpen && ready && self?.status === "active" && inRound
 
-  const now = useServerNow(isOpen && isRunning)
+  // Ticks even with the camera window closed: the Next button depends on it.
+  const now = useServerNow(isRunning)
   const progress = round && isRunning ? getRoundProgress(round, now) : null
+  const lastShotPast =
+    round !== null &&
+    isRunning &&
+    now >= captureAt(round, round.shots - 1) + FINISH_MARGIN_MS
 
   const onShot = useCallback(
     async (shot: number) => {
@@ -109,12 +121,13 @@ export function GroupPhotosStep({
 
   const total = layout.shots
   const taken = round ? shotCount(round) : 0
-  const isComplete = round?.status === "complete"
+  // Every shot's time has passed (the server's status catches up when the leader moves on).
+  const isComplete = round?.status === "complete" || lastShotPast
   const isStopped = round?.status === "stopped"
   const everyoneReady = state.members
     .filter((member) => member.status === "active")
     .every((member) => member.ready)
-  const hasEveryStill = isComplete && stills.hasAll(taken)
+  const hasEveryStill = isComplete && stills.hasAll(total)
   const error = describeDenied(denied, ["start", "stop", "continue", "retake", "go"])
 
   const closeWindow = () => {
@@ -122,7 +135,10 @@ export function GroupPhotosStep({
     setFlashId(0)
   }
 
-  const nextShot = Math.min(taken, total - 1)
+  const nextShot =
+    progress && progress.kind !== "finished"
+      ? progress.shot
+      : Math.min(taken, total - 1)
   const slots = Array.from({ length: total }, (_, shot) => {
     const mine = me === null ? undefined : stills.get(me, shot)
     const received = state.members.filter(
@@ -192,7 +208,7 @@ export function GroupPhotosStep({
                 key={shot}
                 className={cn(
                   "relative aspect-4/3 w-full max-w-md overflow-hidden rounded-lg border bg-muted",
-                  isRunning && shot === nextShot && "ring-2 ring-primary",
+                  isRunning && !isComplete && shot === nextShot && "ring-2 ring-primary",
                 )}
               >
                 {mine ? (
@@ -234,6 +250,8 @@ export function GroupPhotosStep({
           {isLeader ? (
             <StepActions
               onBack={() => actions.go(2)}
+              // Once a round exists, the leader retakes instead of going back.
+              backDisabled={round !== null}
               onNext={() => actions.go(4)}
               nextDisabled={!hasEveryStill}
             />
@@ -288,7 +306,7 @@ export function GroupPhotosStep({
               className="max-h-full w-full max-w-3xl"
             >
               <Badge variant="secondary" className="absolute top-3 left-3">
-                Photo {Math.min(taken + 1, total)} of {total}
+                Photo {Math.min(nextShot + 1, total)} of {total}
               </Badge>
 
               {progress && progress.kind !== "finished" && (
@@ -347,7 +365,7 @@ export function GroupPhotosStep({
           <div className="flex shrink-0 flex-wrap items-center justify-center gap-3 p-4 pb-6">
             {isLeader ? (
               <>
-                {isRunning ? (
+                {isRunning && !isComplete ? (
                   <Button
                     type="button"
                     variant="outline"
@@ -374,7 +392,7 @@ export function GroupPhotosStep({
                     <PlayIcon /> {isStopped ? "Continue" : "Start"}
                   </Button>
                 )}
-                {round && !isRunning && (
+                {round && (!isRunning || isComplete) && (
                   <Button
                     type="button"
                     variant="outline"
