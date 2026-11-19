@@ -1,4 +1,6 @@
 export { BoothLobby } from "./components/booth-lobby"
+export { LeaderCursor } from "./components/leader-cursor"
+export { GroupBoothFlow } from "./group/group-booth-flow"
 export { ChooseModeScreen } from "./components/choose-mode-screen"
 export { ChooseLayoutStep } from "./components/choose-layout-step"
 export { TakePhotosStep } from "./components/take-photos-step"

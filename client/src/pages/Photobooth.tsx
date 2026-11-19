@@ -15,6 +15,7 @@ import {
   StepperTitle,
   StepperTrigger,
 } from "#components/ui/stepper"
+import { ANCHORS, anchorProps } from "#features/live-cursor"
 import {
   BoothLobby,
   BoothSessionProvider,
@@ -22,6 +23,8 @@ import {
   ChooseModeScreen,
   ConfigureExperienceStep,
   DEFAULT_EXPERIENCE,
+  GroupBoothFlow,
+  LeaderCursor,
   PhotoboothModeContext,
   PickFrameStep,
   TakePhotosStep,
@@ -84,25 +87,32 @@ export default function Photobooth() {
 /** "With others": the waiting room first, then the shared steps once the leader starts. */
 function GroupPhotobooth({ onExit }: { onExit: () => void }) {
   const { state } = useBoothSessionContext()
+  const inFlow = state?.phase === "flow"
 
-  if (state?.phase !== "flow") {
-    return (
+  // The leader's cursor is pinned to the stage, so it lands in the same place on every screen.
+  return (
+    <>
+      <LeaderCursor />
       <PageShell
         title="Photobooth"
-        subtitle="Wait for everyone to join, then the leader starts."
+        subtitle={
+          inFlow
+            ? "Choose a layout, set up the camera, and take your photos together."
+            : "Wait for everyone to join, then the leader starts."
+        }
       >
-        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8">
-          <BoothLobby onExit={onExit} />
+        <div
+          {...anchorProps(ANCHORS.boothStage)}
+          className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8"
+        >
+          {inFlow ? (
+            <GroupBoothFlow onExit={onExit} />
+          ) : (
+            <BoothLobby onExit={onExit} />
+          )}
         </div>
       </PageShell>
-    )
-  }
-
-  // Temporary: the shared steps are the next piece.
-  return (
-    <PageShell title="Photobooth" subtitle="The group steps are coming next.">
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col p-4 md:p-8" />
-    </PageShell>
+    </>
   )
 }
 
