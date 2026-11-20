@@ -1,3 +1,4 @@
+import { useRef } from "react"
 import { CheckIcon, LogOutIcon } from "lucide-react"
 
 import { Button } from "#components/ui/button"
@@ -14,7 +15,10 @@ import {
   StepperTrigger,
 } from "#components/ui/stepper"
 
+import { CameraPreview } from "../components/camera-preview"
 import { useCamera } from "../hooks/use-camera"
+import type { PackSource } from "../rtc/alpha-pack"
+import { useAlphaPacker } from "../rtc/use-alpha-packer"
 import { usePeerMesh } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
 import type { BoothStep } from "../session/types"
@@ -44,10 +48,27 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
 
   // Like the solo flow: the camera only runs while a step needs it, and the stream carries over
   // from the experience step to the photos step.
-  const camera = useCamera(step === 2 || step === 3)
+  const camerasOn = step === 2 || step === 3
+  const camera = useCamera(camerasOn)
+
+  // This person's own picture for the steps: the cutout canvas while the background is removed,
+  // otherwise the plain video. <CameraPreview> below fills it. The stage previews from it, photos
+  // are taken from it, and the packer below sends it to the others.
+  const localSourceRef = useRef<PackSource | null>(null)
+  const removeBackground = state?.config.removeBackground ?? false
+
+  // What the others get to see of this camera. A cutout can't travel as transparency, so with the
+  // background removed it is packed into colour-plus-matte video (see rtc/alpha-pack.ts).
+  const cameraTrack = camera.stream?.getVideoTracks()[0] ?? null
+  const packedTrack = useAlphaPacker(
+    camerasOn && removeBackground && !!camera.stream,
+    localSourceRef,
+  )
+  const sendTrack = removeBackground ? packedTrack : cameraTrack
+
   // Live previews of the others, while cameras are on. Links are made at step 2, so they are
   // already up when the countdown starts.
-  const previews = usePeerMesh(step === 2 || step === 3, camera.stream)
+  const previews = usePeerMesh(camerasOn, sendTrack)
   // Held here, above the steps, so stills still arriving at the frame step aren't lost.
   const stills = useGroupStills()
 
@@ -62,6 +83,19 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/*
+        The camera itself, kept playing but invisible (not display:none: browsers may stop updating a
+        hidden video). It runs the background removal and is the source the stage draws from.
+      */}
+      {camerasOn && (
+        <CameraPreview
+          camera={camera}
+          captureRef={localSourceRef}
+          removeBackground={removeBackground}
+          className="pointer-events-none fixed bottom-0 left-0 -z-10 w-24 opacity-0"
+        />
+      )}
+
       <div className="flex justify-end">
         <Button type="button" variant="ghost" size="sm" onClick={onExit}>
           <LogOutIcon /> Leave
@@ -100,13 +134,18 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
             <GroupLayoutStep />
           </StepperContent>
           <StepperContent value={2}>
-            <GroupExperienceStep camera={camera} previews={previews} />
+            <GroupExperienceStep
+              camera={camera}
+              previews={previews}
+              localSourceRef={localSourceRef}
+            />
           </StepperContent>
           <StepperContent value={3}>
             <GroupPhotosStep
               camera={camera}
               stills={stills}
               previews={previews}
+              localSourceRef={localSourceRef}
             />
           </StepperContent>
           <StepperContent value={4}>

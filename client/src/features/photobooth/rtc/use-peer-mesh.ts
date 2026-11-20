@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { boothChannel } from "../session/booth-channel"
 import { useBoothSessionContext } from "../session/booth-session-context"
 import type { BoothRtcSignal } from "../session/types"
-import { fetchIceServers } from "./ice-servers"
+import { fetchIceConfig, fetchRelayServers } from "./ice-servers"
 
 export type PreviewState = "connecting" | "connected" | "failed"
 
@@ -11,8 +11,10 @@ export type PreviewState = "connecting" | "connected" | "failed"
 export type RemotePreview = { stream: MediaStream | null; state: PreviewState }
 
 /** A modest preview: the full-quality photo travels separately, as a still. */
-const MAX_PREVIEW_BITRATE = 600_000
+const MAX_PREVIEW_BITRATE = 700_000
 const MAX_PREVIEW_FRAMERATE = 20
+/** How long a direct (free) connection gets before the relay is tried as well. */
+const DIRECT_ATTEMPT_MS = 7_000
 
 type Peer = {
   pc: RTCPeerConnection
@@ -22,6 +24,9 @@ type Peer = {
   makingOffer: boolean
   ignoreOffer: boolean
   restarted: boolean
+  /** The TURN relay has been added to this link (the fallback, used at most once). */
+  relayTried: boolean
+  fallbackTimer: number | undefined
   stream: MediaStream | null
   state: PreviewState
   /** Signals are handled one at a time, in the order they arrived. */
@@ -32,17 +37,25 @@ type Peer = {
  * A live video link to every other person in the booth (a full mesh: at most 4 people, so at most
  * 3 links each). Only the preview travels this way; photos go over the WebSocket.
  *
+ * What is sent is `localTrack`: the plain camera, or, with the background removed, the packed
+ * colour-plus-matte video from `useAlphaPacker`, since a video call can't carry transparency.
+ *
+ * Connections try the free route first. They start with STUN servers only, which connects most
+ * networks directly. Only a link that hasn't connected after a few seconds (or has failed) asks the
+ * server for TURN credentials and retries through the relay, so relayed traffic, the one thing here
+ * that can cost bandwidth, is used only where nothing else works.
+ *
  * Signalling goes through the booth channel (`rtc` messages). Connections follow "perfect
  * negotiation", so both sides can start at once without a fight over who offers. Everyone sends
  * and receives on one video transceiver, so a person without a camera yet can still see the others,
- * and the camera can be swapped in later without renegotiating.
+ * and the track can be swapped without renegotiating.
  *
  * Failure is quiet: a link that can't be made shows as 'failed' and the photobooth carries on,
  * because the photos never depended on the preview.
  */
 export function usePeerMesh(
   enabled: boolean,
-  localStream: MediaStream | null,
+  localTrack: MediaStreamTrack | null,
 ): ReadonlyMap<number, RemotePreview> {
   const { me, state } = useBoothSessionContext()
   const [previews, setPreviews] = useState<ReadonlyMap<number, RemotePreview>>(
@@ -55,15 +68,15 @@ export function usePeerMesh(
     .filter((id) => id !== me)
   const memberKey = memberIds.join(",")
   const memberIdsRef = useRef<number[]>(memberIds)
-  const localStreamRef = useRef<MediaStream | null>(localStream)
+  const localTrackRef = useRef<MediaStreamTrack | null>(localTrack)
   const syncRef = useRef<(() => void) | null>(null)
   const applyLocalRef = useRef<(() => void) | null>(null)
   useEffect(() => {
     memberIdsRef.current = memberKey ? memberKey.split(",").map(Number) : []
-    localStreamRef.current = localStream
+    localTrackRef.current = localTrack
     syncRef.current?.()
     applyLocalRef.current?.()
-  }, [memberKey, localStream])
+  }, [memberKey, localTrack])
 
   useEffect(() => {
     if (!enabled || me === null) return
@@ -72,7 +85,9 @@ export function usePeerMesh(
     const controller = new AbortController()
     const peers = new Map<number, Peer>()
     const early: { from: number; signal: BoothRtcSignal }[] = []
-    let iceServers: RTCIceServer[] | null = null
+    let stunServers: RTCIceServer[] | null = null
+    let relayAvailable = false
+    let relayRequest: Promise<RTCIceServer[]> | null = null
     let closed = false
 
     const publish = () => {
@@ -111,10 +126,37 @@ export function usePeerMesh(
       }
     }
 
-    const createPeer = (id: number): Peer | null => {
-      if (!iceServers || closed) return null
+    /**
+     * The fallback: add the TURN relay to this link and gather candidates again. Credentials are
+     * requested here, not up front, and shared by every link that needs them. Both ends of a link
+     * do this on their own once their direct attempt has stalled.
+     */
+    const useRelay = async (peer: Peer) => {
+      if (peer.relayTried || !relayAvailable || !stunServers || closed) return
+      peer.relayTried = true
 
-      const pc = new RTCPeerConnection({ iceServers })
+      relayRequest ??= fetchRelayServers(controller.signal)
+      let relays: RTCIceServer[]
+      try {
+        relays = await relayRequest
+      } catch {
+        return // aborted
+      }
+      if (closed || peer.pc.signalingState === "closed" || relays.length === 0) {
+        return
+      }
+
+      peer.pc.setConfiguration({
+        ...peer.pc.getConfiguration(),
+        iceServers: [...stunServers, ...relays],
+      })
+      peer.pc.restartIce()
+    }
+
+    const createPeer = (id: number): Peer | null => {
+      if (!stunServers || closed) return null
+
+      const pc = new RTCPeerConnection({ iceServers: stunServers })
       const transceiver = pc.addTransceiver("video", { direction: "sendrecv" })
       const peer: Peer = {
         pc,
@@ -123,10 +165,17 @@ export function usePeerMesh(
         makingOffer: false,
         ignoreOffer: false,
         restarted: false,
+        relayTried: false,
+        fallbackTimer: undefined,
         stream: null,
         state: "connecting",
         queue: Promise.resolve(),
       }
+
+      // Still not connected: the direct route isn't working, so bring in the relay.
+      peer.fallbackTimer = window.setTimeout(() => {
+        if (peer.state !== "connected") void useRelay(peer)
+      }, DIRECT_ATTEMPT_MS)
 
       pc.onnegotiationneeded = async () => {
         try {
@@ -161,10 +210,15 @@ export function usePeerMesh(
       pc.onconnectionstatechange = () => {
         const { connectionState } = pc
         if (connectionState === "connected") {
+          window.clearTimeout(peer.fallbackTimer)
           peer.state = "connected"
           void limitBitrate(peer)
         } else if (connectionState === "failed") {
-          // One more try (a new set of candidate pairs) before giving up.
+          // First the relay (if there is one), then one plain retry, then give up.
+          if (!peer.relayTried && relayAvailable) {
+            void useRelay(peer)
+            return
+          }
           if (!peer.restarted) {
             peer.restarted = true
             pc.restartIce()
@@ -177,7 +231,7 @@ export function usePeerMesh(
         publish()
       }
 
-      void peer.sender.replaceTrack(localStreamRef.current?.getVideoTracks()[0] ?? null)
+      void peer.sender.replaceTrack(localTrackRef.current)
       peers.set(id, peer)
       publish()
       return peer
@@ -186,6 +240,7 @@ export function usePeerMesh(
     const closePeer = (id: number) => {
       const peer = peers.get(id)
       if (!peer) return
+      window.clearTimeout(peer.fallbackTimer)
       peer.pc.onnegotiationneeded = null
       peer.pc.onicecandidate = null
       peer.pc.ontrack = null
@@ -196,7 +251,7 @@ export function usePeerMesh(
 
     /** Make the set of links match the people who are here now. */
     const sync = () => {
-      if (!iceServers || closed) return
+      if (!stunServers || closed) return
       const wanted = new Set(memberIdsRef.current)
       let changed = false
       for (const id of [...peers.keys()]) {
@@ -212,8 +267,9 @@ export function usePeerMesh(
     }
 
     const applyLocal = () => {
-      const track = localStreamRef.current?.getVideoTracks()[0] ?? null
-      for (const peer of peers.values()) void peer.sender.replaceTrack(track)
+      for (const peer of peers.values()) {
+        void peer.sender.replaceTrack(localTrackRef.current)
+      }
     }
 
     const handle = async (from: number, signal: BoothRtcSignal) => {
@@ -258,7 +314,7 @@ export function usePeerMesh(
 
     const unsubscribe = boothChannel.subscribe((message) => {
       if (message.t !== "rtc") return
-      if (!iceServers) {
+      if (!stunServers) {
         early.push({ from: message.from, signal: message.signal })
         return
       }
@@ -268,10 +324,11 @@ export function usePeerMesh(
     syncRef.current = sync
     applyLocalRef.current = applyLocal
 
-    fetchIceServers(controller.signal)
-      .then((servers) => {
+    fetchIceConfig(controller.signal)
+      .then((config) => {
         if (closed) return
-        iceServers = servers
+        stunServers = config.iceServers
+        relayAvailable = config.relayAvailable
         sync()
         for (const item of early.splice(0)) void handle(item.from, item.signal)
       })

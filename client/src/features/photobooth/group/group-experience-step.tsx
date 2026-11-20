@@ -1,3 +1,5 @@
+import type { RefObject } from "react"
+
 import { Button } from "#components/ui/button"
 import {
   Card,
@@ -10,16 +12,16 @@ import {
 import { Field, FieldGroup, FieldLabel } from "#components/ui/field"
 import { Switch } from "#components/ui/switch"
 
-import { CameraPreview } from "../components/camera-preview"
 import { StepActions } from "../components/step-actions"
-import { FILTERS, INTERVALS, getFilter } from "../constants"
+import { FILTERS, INTERVALS } from "../constants"
 import type { CameraState } from "../hooks/use-camera"
+import type { PackSource } from "../rtc/alpha-pack"
 import type { RemotePreview } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
 import type { BoothScene } from "../session/types"
 import { describeDenied } from "./denied-message"
 import { GroupRoster } from "./group-roster"
-import { RemotePreviews } from "./remote-previews"
+import { GroupStage } from "./group-stage"
 import { WaitingForLeader } from "./waiting-for-leader"
 
 const SCENES: { id: BoothScene; name: string; hint: string }[] = [
@@ -42,9 +44,12 @@ const SCENES: { id: BoothScene; name: string; hint: string }[] = [
 export function GroupExperienceStep({
   camera,
   previews,
+  localSourceRef,
 }: {
   camera: CameraState
   previews: ReadonlyMap<number, RemotePreview>
+  /** This person's own camera (or its cutout), owned by the flow. */
+  localSourceRef: RefObject<PackSource | null>
 }) {
   const { state, isLeader, denied, actions } = useBoothSessionContext()
   if (!state) return null
@@ -68,13 +73,29 @@ export function GroupExperienceStep({
         <GroupRoster />
 
         <div className="grid gap-6 @lg:grid-cols-2">
+          {/* Everyone's cameras in one picture, laid out like the frame. */}
           <div className="flex flex-col gap-3">
-            <CameraPreview
-              camera={camera}
-              filter={getFilter(config.filterId).css}
-              removeBackground={config.removeBackground}
+            <GroupStage
+              localSourceRef={localSourceRef}
+              previews={previews}
+              cameraReady={!!camera.stream}
             />
-            <RemotePreviews previews={previews} />
+            {camera.error && (
+              <div
+                role="alert"
+                className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 p-3 text-sm text-destructive"
+              >
+                <p>{camera.error}</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={camera.retry}
+                >
+                  Try again
+                </Button>
+              </div>
+            )}
           </div>
 
           <FieldGroup>

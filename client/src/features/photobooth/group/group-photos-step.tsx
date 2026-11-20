@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useState, type RefObject } from "react"
 import { cn } from "cn"
 import {
   CameraIcon,
@@ -27,16 +27,16 @@ import {
   DialogTitle,
 } from "#components/ui/dialog"
 
-import { CameraPreview } from "../components/camera-preview"
 import { STEP_BUTTON_CLASS, StepActions } from "../components/step-actions"
 import { LAYOUTS, getFilter, getIntervalSeconds } from "../constants"
 import type { CameraState } from "../hooks/use-camera"
+import type { PackSource } from "../rtc/alpha-pack"
 import type { RemotePreview } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
 import { captureStill } from "./capture-still"
 import { describeDenied } from "./denied-message"
 import { GroupRoster } from "./group-roster"
-import { RemotePreviews } from "./remote-previews"
+import { GroupStage } from "./group-stage"
 import { captureAt, getRoundProgress, shotCount } from "./round-timeline"
 import type { GroupStills } from "./use-group-stills"
 import { useAutoReady } from "./use-auto-ready"
@@ -57,6 +57,8 @@ type GroupPhotosStepProps = {
   camera: CameraState
   stills: GroupStills
   previews: ReadonlyMap<number, RemotePreview>
+  /** This person's own camera (or its cutout), owned by the flow. Photos are taken from it. */
+  localSourceRef: RefObject<PackSource | null>
 }
 
 /**
@@ -68,11 +70,12 @@ export function GroupPhotosStep({
   camera,
   stills,
   previews,
+  localSourceRef,
 }: GroupPhotosStepProps) {
   const { state, me, self, isLeader, denied, actions } =
     useBoothSessionContext()
 
-  const captureRef = useRef<HTMLVideoElement | HTMLCanvasElement | null>(null)
+  const captureRef = localSourceRef
   const [isOpen, setIsOpen] = useState(false)
   // 0 means no flash. Each capture bumps it, which mounts a fresh flash element.
   const [flashId, setFlashId] = useState(0)
@@ -298,11 +301,11 @@ export function GroupPhotosStep({
           )}
 
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-4">
-            <CameraPreview
-              camera={camera}
-              filter={filter}
-              captureRef={captureRef}
-              removeBackground={state.config.removeBackground}
+            {/* Everyone's cameras in one picture, laid out like the frame. */}
+            <GroupStage
+              localSourceRef={localSourceRef}
+              previews={previews}
+              cameraReady={!!camera.stream}
               className="max-h-full w-full max-w-3xl"
             >
               <Badge variant="secondary" className="absolute top-3 left-3">
@@ -333,12 +336,7 @@ export function GroupPhotosStep({
               <span className="sr-only" aria-live="assertive">
                 {progress && progress.kind !== "finished" ? progress.secondsLeft : ""}
               </span>
-            </CameraPreview>
-
-            <RemotePreviews
-              previews={previews}
-              className="w-full max-w-3xl [&>li]:max-h-28"
-            />
+            </GroupStage>
 
             <ol className="flex flex-wrap justify-center gap-2">
               {slots.map(({ shot, mine }) => (
