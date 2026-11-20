@@ -3,7 +3,7 @@ import cors from 'cors';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import mongoose from 'mongoose';
-import { SESSION_COOKIE_NAME, config, cookieOptions } from './config';
+import { SESSION_COOKIE_NAME, config, cookieOptions, isOriginAllowed } from './config';
 import { requestLogger } from './middlewares/logger';
 import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
@@ -18,10 +18,17 @@ async function main() {
 
   const app = express();
 
-  app.use(cors({
-    origin: config.frontendUrl,
-    credentials: true
-  }));
+  app.use(
+    cors({
+      origin(origin, callback) {
+        if (!origin || isOriginAllowed(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+      },
+      credentials: true,
+    })
+  );
 
   // Render terminates TLS in front of the app; without this, `secure` cookies are never set.
   if (config.isProd || config.secureCookies) app.set('trust proxy', 1);
@@ -74,6 +81,9 @@ async function main() {
   // Start Server
   const server = app.listen(config.port, () => {
     console.log(`Server is running at http://localhost:${config.port}`);
+    if (config.allowLanOrigins) {
+      console.log('Dev: origins on private networks are allowed (ALLOW_LAN_ORIGINS).');
+    }
   });
 
   // WebSockets share the HTTP server (and its port) and the session middleware above.
