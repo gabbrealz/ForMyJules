@@ -85,6 +85,7 @@ export function GroupPhotosStep({
   const round = state?.round ?? null
   const layout = LAYOUTS.find((candidate) => candidate.id === state?.config.layoutId)
   const filter = getFilter(state?.config.filterId ?? "none").css
+  const isOneScene = state?.config.scene === "one-scene"
 
   const isRunning = round?.status === "running"
   const inRound = round !== null && me !== null && round.roster.includes(me)
@@ -102,14 +103,14 @@ export function GroupPhotosStep({
     async (shot: number) => {
       // Freeze the picture and flash at once, at the agreed moment. Encoding the image takes a
       // while on a phone, and the flash must not wait for it.
-      const snapshot = snapshotStill(captureRef.current, filter)
+      const snapshot = snapshotStill(captureRef.current, filter, isOneScene)
       if (!snapshot) return
       setFlashId((id) => id + 1)
 
       const blob = await encodeStill(snapshot)
       if (blob) stills.addOwn(shot, blob)
     },
-    [filter, stills],
+    [filter, isOneScene, stills],
   )
   useShotScheduler({ round, enabled: canShoot, onShot })
 
@@ -305,12 +306,17 @@ export function GroupPhotosStep({
           )}
 
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-4">
-            {/* Everyone's cameras in one picture, laid out like the frame. */}
+            {/*
+              Everyone's cameras in one picture, laid out like the frame. The stage must keep its 4:3:
+              capping only its height (max-h) squeezes the box while the picture inside stays as wide,
+              which stretches it. So the box is sized from the space available, both ways.
+            */}
+            <div className="relative grid min-h-0 w-full max-w-3xl flex-1 place-items-center [container-type:size]">
             <GroupStage
               localSourceRef={localSourceRef}
               previews={previews}
               cameraReady={!!camera.stream}
-              className="max-h-full w-full max-w-3xl"
+              className="w-[min(100cqw,calc(100cqh*4/3))]"
             >
               <Badge variant="secondary" className="absolute top-3 left-3">
                 Photo {Math.min(nextShot + 1, total)} of {total}
@@ -341,6 +347,7 @@ export function GroupPhotosStep({
                 {progress && progress.kind !== "finished" ? progress.secondsLeft : ""}
               </span>
             </GroupStage>
+            </div>
 
             <ol className="flex flex-wrap justify-center gap-2">
               {slots.map(({ shot, mine }) => (
