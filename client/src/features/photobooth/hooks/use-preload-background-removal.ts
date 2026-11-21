@@ -10,7 +10,7 @@ import { preloadBackgroundRemoval } from "../background/segmenter"
  */
 export function usePreloadBackgroundRemoval() {
   useEffect(() => {
-    if ("requestIdleCallback" in window) {
+    if (typeof window.requestIdleCallback === "function") {
       // The timeout makes it run even if the browser never gets idle.
       const id = window.requestIdleCallback(preloadBackgroundRemoval, {
         timeout: 5000,

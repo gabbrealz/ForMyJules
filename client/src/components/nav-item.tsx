@@ -5,6 +5,7 @@ import {
   MotionConfig,
   motion,
   useAnimationControls,
+  type Variant,
   type Variants,
 } from "framer-motion"
 import { cn } from "cn"
@@ -26,7 +27,7 @@ import { useRipple } from "../hooks/use-ripple"
 
 const REST = { y: 0, scale: 1, scaleX: 1, scaleY: 1, rotate: 0 }
 
-const PRESS = {
+const PRESS: Variant = {
   scale: [1, 0.88, 1.08, 1],
   transition: { duration: 0.4, ease: "easeOut" },
 }

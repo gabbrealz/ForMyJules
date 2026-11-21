@@ -8,7 +8,10 @@ import { ResultsTab } from "./results-tab"
 
 // Extra props (e.g. data attributes) are passed through to the card element.
 interface EntriesCardProps
-  extends Omit<ComponentProps<typeof Card>, "children" | "className"> {
+  extends Omit<
+    ComponentProps<typeof Card>,
+    "children" | "className" | "results"
+  > {
   /** One entry per line; each line is edited in its own input. */
   text: string
   onTextChange: (text: string) => void

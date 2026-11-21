@@ -141,9 +141,13 @@ const buttonVariants = cva(
   }
 )
 
-/* -------------------------------------------------------------------------- */
-/*  Component                                                                  */
-/* -------------------------------------------------------------------------- */
+type PointerDownEvent = Parameters<
+  NonNullable<ButtonPrimitive.Props["onPointerDown"]>
+>[0]
+type KeyboardEventArg = Parameters<
+  NonNullable<ButtonPrimitive.Props["onKeyDown"]>
+>[0]
+type BlurEvent = Parameters<NonNullable<ButtonPrimitive.Props["onBlur"]>>[0]
 
 function Button({
   className,
@@ -164,7 +168,7 @@ function Button({
     releaseKeyRippleRef.current = null
   }
 
-  function handlePointerDown(event: React.PointerEvent<HTMLButtonElement>) {
+  function handlePointerDown(event: PointerDownEvent) {
     onPointerDown?.(event)
 
     const host = event.currentTarget
@@ -182,7 +186,7 @@ function Button({
     endEvents.forEach((name) => host.addEventListener(name, done))
   }
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+  function handleKeyDown(event: KeyboardEventArg) {
     onKeyDown?.(event)
 
     const layer = rippleLayerRef.current
@@ -200,12 +204,12 @@ function Button({
     releaseKeyRippleRef.current = startRipple(layer) // from the center
   }
 
-  function handleKeyUp(event: React.KeyboardEvent<HTMLButtonElement>) {
+  function handleKeyUp(event: KeyboardEventArg) {
     onKeyUp?.(event)
     if (event.key === "Enter" || event.key === " ") endKeyRipple()
   }
 
-  function handleBlur(event: React.FocusEvent<HTMLButtonElement>) {
+  function handleBlur(event: BlurEvent) {
     onBlur?.(event)
     endKeyRipple()
   }
