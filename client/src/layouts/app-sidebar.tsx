@@ -20,7 +20,7 @@ import { isAdmin } from "../features/auth/types.ts"
 import { cn } from "cn"
 
 import { NavItem, type NavPersonality } from "#components/nav-item"
-import { useRipple } from "#hooks/use-ripple"
+import { Button } from "#components/ui/button"
 import {
   Sidebar,
   SidebarContent,
@@ -120,7 +120,6 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
   const { pathname } = useLocation()
   const { user } = useAuth()
   const { isMobile, setOpenMobile, open, toggleSidebar } = useSidebar()
-  const ripple = useRipple<HTMLButtonElement>()
 
   function closeMobileSidebar() {
     if (isMobile) setOpenMobile(false)
@@ -156,25 +155,20 @@ export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
         <SidebarFooter className="gap-2 p-2">
           <SidebarSeparator className="hidden bg-sidebar-foreground/30 h-[1.5px] rounded-full group-data-[collapsible=icon]:block" />
           <div className={cn("flex", open ? "justify-end" : "justify-center")}>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={toggleSidebar}
               aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
               aria-expanded={open}
-              {...ripple.handlers}
-              className="relative isolate flex size-8 cursor-pointer items-center justify-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none"
+              className="relative isolate cursor-pointer flex size-8 items-center justify-center"
             >
-              <span
-                ref={ripple.layerRef}
-                aria-hidden
-                className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[inherit] text-sidebar-foreground"
-              />
               {open ? (
                 <PanelLeftCloseIcon className="size-4.5" />
               ) : (
                 <PanelLeftOpenIcon className="size-4.5" />
               )}
-            </button>
+            </Button>
           </div>
         </SidebarFooter>
       )}
