@@ -2,7 +2,7 @@ import { ServerResponse, type IncomingMessage, type Server } from 'node:http';
 import type { Duplex } from 'node:stream';
 import type { Request, RequestHandler, Response } from 'express';
 import { WebSocketServer, type RawData, type WebSocket } from 'ws';
-import { config } from '../config';
+import { isOriginAllowed } from '../config';
 import { User, toPublicUser, type PublicUser } from '../models/user';
 import { decodeBinaryFrame } from './binary';
 import {
@@ -83,9 +83,6 @@ export function attachWebSocketServer(server: Server, sessionParser: RequestHand
     // Sized for the largest binary frame; text messages get their own, smaller caps below.
     perMessageDeflate: false, // tiny messages and already-compressed images: only costs CPU and memory
   });
-
-  // WebSockets are not covered by CORS, so check Origin ourselves.
-  const allowedOrigins = new Set([new URL(config.frontendUrl).origin]);
 
   function onMessage(conn: SocketConnection, data: RawData, isBinary: boolean): void {
     if (!hub.takeToken(conn)) return;
@@ -177,7 +174,8 @@ export function attachWebSocketServer(server: Server, sessionParser: RequestHand
     const { pathname } = new URL(req.url ?? '/', 'http://localhost');
     if (pathname !== WS_PATH) return reject(socket, 404, 'Not Found');
 
-    if (!allowedOrigins.has(req.headers.origin ?? '')) return reject(socket, 403, 'Forbidden');
+    // WebSockets are not covered by CORS, so check Origin ourselves, with the same rule as CORS.
+    if (!isOriginAllowed(req.headers.origin ?? '')) return reject(socket, 403, 'Forbidden');
     if (hub.connections.size >= WS_MAX_CONNECTIONS_TOTAL) {
       return reject(socket, 503, 'Service Unavailable');
     }
