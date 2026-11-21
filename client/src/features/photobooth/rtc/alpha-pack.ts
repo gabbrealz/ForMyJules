@@ -53,6 +53,48 @@ export function drawCover(
 }
 
 /**
+ * Draws `source` at a scale that depends only on its SHORT side, centred in the box, with the
+ * overflow cropped and the rest left empty (not mirrored). Used to put several people into one
+ * scene: every camera is scaled so its short side fills the box's height, whatever its shape, so
+ * faces come out the same size. A portrait phone (720x1280) therefore isn't blown up to fill a
+ * landscape box the way `drawCover` would do; it keeps its size, is cropped top and bottom, and
+ * leaves empty (transparent, for a cutout) bands at the sides.
+ */
+export function drawFit(
+  context: CanvasRenderingContext2D,
+  source: PackSource,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): boolean {
+  const { width: sourceWidth, height: sourceHeight } = sourceSize(source)
+  if (!sourceWidth || !sourceHeight) return false
+
+  const scale = height / Math.min(sourceWidth, sourceHeight)
+  const drawWidth = sourceWidth * scale
+  const drawHeight = sourceHeight * scale
+
+  context.save()
+  context.beginPath()
+  context.rect(x, y, width, height)
+  context.clip() // what overflows must not spill into the neighbouring half or slice
+  context.drawImage(
+    source,
+    0,
+    0,
+    sourceWidth,
+    sourceHeight,
+    x + (width - drawWidth) / 2,
+    y + (height - drawHeight) / 2,
+    drawWidth,
+    drawHeight,
+  )
+  context.restore()
+  return true
+}
+
+/**
  * Packs the camera, or its cutout canvas, into the colour-plus-matte picture. Draw into `canvas`
  * as often as needed and send its `captureStream()`.
  *
@@ -78,15 +120,17 @@ export class AlphaPacker {
     this.matteContext = matteContext
   }
 
-  draw(source: PackSource | null): void {
+  /** `fit`: place the picture with `drawFit` (for one shared scene) instead of `drawCover`. */
+  draw(source: PackSource | null, fit = false): void {
     const { context, matteContext } = this
+    const place = fit ? drawFit : drawCover
 
     context.fillStyle = "#000"
     context.fillRect(0, 0, PACK_WIDTH * 2, PACK_HEIGHT)
     if (!source) return
 
     // Left: the colour. Drawn over black, so the transparent area is black.
-    if (!drawCover(context, source, 0, 0, PACK_WIDTH, PACK_HEIGHT)) return
+    if (!place(context, source, 0, 0, PACK_WIDTH, PACK_HEIGHT)) return
 
     // Right: the matte. White everywhere, then keep it only where the cutout has alpha, which
     // leaves white (scaled by the alpha) on transparent; over black that is a grey picture.
@@ -96,7 +140,7 @@ export class AlphaPacker {
     matteContext.fillRect(0, 0, PACK_WIDTH, PACK_HEIGHT)
     if (source instanceof HTMLCanvasElement) {
       matteContext.globalCompositeOperation = "destination-in"
-      drawCover(matteContext, source, 0, 0, PACK_WIDTH, PACK_HEIGHT)
+      place(matteContext, source, 0, 0, PACK_WIDTH, PACK_HEIGHT)
     }
     context.drawImage(this.matte, PACK_WIDTH, 0)
   }

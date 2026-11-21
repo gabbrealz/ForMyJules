@@ -4,7 +4,12 @@ import { cn } from "cn"
 import { Spinner } from "#components/ui/spinner"
 
 import { getFilter } from "../constants"
-import { AlphaUnpacker, drawCover, type PackSource } from "../rtc/alpha-pack"
+import {
+  AlphaUnpacker,
+  drawCover,
+  drawFit,
+  type PackSource,
+} from "../rtc/alpha-pack"
 import type { RemotePreview } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
 
@@ -117,6 +122,10 @@ export function GroupStage({
       return unpacker.update(video) ? unpacker.canvas : null
     }
 
+    // One scene: crop to the box without resizing by the long side, so a portrait phone doesn't
+    // get its face enlarged. Slices: each camera fills its slice.
+    const place = scene === "one-scene" ? drawFit : drawCover
+
     /** Mirrored inside its box, like a selfie camera and like the photos. */
     const drawMirrored = (
       source: PackSource,
@@ -129,7 +138,7 @@ export function GroupStage({
       context.clip()
       context.translate(x + width, 0)
       context.scale(-1, 1)
-      drawCover(context, source, 0, 0, width, STAGE_HEIGHT)
+      place(context, source, 0, 0, width, STAGE_HEIGHT)
       context.restore()
     }
 

@@ -56,6 +56,9 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
   // are taken from it, and the packer below sends it to the others.
   const localSourceRef = useRef<PackSource | null>(null)
   const removeBackground = state?.config.removeBackground ?? false
+  // One shared scene: pictures are placed by their short side, so faces are the same size on a
+  // portrait phone and a landscape webcam (see drawFit).
+  const isOneScene = state?.config.scene === "one-scene"
 
   // What the others get to see of this camera. A cutout can't travel as transparency, so with the
   // background removed it is packed into colour-plus-matte video (see rtc/alpha-pack.ts).
@@ -63,6 +66,7 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
   const packedTrack = useAlphaPacker(
     camerasOn && removeBackground && !!camera.stream,
     localSourceRef,
+    isOneScene,
   )
   const sendTrack = removeBackground ? packedTrack : cameraTrack
 

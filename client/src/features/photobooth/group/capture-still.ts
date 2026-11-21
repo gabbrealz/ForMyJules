@@ -18,10 +18,16 @@ function toBlob(
  * photobooth. Everything here is synchronous, so the moment of the shot is the moment this is
  * called; the slow part (encoding) comes after, in `encodeStill`. Returns null when the camera has
  * no picture yet.
+ *
+ * `fit` (one shared scene): nothing is resized to fill the 4:3. The picture keeps its scale, set
+ * by its SHORT side, and is cropped to the 4:3 where it overflows; where it is narrower (a
+ * portrait phone) the sides stay transparent. Same placement as the live preview (`drawFit`), so
+ * the faces are not enlarged and the final frame matches what was seen.
  */
 export function snapshotStill(
   source: HTMLVideoElement | HTMLCanvasElement | null,
   filter: string,
+  fit = false,
 ): HTMLCanvasElement | null {
   if (!source) return null
 
@@ -30,6 +36,28 @@ export function snapshotStill(
   const height = isVideo ? source.videoHeight : source.height
   if (!width || !height) return null
 
+  const canvas = document.createElement("canvas")
+  const context = canvas.getContext("2d")
+  if (!context) return null
+
+  if (fit) {
+    const short = Math.min(width, height)
+    canvas.width = Math.round(short * PHOTO_ASPECT)
+    canvas.height = short
+    context.filter = filter
+    // Mirrored around the middle, so centring is the same either way.
+    context.translate(canvas.width, 0)
+    context.scale(-1, 1)
+    context.drawImage(
+      source,
+      (canvas.width - width) / 2,
+      (canvas.height - height) / 2,
+      width,
+      height,
+    )
+    return canvas
+  }
+
   let sw = width
   let sh = height
   if (width / height > PHOTO_ASPECT) sw = height * PHOTO_ASPECT
@@ -37,11 +65,8 @@ export function snapshotStill(
   const sx = (width - sw) / 2
   const sy = (height - sh) / 2
 
-  const canvas = document.createElement("canvas")
   canvas.width = Math.round(sw)
   canvas.height = Math.round(sh)
-  const context = canvas.getContext("2d")
-  if (!context) return null
 
   context.filter = filter
   context.translate(canvas.width, 0)
