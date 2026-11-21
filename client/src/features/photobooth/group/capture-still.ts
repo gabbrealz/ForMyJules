@@ -12,18 +12,17 @@ function toBlob(
 }
 
 /**
- * Takes one still from the camera element (the <video>, or the cutout canvas while the background
- * is removed): the centre of the feed cropped to 4:3, mirrored like the preview, with the filter
- * burned in. The same crop as the solo photobooth, but as a full-size image file rather than a
- * data URL, because it is sent to the others as it is.
- *
- * PNG keeps the transparent background of a cutout. If that is too big to send, WebP (which also
- * keeps transparency) is used instead. Returns null when the camera has no picture yet.
+ * Step one, instant: freezes the picture. Copies the camera element (the <video>, or the cutout
+ * canvas while the background is removed) into a canvas of its own: the centre of the feed cropped
+ * to 4:3, mirrored like the preview, with the filter burned in. The same crop as the solo
+ * photobooth. Everything here is synchronous, so the moment of the shot is the moment this is
+ * called; the slow part (encoding) comes after, in `encodeStill`. Returns null when the camera has
+ * no picture yet.
  */
-export async function captureStill(
+export function snapshotStill(
   source: HTMLVideoElement | HTMLCanvasElement | null,
   filter: string,
-): Promise<Blob | null> {
+): HTMLCanvasElement | null {
   if (!source) return null
 
   const isVideo = source instanceof HTMLVideoElement
@@ -48,7 +47,17 @@ export async function captureStill(
   context.translate(canvas.width, 0)
   context.scale(-1, 1)
   context.drawImage(source, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height)
+  return canvas
+}
 
+/**
+ * Step two, slow (on a phone, a second or more): turns the frozen picture into an image file to
+ * send. It is a full-size image, because the others draw the frame from it as it is.
+ *
+ * PNG keeps the transparent background of a cutout. If that is too big to send, WebP (which also
+ * keeps transparency) is used instead.
+ */
+export async function encodeStill(canvas: HTMLCanvasElement): Promise<Blob | null> {
   const png = await toBlob(canvas, "image/png")
   if (png && png.size <= MAX_STILL_BYTES) return png
 

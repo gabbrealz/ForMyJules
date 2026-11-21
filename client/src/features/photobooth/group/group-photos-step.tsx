@@ -33,7 +33,7 @@ import type { CameraState } from "../hooks/use-camera"
 import type { PackSource } from "../rtc/alpha-pack"
 import type { RemotePreview } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
-import { captureStill } from "./capture-still"
+import { encodeStill, snapshotStill } from "./capture-still"
 import { describeDenied } from "./denied-message"
 import { GroupRoster } from "./group-roster"
 import { GroupStage } from "./group-stage"
@@ -100,10 +100,14 @@ export function GroupPhotosStep({
 
   const onShot = useCallback(
     async (shot: number) => {
-      const blob = await captureStill(captureRef.current, filter)
-      if (!blob) return
+      // Freeze the picture and flash at once, at the agreed moment. Encoding the image takes a
+      // while on a phone, and the flash must not wait for it.
+      const snapshot = snapshotStill(captureRef.current, filter)
+      if (!snapshot) return
       setFlashId((id) => id + 1)
-      stills.addOwn(shot, blob)
+
+      const blob = await encodeStill(snapshot)
+      if (blob) stills.addOwn(shot, blob)
     },
     [filter, stills],
   )
