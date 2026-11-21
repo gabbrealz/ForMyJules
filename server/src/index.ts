@@ -5,6 +5,7 @@ import MongoStore from 'connect-mongo';
 import mongoose from 'mongoose';
 import { SESSION_COOKIE_NAME, config, cookieOptions, isOriginAllowed } from './config';
 import { requestLogger } from './middlewares/logger';
+import { isRelayConfigured } from './services/rtc';
 import adminRouter from './routes/admin';
 import authRouter from './routes/auth';
 import photosRouter from './routes/photos';
@@ -81,6 +82,11 @@ async function main() {
   // Start Server
   const server = app.listen(config.port, () => {
     console.log(`Server is running at http://localhost:${config.port}`);
+    if (!isRelayConfigured()) {
+      console.warn(
+        'Photobooth: no TURN relay (METERED_APP_NAME / METERED_API_KEY unset). Live previews work only where a direct connection is possible.',
+      );
+    }
     if (config.allowLanOrigins) {
       console.log('Dev: origins on private networks are allowed (ALLOW_LAN_ORIGINS).');
     }

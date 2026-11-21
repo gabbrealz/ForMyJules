@@ -15,6 +15,12 @@ const MAX_PREVIEW_BITRATE = 700_000
 const MAX_PREVIEW_FRAMERATE = 20
 /** How long a direct (free) connection gets before the relay is tried as well. */
 const DIRECT_ATTEMPT_MS = 7_000
+/**
+ * An offer sent before the other person's page was listening is simply lost (signalling is not
+ * stored). While a link is unanswered, send the same offer again now and then, a few times.
+ */
+const OFFER_RETRY_MS = 2_500
+const MAX_OFFER_RETRIES = 5
 
 type Peer = {
   pc: RTCPeerConnection
@@ -27,6 +33,8 @@ type Peer = {
   /** The TURN relay has been added to this link (the fallback, used at most once). */
   relayTried: boolean
   fallbackTimer: number | undefined
+  offerRetryTimer: number | undefined
+  offerRetries: number
   stream: MediaStream | null
   state: PreviewState
   /** Signals are handled one at a time, in the order they arrived. */
@@ -142,9 +150,12 @@ export function usePeerMesh(
       } catch {
         return // aborted
       }
-      if (closed || peer.pc.signalingState === "closed" || relays.length === 0) {
+      if (closed || peer.pc.signalingState === "closed") return
+      if (relays.length === 0) {
+        console.warn("[booth] The server returned no TURN relay servers.")
         return
       }
+      console.info("[booth] Direct preview link not up: trying the TURN relay.")
 
       peer.pc.setConfiguration({
         ...peer.pc.getConfiguration(),
@@ -167,6 +178,8 @@ export function usePeerMesh(
         restarted: false,
         relayTried: false,
         fallbackTimer: undefined,
+        offerRetryTimer: undefined,
+        offerRetries: 0,
         stream: null,
         state: "connecting",
         queue: Promise.resolve(),
@@ -174,8 +187,27 @@ export function usePeerMesh(
 
       // Still not connected: the direct route isn't working, so bring in the relay.
       peer.fallbackTimer = window.setTimeout(() => {
-        if (peer.state !== "connected") void useRelay(peer)
+        if (peer.state === "connected") return
+        if (!relayAvailable) {
+          console.warn(
+            `[booth] No preview connection to member ${id} after ${DIRECT_ATTEMPT_MS / 1000}s, and the ` +
+              "server has no TURN relay to fall back to (set METERED_APP_NAME and METERED_API_KEY).",
+          )
+        }
+        void useRelay(peer)
       }, DIRECT_ATTEMPT_MS)
+
+      peer.offerRetryTimer = window.setInterval(() => {
+        if (peer.state === "connected" || peer.offerRetries >= MAX_OFFER_RETRIES) {
+          window.clearInterval(peer.offerRetryTimer)
+          return
+        }
+        // Our offer is still waiting for an answer: the other side may never have received it.
+        if (pc.signalingState === "have-local-offer" && pc.localDescription) {
+          peer.offerRetries += 1
+          sendDescription(id, pc.localDescription)
+        }
+      }, OFFER_RETRY_MS)
 
       pc.onnegotiationneeded = async () => {
         try {
@@ -211,6 +243,7 @@ export function usePeerMesh(
         const { connectionState } = pc
         if (connectionState === "connected") {
           window.clearTimeout(peer.fallbackTimer)
+          window.clearInterval(peer.offerRetryTimer)
           peer.state = "connected"
           void limitBitrate(peer)
         } else if (connectionState === "failed") {
@@ -241,6 +274,7 @@ export function usePeerMesh(
       const peer = peers.get(id)
       if (!peer) return
       window.clearTimeout(peer.fallbackTimer)
+      window.clearInterval(peer.offerRetryTimer)
       peer.pc.onnegotiationneeded = null
       peer.pc.onicecandidate = null
       peer.pc.ontrack = null
