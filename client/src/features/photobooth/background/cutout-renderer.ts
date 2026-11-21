@@ -107,12 +107,19 @@ export class CutoutRenderer {
   private readonly buffer: WebGLBuffer
   private readonly videoTexture: WebGLTexture
   private readonly maskTexture: WebGLTexture
+  // A 2D copy of the video frame, which is what gets uploaded to the GPU (see render()).
+  private readonly frame = document.createElement("canvas")
+  private readonly frameContext: CanvasRenderingContext2D
   private videoSize: Size = { width: 0, height: 0 }
   private maskSize: Size = { width: 0, height: 0 }
   private disposed = false
 
   constructor(canvas: HTMLCanvasElement, options: CutoutRendererOptions = {}) {
     this.canvas = canvas
+
+    const frameContext = this.frame.getContext("2d", { alpha: false })
+    if (!frameContext) throw new Error("2D canvas isn't available.")
+    this.frameContext = frameContext
 
     // preserveDrawingBuffer keeps the last frame readable, so a photo can be
     // taken from this canvas at any moment (drawImage on a cleared buffer
@@ -223,6 +230,18 @@ export class CutoutRenderer {
     }
     gl.viewport(0, 0, width, height)
 
+    // The frame goes to the GPU through a 2D canvas, not straight from the <video>. Uploading a
+    // <video> to a texture directly can silently give black on some phones (for instance when the
+    // camera was restarted, or the video isn't on screen), which shows as a black silhouette.
+    // Drawing a video onto a 2D canvas is the path every browser supports, and the segmentation
+    // input already relies on it.
+    const frame = this.frame
+    if (frame.width !== width || frame.height !== height) {
+      frame.width = width
+      frame.height = height
+    }
+    this.frameContext.drawImage(video, 0, 0, width, height)
+
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.videoTexture)
     if (this.videoSize.width !== width || this.videoSize.height !== height) {
@@ -232,7 +251,7 @@ export class CutoutRenderer {
         gl.RGBA,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        video,
+        frame,
       )
       this.videoSize = { width, height }
     } else {
@@ -243,7 +262,7 @@ export class CutoutRenderer {
         0,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        video,
+        frame,
       )
     }
 
