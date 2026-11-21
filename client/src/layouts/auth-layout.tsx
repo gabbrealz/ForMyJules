@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { CatIcon } from "lucide-react"
 
+import { BrandIcon } from "#components/brand"
 import { Backdrop } from "#components/backdrop"
 import { Button } from "#components/ui/button"
 import {
@@ -35,9 +36,7 @@ export function AuthLayout({
       <div className="relative flex min-h-svh flex-col items-center justify-center gap-4 px-4 py-10">
         <Card className="w-full max-w-sm bg-card/90 backdrop-blur-md">
           <CardHeader className="items-center justify-items-center text-center">
-            <span className="mb-2 flex size-12 items-center justify-center rounded-2xl bg-apricot text-brown">
-              <CatIcon className="size-6" />
-            </span>
+            <BrandIcon variant="rounded" className="size-14 mb-2" />
             <CardTitle className="text-xl font-bold">{title}</CardTitle>
             <CardDescription>{description}</CardDescription>
           </CardHeader>
@@ -59,8 +58,7 @@ export function AuthLayout({
 
         <Button
           variant="ghost"
-          size="sm"
-          className="text-cream hover:bg-cream/15 hover:text-cream"
+          className="w-32 text-cream hover:bg-cream/15 hover:text-cream"
           onClick={() => navigate("/")}
         >
           Back to start
