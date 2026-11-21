@@ -1,0 +1,436 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/nunito";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================
+   1. PALETTE: the calico cat
+   --------------------------------------------------------------------------
+   Five hues sampled from the pixel-art cat, each with an 11-step shade scale
+   (50 = lightest, 950 = darkest). The swatch that was sampled straight from
+   the image sits at its natural step and is marked "(sampled)"; the other
+   steps are the same hue with lightness/chroma stepped up and down.
+
+     Cocoa     the outline        #573c31 -> cocoa-800
+     Smoke     the grey patches   #766669 -> smoke-500
+     Marigold  the orange patches #ffba45 -> marigold-400
+     Peach     ears and belly     #f9dec9 -> peach-200
+     Blush     the cheek          #fcd8d8 -> blush-200
+     Milk      the white chest    #fffeff (single shade)
+
+   Declared with `@theme static` so every shade is always emitted and usable
+   as a utility (bg-cocoa-800, text-marigold-400, border-peach-200, ...).
+   Components should still prefer the semantic tokens in section 3.
+   ========================================================================== */
+@theme static {
+  /* Cocoa: the outline. Warm dark brown; text, dark surfaces. */
+  --color-cocoa-50: oklch(0.98 0.006 43.1); /* #fcf7f5 */
+  --color-cocoa-100: oklch(0.955 0.011 43.1); /* #f7eeeb */
+  --color-cocoa-200: oklch(0.915 0.017 43.1); /* #ede0da */
+  --color-cocoa-300: oklch(0.86 0.023 43.1); /* #dfccc5 */
+  --color-cocoa-400: oklch(0.797 0.03 43.1); /* #ceb7ae */
+  --color-cocoa-500: oklch(0.693 0.036 43.1); /* #b1968b */
+  --color-cocoa-600: oklch(0.59 0.04 43.1); /* #93766a */
+  --color-cocoa-700: oklch(0.487 0.043 43.1); /* #75584c */
+  --color-cocoa-800: oklch(0.384 0.043 43.1); /* #573c31 (sampled) */
+  --color-cocoa-900: oklch(0.297 0.036 43.1); /* #3d271e */
+  --color-cocoa-950: oklch(0.21 0.03 43.1); /* #24140d */
+
+  /* Smoke: the grey-mauve patches. Quiet neutral for borders and muted text. */
+  --color-smoke-50: oklch(0.975 0.007 5.1); /* #fbf5f6 */
+  --color-smoke-100: oklch(0.935 0.01 5.1); /* #f0e7e8 */
+  --color-smoke-200: oklch(0.855 0.015 5.1); /* #d9cbce */
+  --color-smoke-300: oklch(0.756 0.018 5.1); /* #baabae */
+  --color-smoke-400: oklch(0.661 0.02 5.1); /* #9e8e91 */
+  --color-smoke-500: oklch(0.526 0.021 5.1); /* #766669 (sampled) */
+  --color-smoke-600: oklch(0.461 0.02 5.1); /* #635457 */
+  --color-smoke-700: oklch(0.396 0.018 5.1); /* #4f4345 */
+  --color-smoke-800: oklch(0.331 0.016 5.1); /* #3d3234 */
+  --color-smoke-900: oklch(0.275 0.013 5.1); /* #2d2527 */
+  --color-smoke-950: oklch(0.22 0.01 5.1); /* #1f191a */
+
+  /* Marigold: the orange patches. The signature accent. */
+  --color-marigold-50: oklch(0.987 0.01 76.7); /* #fffaf3 */
+  --color-marigold-100: oklch(0.968 0.026 76.7); /* #fff3e2 */
+  --color-marigold-200: oklch(0.935 0.054 76.7); /* #fee6c2 */
+  --color-marigold-300: oklch(0.887 0.098 76.7); /* #ffd28f */
+  --color-marigold-400: oklch(0.834 0.15 76.7); /* #ffba45 (sampled) */
+  --color-marigold-500: oklch(0.727 0.15 76.7); /* #db980b */
+  --color-marigold-600: oklch(0.62 0.129 76.7); /* #b17a05 */
+  --color-marigold-700: oklch(0.513 0.106 76.7); /* #895d05 */
+  --color-marigold-800: oklch(0.407 0.085 76.7); /* #634200 */
+  --color-marigold-900: oklch(0.31 0.065 76.7); /* #422b00 */
+  --color-marigold-950: oklch(0.22 0.046 76.7); /* #261700 */
+
+  /* Peach: ears and belly. Warm paper tones for page and surfaces. */
+  --color-peach-50: oklch(0.981 0.008 60.1); /* #fdf8f3 */
+  --color-peach-100: oklch(0.957 0.018 60.1); /* #fbeee5 */
+  --color-peach-200: oklch(0.917 0.041 60.1); /* #f9dec9 (sampled) */
+  --color-peach-300: oklch(0.862 0.053 60.1); /* #edcaaf */
+  --color-peach-400: oklch(0.801 0.062 60.1); /* #dcb697 */
+  --color-peach-500: oklch(0.701 0.062 60.1); /* #bc9678 */
+  --color-peach-600: oklch(0.6 0.055 60.1); /* #99795f */
+  --color-peach-700: oklch(0.5 0.045 60.1); /* #775d49 */
+  --color-peach-800: oklch(0.4 0.037 60.1); /* #574333 */
+  --color-peach-900: oklch(0.31 0.029 60.1); /* #3b2d22 */
+  --color-peach-950: oklch(0.22 0.023 60.1); /* #221810 */
+
+  /* Blush: the cheek. Only 200 is in the image; the deeper steps carry the
+     same hue up to a rose red, which is what destructive actions use. */
+  --color-blush-50: oklch(0.978 0.008 17.9); /* #fdf6f6 */
+  --color-blush-100: oklch(0.953 0.02 17.9); /* #fdeaea */
+  --color-blush-200: oklch(0.912 0.04 17.9); /* #fcd8d8 (sampled) */
+  --color-blush-300: oklch(0.858 0.072 17.9); /* #fcbebf */
+  --color-blush-400: oklch(0.798 0.113 17.9); /* #fd9fa2 */
+  --color-blush-500: oklch(0.699 0.145 17.9); /* #ea757c */
+  --color-blush-600: oklch(0.599 0.161 17.9); /* #ce4f5b */
+  --color-blush-700: oklch(0.5 0.145 17.9); /* #a63743 */
+  --color-blush-800: oklch(0.4 0.121 17.9); /* #7c242e */
+  --color-blush-900: oklch(0.31 0.089 17.9); /* #54191f */
+  --color-blush-950: oklch(0.22 0.064 17.9); /* #330a0f */
+
+  /* Milk: the white chest. Cards and popovers in light mode. */
+  --color-milk: oklch(0.998 0.002 326); /* #fffeff (sampled) */
+}
+
+/* ==========================================================================
+   2. TAILWIND TOKEN REGISTRATION
+   Maps the semantic CSS variables in section 3 to utilities (bg-background,
+   text-primary, ...). No color values live here.
+   ========================================================================== */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-field: var(--field);
+  --color-field-border: var(--field-border);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-header: var(--header);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Brand colors: constant in light and dark mode (e.g. text on photo backdrops).
+     Usage: bg-brown, text-cream, bg-vanilla/60, bg-apricot, ... */
+  --color-brown: var(--brand-brown);
+  --color-cream: var(--brand-cream);
+  --color-vanilla: var(--brand-vanilla);
+  --color-apricot: var(--brand-apricot);
+
+  --font-sans: "DM Sans Variable", sans-serif;
+  --font-heading: "Nunito Variable", "DM Sans Variable", sans-serif;
+}
+
+/* ==========================================================================
+   3. SEMANTIC TOKENS: palette -> roles
+   Every role below points at a palette shade from section 1.
+   ========================================================================== */
+:root {
+  --radius: 0.875rem;
+
+  /* Height of the app header (layouts/header.tsx). Anything that has to fit
+     "the viewport minus the header" reads this instead of hard-coding a number. */
+  --header-height: 3.5rem;
+
+  /* Brand colors (same in both modes) */
+  --brand-brown: var(--color-cocoa-950); /* dark brown: photo backdrop, text on light fills */
+  --brand-cream: var(--color-peach-50); /* text over the photo backdrop */
+  --brand-vanilla: var(--color-peach-100); /* soft cream fill / button */
+  --brand-apricot: var(--color-marigold-300); /* calico orange fill / hover */
+
+  /* Light mode (primary design target) */
+  --background: var(--color-blush-50);
+  --foreground: var(--color-cocoa-900);
+  --card: var(--color-milk);
+  --card-foreground: var(--color-cocoa-900);
+  --popover: var(--color-milk);
+  --popover-foreground: var(--color-cocoa-900);
+  /* Primary stays dark: `text-primary` is also used for link text. */
+  --primary: var(--color-cocoa-800);
+  --primary-foreground: var(--color-milk);
+  --secondary: var(--color-peach-200);
+  --secondary-foreground: var(--color-cocoa-800);
+  --muted: var(--color-peach-100);
+  --muted-foreground: var(--color-smoke-600);
+  --accent: var(--color-marigold-200);
+  --accent-foreground: var(--color-cocoa-900);
+  --destructive: var(--color-blush-700);
+  --destructive-foreground: var(--color-milk);
+  --border: var(--color-peach-200);
+  --input: var(--color-peach-300);
+  /* Form fields: a tinted well with a ~3:1 border so inputs read as their own object on cards */
+  --field: var(--color-peach-100);
+  --field-border: var(--color-smoke-400);
+  --ring: var(--color-marigold-500);
+  --chart-1: var(--color-marigold-400);
+  --chart-2: var(--color-smoke-500);
+  --chart-3: var(--color-blush-400);
+  --chart-4: var(--color-peach-500);
+  --chart-5: var(--color-cocoa-800);
+  --header: var(--color-peach-100);
+  --sidebar: var(--color-peach-50);
+  --sidebar-foreground: var(--color-cocoa-900);
+  --sidebar-primary: var(--color-cocoa-800);
+  --sidebar-primary-foreground: var(--color-milk);
+  --sidebar-accent: var(--color-marigold-200);
+  --sidebar-accent-foreground: var(--color-cocoa-900);
+  --sidebar-border: var(--color-peach-200);
+  --sidebar-ring: var(--color-marigold-500);
+}
+
+.dark {
+  --background: var(--color-cocoa-950);
+  --foreground: var(--color-peach-100);
+  --card: var(--color-cocoa-900);
+  --card-foreground: var(--color-peach-100);
+  --popover: var(--color-cocoa-900);
+  --popover-foreground: var(--color-peach-100);
+  --primary: var(--color-marigold-400);
+  --primary-foreground: var(--color-cocoa-950);
+  --secondary: var(--color-cocoa-800);
+  --secondary-foreground: var(--color-peach-100);
+  --muted: var(--color-cocoa-800);
+  --muted-foreground: var(--color-peach-300);
+  --accent: var(--color-cocoa-700);
+  --accent-foreground: var(--color-peach-50);
+  --destructive: var(--color-blush-400);
+  --destructive-foreground: var(--color-cocoa-950);
+  --border: oklch(from var(--color-milk) l c h / 12%);
+  --input: oklch(from var(--color-milk) l c h / 16%);
+  --field: var(--color-cocoa-950);
+  --field-border: var(--color-smoke-400);
+  --ring: var(--color-marigold-500);
+  --chart-1: var(--color-marigold-400);
+  --chart-2: var(--color-smoke-300);
+  --chart-3: var(--color-blush-400);
+  --chart-4: var(--color-peach-400);
+  --chart-5: var(--color-cocoa-500);
+  --header: var(--color-cocoa-900);
+  --sidebar: var(--color-cocoa-950);
+  --sidebar-foreground: var(--color-peach-100);
+  --sidebar-primary: var(--color-marigold-400);
+  --sidebar-primary-foreground: var(--color-cocoa-950);
+  --sidebar-accent: var(--color-cocoa-800);
+  --sidebar-accent-foreground: var(--color-peach-100);
+  --sidebar-border: oklch(from var(--color-milk) l c h / 10%);
+  --sidebar-ring: var(--color-marigold-500);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ==========================================================================
+   Everything above is globals.css, unchanged. Everything below is new and
+   only adds gradients: no palette shade and no semantic token is redefined.
+   The solid token colors above stay as the fallback under each gradient.
+   ========================================================================== */
+
+/* ==========================================================================
+   4. GRADIENT RECIPES
+   Plain CSS variables built from the palette, so they also work as Tailwind
+   utilities, e.g. `bg-(image:--gradient-primary)`.
+   ========================================================================== */
+:root {
+  /* Page: blush -> peach -> marigold wash, with a marigold glow top-right
+     (where the orange patch sits on the cat) and a blush glow bottom-left. */
+  --gradient-page:
+    radial-gradient(
+      70% 55% at 100% 0%,
+      color-mix(in oklab, var(--color-marigold-200) 55%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      60% 50% at 0% 100%,
+      color-mix(in oklab, var(--color-blush-200) 55%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(
+      165deg,
+      var(--color-blush-50) 0%,
+      var(--color-peach-50) 55%,
+      var(--color-marigold-50) 100%
+    );
+
+  /* Header: peach on the brand side, warming to marigold under the avatar,
+     so it flows into the page glow right below it. */
+  --gradient-header: linear-gradient(
+    100deg,
+    var(--color-peach-100) 0%,
+    var(--color-blush-100) 55%,
+    var(--color-marigold-100) 100%
+  );
+
+  /* Sidebar: peach paper that deepens slightly toward the bottom. */
+  --gradient-sidebar: linear-gradient(
+    180deg,
+    var(--color-peach-50) 0%,
+    var(--color-peach-100) 100%
+  );
+
+  /* Active nav pill. */
+  --gradient-nav-active: linear-gradient(
+    90deg,
+    var(--color-marigold-200),
+    var(--color-marigold-300)
+  );
+
+  /* Primary buttons, the selected layout card, active stepper dots.
+     The middle stop is the solid primary (cocoa-800). */
+  --gradient-primary: linear-gradient(
+    145deg,
+    var(--color-cocoa-700) 0%,
+    var(--color-cocoa-800) 55%,
+    var(--color-cocoa-900) 100%
+  );
+
+  /* Finished stretch of the stepper line. */
+  --gradient-progress: linear-gradient(
+    90deg,
+    var(--color-marigold-300),
+    var(--color-marigold-400)
+  );
+}
+
+.dark {
+  /* Night page: cocoa drifting into smoke, marigold ember top-right,
+     a faint blush glow bottom-left. */
+  --gradient-page:
+    radial-gradient(
+      70% 55% at 100% 0%,
+      color-mix(in oklab, var(--color-marigold-900) 55%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      60% 50% at 0% 100%,
+      color-mix(in oklab, var(--color-blush-900) 35%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(
+      165deg,
+      var(--color-cocoa-950) 0%,
+      var(--color-smoke-950) 100%
+    );
+
+  --gradient-header: linear-gradient(
+    100deg,
+    var(--color-cocoa-900) 0%,
+    var(--color-smoke-900) 55%,
+    var(--color-marigold-900) 100%
+  );
+
+  --gradient-sidebar: linear-gradient(
+    180deg,
+    var(--color-cocoa-950) 0%,
+    var(--color-smoke-950) 100%
+  );
+
+  --gradient-nav-active: linear-gradient(
+    90deg,
+    var(--color-cocoa-800),
+    var(--color-marigold-800)
+  );
+
+  /* In the dark the primary action is the marigold patch. */
+  --gradient-primary: linear-gradient(
+    145deg,
+    var(--color-marigold-300) 0%,
+    var(--color-marigold-400) 55%,
+    var(--color-marigold-500) 100%
+  );
+
+  --gradient-progress: linear-gradient(
+    90deg,
+    var(--color-marigold-600),
+    var(--color-marigold-400)
+  );
+}
+
+/* ==========================================================================
+   5. WHERE THE GRADIENTS ATTACH
+   The components paint solid colors with utilities (bg-header, bg-primary,
+   ...). Those only set background-color, so these rules add a
+   background-image on top and the solid color remains as the fallback.
+   Delete any rule to go back to flat color for that one element.
+   ========================================================================== */
+
+/* Page: the app's main area (SidebarInset) and bare pages like Login. */
+body {
+  background-image: var(--gradient-page);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/* Header (layouts/header.tsx). */
+.bg-header {
+  background-image: var(--gradient-header);
+}
+
+/* Sidebar: the desktop panel, the phone slide-over and the stock variant. */
+[data-slot="sidebar"].bg-sidebar,
+[data-slot="sidebar-inner"] {
+  background-image: var(--gradient-sidebar);
+}
+
+/* Active nav pill (components/nav-item.tsx). */
+.bg-sidebar-accent {
+  background-image: var(--gradient-nav-active);
+}
+
+/* Primary buttons, including the selected card in the Photobooth layout
+   picker. Only the plain `bg-primary` class; tinted ones like
+   `bg-primary/10` are left alone. */
+[data-slot="button"].bg-primary {
+  background-image: var(--gradient-primary);
+}
+
+/* Stepper: filled dots, and a line that turns marigold once passed. */
+[data-slot="stepper-indicator"][data-state="active"],
+[data-slot="stepper-indicator"][data-state="completed"] {
+  background-image: var(--gradient-primary);
+}
+[data-slot="stepper-separator"][data-state="completed"] {
+  background-image: var(--gradient-progress);
+}
