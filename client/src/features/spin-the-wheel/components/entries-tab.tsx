@@ -60,7 +60,7 @@ export function EntriesTab({
           Sort
         </Button>
         </span>
-        <Button type="button" size="sm" onClick={addRow} disabled={disabled}>
+        <Button type="button" hasRipple={true} size="sm" onClick={addRow} disabled={disabled}>
           <Plus />
           Add entry
         </Button>

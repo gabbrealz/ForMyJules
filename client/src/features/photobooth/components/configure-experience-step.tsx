@@ -65,6 +65,7 @@ export function ConfigureExperienceStep({
                     type="button"
                     size="sm"
                     variant={selected ? "default" : "outline"}
+                    hasRipple={true}
                     aria-pressed={selected}
                     onClick={() =>
                       onChange({ ...experience, filterId: filter.id })
@@ -91,6 +92,7 @@ export function ConfigureExperienceStep({
                     type="button"
                     size="sm"
                     variant={selected ? "default" : "outline"}
+                    hasRipple={true}
                     aria-pressed={selected}
                     onClick={() =>
                       onChange({ ...experience, intervalId: interval.id })

@@ -358,6 +358,7 @@ export function PickFrameStep({
               <Button
                 type="button"
                 variant="outline"
+                hasRipple={true}
                 className={FOOTER_BUTTON_CLASS}
                 onClick={onStartOver}
               >
@@ -366,6 +367,7 @@ export function PickFrameStep({
               <Button
                 type="button"
                 className={FOOTER_BUTTON_CLASS}
+                hasRipple={true}
                 onClick={() => navigate("/gallery")}
               >
                 View gallery
@@ -391,6 +393,7 @@ export function PickFrameStep({
               <Button
                 type="button"
                 variant="outline"
+                hasRipple={true}
                 className={FOOTER_BUTTON_CLASS}
                 onClick={download}
                 disabled={!ready || isUploading}
@@ -399,6 +402,7 @@ export function PickFrameStep({
               </Button>
               <Button
                 type="button"
+                hasRipple={true}
                 className={FOOTER_BUTTON_CLASS}
                 onClick={save}
                 disabled={!ready || !canSave || isUploading}

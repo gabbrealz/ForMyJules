@@ -5,7 +5,7 @@ import {
   type PointerEvent,
 } from "react"
 
-// Material 3 ripple values. Same numbers as the Button component.
+// Material 3 ripple values.
 const RIPPLE_OPACITY = 0.16 // peak opacity (the ripple uses currentColor)
 const RIPPLE_GROW_MS = 450 // time to reach full size
 const RIPPLE_FADE_MS = 350 // fade-out after release

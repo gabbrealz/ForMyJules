@@ -35,6 +35,7 @@ export function UploadPhotosButton({
       />
       <Button
         type="button"
+        hasRipple={true}
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
       >

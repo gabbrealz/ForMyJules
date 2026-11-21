@@ -59,6 +59,7 @@ export function ChooseModeScreen({ onSelect }: ChooseModeScreenProps) {
               key={id}
               type="button"
               variant="outline"
+              hasRipple={true}
               onClick={() => onSelect(id)}
               className="h-auto flex-col gap-2 py-6 whitespace-normal"
             >

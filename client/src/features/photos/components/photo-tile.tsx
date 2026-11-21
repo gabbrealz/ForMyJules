@@ -28,8 +28,10 @@ export function PhotoTile({ photo }: { photo: Photo }) {
 
   return (
     <div
-      className="relative w-full overflow-hidden bg-muted"
-      // Reserves the exact space before the image arrives, so nothing jumps.
+      className={cn(
+        "relative w-full overflow-hidden bg-muted rounded-xs",
+        "hover:-translate-y-1.5 focus:-translate-y-2 transition-transform"
+      )}
       style={{ aspectRatio: `${photo.w} / ${photo.h}` }}
     >
       {placeholder && (

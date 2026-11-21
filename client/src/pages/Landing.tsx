@@ -29,6 +29,7 @@ export default function Landing() {
           </p>
           <Button
             size="lg"
+            hasRipple={true}
             className="mt-8 h-12 rounded-full bg-vanilla px-7 text-base font-semibold text-brown hover:bg-apricot"
             onClick={() => navigate(isAuthenticated ? "/home" : "/login")}
           >

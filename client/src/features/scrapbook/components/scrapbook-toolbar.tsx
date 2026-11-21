@@ -82,7 +82,7 @@ export function ScrapbookToolbar({
           {isFullScreen ? <MinimizeIcon /> : <MaximizeIcon />}
           {isFullScreen ? "Zoom out" : "Zoom in"}
         </Button>
-        <Button size="sm" onClick={onEdit}>
+        <Button hasRipple={true} size="sm" onClick={onEdit}>
           <PencilIcon />
           Edit Scrapbook
         </Button>

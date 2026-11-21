@@ -42,6 +42,7 @@ export function ChooseLayoutStep({
                 key={layout.id}
                 type="button"
                 variant={selected ? "default" : "outline"}
+                hasRipple={true}
                 aria-pressed={selected}
                 onClick={() => onSelect(layout)}
                 className="h-auto flex-col gap-2 py-4"

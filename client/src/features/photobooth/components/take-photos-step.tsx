@@ -251,6 +251,7 @@ export function TakePhotosStep({
       <Button
         type="button"
         variant="outline"
+        hasRipple={true}
         className={className}
         onClick={reset}
       >
@@ -293,6 +294,7 @@ export function TakePhotosStep({
             {!isComplete && (
               <Button
                 type="button"
+                hasRipple={true}
                 className={cn(STEP_BUTTON_CLASS, "h-12")}
                 onClick={openModal}
                 disabled={!camera.stream}
@@ -420,6 +422,7 @@ export function TakePhotosStep({
               <Button
                 type="button"
                 variant="outline"
+                hasRipple={true}
                 className={CAMERA_BUTTON_CLASS}
                 onClick={() => setIsRunning(false)}
               >
@@ -429,6 +432,7 @@ export function TakePhotosStep({
               <Button
                 type="button"
                 className={CAMERA_BUTTON_CLASS}
+                hasRipple={true}
                 onClick={closeModal}
               >
                 <CheckIcon /> Done
@@ -437,6 +441,7 @@ export function TakePhotosStep({
               <Button
                 type="button"
                 className={CAMERA_BUTTON_CLASS}
+                hasRipple={true}
                 onClick={start}
                 disabled={!camera.stream}
               >

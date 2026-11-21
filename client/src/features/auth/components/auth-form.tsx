@@ -24,6 +24,7 @@ export function AuthForm({
         <Button
           type="submit"
           size="lg"
+          hasRipple={true}
           className="h-10 w-full text-sm"
           disabled={pending}
         >
