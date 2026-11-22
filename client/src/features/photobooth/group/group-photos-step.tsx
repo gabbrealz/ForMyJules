@@ -86,11 +86,12 @@ export function GroupPhotosStep({
   const round = state?.round ?? null
   const layout = LAYOUTS.find((candidate) => candidate.id === state?.config.layoutId)
   const filter = getFilter(state?.config.filterId ?? "none").css
-  // One shared scene: not resized to fill, but placed on this person's side of it.
+  // Not resized to fill: scaled by the short side like the preview, and in one shared scene
+  // placed on this person's side of it (in separate cells, the middle of the slice).
   const anchor =
     state?.config.scene === "one-scene" && state
       ? sceneAnchor(state.members, me)
-      : null
+      : 0.5
 
   const isRunning = round?.status === "running"
   const inRound = round !== null && me !== null && round.roster.includes(me)

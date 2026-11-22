@@ -62,11 +62,11 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
   // are taken from it, and the packer below sends it to the others.
   const localSourceRef = useRef<PackSource | null>(null)
   const removeBackground = state?.config.removeBackground ?? false
-  // One shared scene: pictures are placed by their short side, so faces are the same size on a
-  // portrait phone and a landscape webcam, and a narrow picture stands on its side of the scene
-  // (see drawFit and sceneAnchor). Null otherwise: the camera fills its cell.
+  // Pictures are scaled by their short side, so faces are the same size on a portrait phone and a
+  // landscape webcam (see drawFit). In one shared scene a narrow picture also stands on its side
+  // of it (sceneAnchor); in separate cells it stays in the middle of its slice.
   const anchor =
-    state?.config.scene === "one-scene" ? sceneAnchor(state.members, me) : null
+    state?.config.scene === "one-scene" ? sceneAnchor(state.members, me) : 0.5
 
   // What the others get to see of this camera. A cutout can't travel as transparency, so with the
   // background removed it is packed into colour-plus-matte video (see rtc/alpha-pack.ts).

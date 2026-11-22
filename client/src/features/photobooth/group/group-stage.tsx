@@ -4,12 +4,7 @@ import { cn } from "cn"
 import { Spinner } from "#components/ui/spinner"
 
 import { getFilter } from "../constants"
-import {
-  AlphaUnpacker,
-  drawCover,
-  drawFit,
-  type PackSource,
-} from "../rtc/alpha-pack"
+import { AlphaUnpacker, drawFit, type PackSource } from "../rtc/alpha-pack"
 import type { RemotePreview } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
 import { sceneAnchor } from "./scene-anchor"
@@ -126,8 +121,9 @@ export function GroupStage({
 
     /**
      * Mirrored inside its box, like a selfie camera and like the photos.
-     * One scene: scaled by the short side only, so a portrait phone doesn't get its face enlarged,
-     * and pushed to its side of the scene (`anchor`). Slices: each camera fills its slice.
+     * Scaled by the short side only, so a portrait phone doesn't get its face enlarged next to a
+     * laptop camera. One scene: the picture is pushed to its side of the scene (`anchor`). Slices:
+     * it is cropped to its slice (and only scaled up if it would otherwise not fill it).
      */
     const drawMirrored = (
       source: PackSource,
@@ -141,11 +137,16 @@ export function GroupStage({
       context.clip()
       context.translate(x + width, 0)
       context.scale(-1, 1)
-      if (scene === "one-scene") {
-        drawFit(context, source, 0, 0, width, STAGE_HEIGHT, anchor)
-      } else {
-        drawCover(context, source, 0, 0, width, STAGE_HEIGHT)
-      }
+      drawFit(
+        context,
+        source,
+        0,
+        0,
+        width,
+        STAGE_HEIGHT,
+        anchor,
+        scene !== "one-scene",
+      )
       context.restore()
     }
 

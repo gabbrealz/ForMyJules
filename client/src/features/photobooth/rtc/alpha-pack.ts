@@ -61,7 +61,9 @@ export function drawCover(
  *
  * A picture wider than the box is cropped evenly on both sides. A narrower one is placed by
  * `anchor` (0 against the left edge, 1 against the right, 0.5 centred), and what is left of the
- * box stays empty (transparent, for a cutout).
+ * box stays empty (transparent, for a cutout). With `fill`, a picture that would still be too
+ * narrow is scaled up just enough to cover the box instead (only for a portrait camera in a wide
+ * box; everything else keeps the same scale).
  */
 export function drawFit(
   context: CanvasRenderingContext2D,
@@ -71,11 +73,13 @@ export function drawFit(
   width: number,
   height: number,
   anchor = 0.5,
+  fill = false,
 ): boolean {
   const { width: sourceWidth, height: sourceHeight } = sourceSize(source)
   if (!sourceWidth || !sourceHeight) return false
 
-  const scale = height / Math.min(sourceWidth, sourceHeight)
+  const fitScale = height / Math.min(sourceWidth, sourceHeight)
+  const scale = fill ? Math.max(fitScale, width / sourceWidth) : fitScale
   const drawWidth = sourceWidth * scale
   const drawHeight = sourceHeight * scale
   const slack = width - drawWidth
