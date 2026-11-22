@@ -19,15 +19,16 @@ function toBlob(
  * called; the slow part (encoding) comes after, in `encodeStill`. Returns null when the camera has
  * no picture yet.
  *
- * `fit` (one shared scene): nothing is resized to fill the 4:3. The picture keeps its scale, set
- * by its SHORT side, and is cropped to the 4:3 where it overflows; where it is narrower (a
- * portrait phone) the sides stay transparent. Same placement as the live preview (`drawFit`), so
- * the faces are not enlarged and the final frame matches what was seen.
+ * `anchor` (one shared scene, see `sceneAnchor`): nothing is resized to fill the 4:3. The picture
+ * keeps its scale, set by its SHORT side, and is cropped to the 4:3 where it overflows; where it
+ * is narrower (a portrait phone) it is pushed to the left (0) or right (1) and the rest stays
+ * transparent. Same placement as the live preview (`drawFit`), so the faces are not enlarged and
+ * the final frame matches what was seen. Null: the plain 4:3 crop.
  */
 export function snapshotStill(
   source: HTMLVideoElement | HTMLCanvasElement | null,
   filter: string,
-  fit = false,
+  anchor: number | null = null,
 ): HTMLCanvasElement | null {
   if (!source) return null
 
@@ -40,17 +41,18 @@ export function snapshotStill(
   const context = canvas.getContext("2d")
   if (!context) return null
 
-  if (fit) {
+  if (anchor !== null) {
     const short = Math.min(width, height)
     canvas.width = Math.round(short * PHOTO_ASPECT)
     canvas.height = short
+    const slack = canvas.width - width
     context.filter = filter
-    // Mirrored around the middle, so centring is the same either way.
+    // The anchor is for the picture before the mirror flips it (see `sceneAnchor`).
     context.translate(canvas.width, 0)
     context.scale(-1, 1)
     context.drawImage(
       source,
-      (canvas.width - width) / 2,
+      slack <= 0 ? slack / 2 : slack * anchor,
       (canvas.height - height) / 2,
       width,
       height,

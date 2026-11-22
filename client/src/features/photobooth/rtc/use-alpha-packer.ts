@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from "react"
+import { useEffect, useRef, useState, type RefObject } from "react"
 
 import { AlphaPacker, type PackSource } from "./alpha-pack"
 
@@ -10,16 +10,22 @@ const PACK_FPS = 20
  * the capture element of <CameraPreview>, which is its cutout canvas once background removal is
  * ready and the plain video before that. Returns null while not enabled.
  *
- * `fit`: scale the picture by its short side instead of covering the whole packed picture, so
- * the faces of a portrait phone and a landscape webcam come out the same size when they share
- * one scene (see `drawFit`).
+ * `anchor`: null fills the picture with the camera. A number (see `sceneAnchor`) is for one shared
+ * scene: the camera is scaled by its short side, so faces come out the same size on a portrait
+ * phone and a landscape webcam, and a narrower picture is pushed to the left (0) or right (1).
+ * It can change while running (people come and go) without restarting the track.
  */
 export function useAlphaPacker(
   enabled: boolean,
   sourceRef: RefObject<PackSource | null>,
-  fit: boolean,
+  anchor: number | null,
 ): MediaStreamTrack | null {
   const [track, setTrack] = useState<MediaStreamTrack | null>(null)
+
+  const anchorRef = useRef(anchor)
+  useEffect(() => {
+    anchorRef.current = anchor
+  }, [anchor])
 
   useEffect(() => {
     if (!enabled) return
@@ -36,7 +42,7 @@ export function useAlphaPacker(
     setTrack(next)
 
     const timer = window.setInterval(
-      () => packer.draw(sourceRef.current, fit),
+      () => packer.draw(sourceRef.current, anchorRef.current),
       1000 / PACK_FPS,
     )
 
@@ -45,7 +51,7 @@ export function useAlphaPacker(
       next?.stop()
       setTrack(null)
     }
-  }, [enabled, sourceRef, fit])
+  }, [enabled, sourceRef])
 
   return track
 }

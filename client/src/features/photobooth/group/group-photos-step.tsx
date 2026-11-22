@@ -37,6 +37,7 @@ import { encodeStill, snapshotStill } from "./capture-still"
 import { describeDenied } from "./denied-message"
 import { GroupRoster } from "./group-roster"
 import { GroupStage } from "./group-stage"
+import { sceneAnchor } from "./scene-anchor"
 import { captureAt, getRoundProgress, shotCount } from "./round-timeline"
 import type { GroupStills } from "./use-group-stills"
 import { useAutoReady } from "./use-auto-ready"
@@ -85,7 +86,11 @@ export function GroupPhotosStep({
   const round = state?.round ?? null
   const layout = LAYOUTS.find((candidate) => candidate.id === state?.config.layoutId)
   const filter = getFilter(state?.config.filterId ?? "none").css
-  const isOneScene = state?.config.scene === "one-scene"
+  // One shared scene: not resized to fill, but placed on this person's side of it.
+  const anchor =
+    state?.config.scene === "one-scene" && state
+      ? sceneAnchor(state.members, me)
+      : null
 
   const isRunning = round?.status === "running"
   const inRound = round !== null && me !== null && round.roster.includes(me)
@@ -103,14 +108,14 @@ export function GroupPhotosStep({
     async (shot: number) => {
       // Freeze the picture and flash at once, at the agreed moment. Encoding the image takes a
       // while on a phone, and the flash must not wait for it.
-      const snapshot = snapshotStill(captureRef.current, filter, isOneScene)
+      const snapshot = snapshotStill(captureRef.current, filter, anchor)
       if (!snapshot) return
       setFlashId((id) => id + 1)
 
       const blob = await encodeStill(snapshot)
       if (blob) stills.addOwn(shot, blob)
     },
-    [filter, isOneScene, stills],
+    [filter, anchor, stills],
   )
   useShotScheduler({ round, enabled: canShoot, onShot })
 

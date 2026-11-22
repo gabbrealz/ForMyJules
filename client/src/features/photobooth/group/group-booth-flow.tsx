@@ -26,6 +26,7 @@ import { GroupExperienceStep } from "./group-experience-step"
 import { GroupFrameStep } from "./group-frame-step"
 import { GroupLayoutStep } from "./group-layout-step"
 import { GroupPhotosStep } from "./group-photos-step"
+import { sceneAnchor } from "./scene-anchor"
 import { useGroupStills } from "./use-group-stills"
 
 // Same four steps as the solo flow, driven by the server's `step` instead of local state.
@@ -43,13 +44,18 @@ const INDICATORS = { completed: <CheckIcon className="size-3.5" /> }
  * step the group is on; everyone's stepper follows it, and only the leader can move it.
  */
 export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
-  const { state, isLeader, actions } = useBoothSessionContext()
+  const { state, me, isLeader, actions } = useBoothSessionContext()
   const step = state?.step ?? 1
 
   // Like the solo flow: the camera only runs while a step needs it, and the stream carries over
   // from the experience step to the photos step.
   const camerasOn = step === 2 || step === 3
   const camera = useCamera(camerasOn)
+  // The video links to the others outlive the cameras: they stay up through the frame step too.
+  // "Retake photos" goes from step 4 straight back to step 3, and links built from scratch there
+  // have to be negotiated while people are already looking at the preview (a slow or lost offer
+  // shows up as a missing picture). Kept up, the new camera just takes over the existing link.
+  const linksOn = step >= 2
 
   // This person's own picture for the steps: the cutout canvas while the background is removed,
   // otherwise the plain video. <CameraPreview> below fills it. The stage previews from it, photos
@@ -57,8 +63,10 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
   const localSourceRef = useRef<PackSource | null>(null)
   const removeBackground = state?.config.removeBackground ?? false
   // One shared scene: pictures are placed by their short side, so faces are the same size on a
-  // portrait phone and a landscape webcam (see drawFit).
-  const isOneScene = state?.config.scene === "one-scene"
+  // portrait phone and a landscape webcam, and a narrow picture stands on its side of the scene
+  // (see drawFit and sceneAnchor). Null otherwise: the camera fills its cell.
+  const anchor =
+    state?.config.scene === "one-scene" ? sceneAnchor(state.members, me) : null
 
   // What the others get to see of this camera. A cutout can't travel as transparency, so with the
   // background removed it is packed into colour-plus-matte video (see rtc/alpha-pack.ts).
@@ -66,13 +74,13 @@ export function GroupBoothFlow({ onExit }: { onExit: () => void }) {
   const packedTrack = useAlphaPacker(
     camerasOn && removeBackground && !!camera.stream,
     localSourceRef,
-    isOneScene,
+    anchor,
   )
   const sendTrack = removeBackground ? packedTrack : cameraTrack
 
   // Live previews of the others, while cameras are on. Links are made at step 2, so they are
   // already up when the countdown starts.
-  const previews = usePeerMesh(camerasOn, sendTrack)
+  const previews = usePeerMesh(linksOn, sendTrack)
   // Held here, above the steps, so stills still arriving at the frame step aren't lost.
   const stills = useGroupStills()
 

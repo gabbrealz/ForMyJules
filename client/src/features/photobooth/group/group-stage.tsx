@@ -12,6 +12,7 @@ import {
 } from "../rtc/alpha-pack"
 import type { RemotePreview } from "../rtc/use-peer-mesh"
 import { useBoothSessionContext } from "../session/booth-session-context"
+import { sceneAnchor } from "./scene-anchor"
 
 // One cell of the frame, in canvas pixels. Same 4:3 as a photo.
 const STAGE_WIDTH = 640
@@ -104,6 +105,7 @@ export function GroupStage({
     if (!canvas || !context) return
 
     const ids = memberKey ? memberKey.split(",").map(Number) : []
+    const roster = ids.map((id) => ({ id, status: "active" }))
 
     /** What to draw for one person, or null if they have no picture yet. */
     const sourceFor = (id: number): PackSource | null => {
@@ -122,15 +124,16 @@ export function GroupStage({
       return unpacker.update(video) ? unpacker.canvas : null
     }
 
-    // One scene: crop to the box without resizing by the long side, so a portrait phone doesn't
-    // get its face enlarged. Slices: each camera fills its slice.
-    const place = scene === "one-scene" ? drawFit : drawCover
-
-    /** Mirrored inside its box, like a selfie camera and like the photos. */
+    /**
+     * Mirrored inside its box, like a selfie camera and like the photos.
+     * One scene: scaled by the short side only, so a portrait phone doesn't get its face enlarged,
+     * and pushed to its side of the scene (`anchor`). Slices: each camera fills its slice.
+     */
     const drawMirrored = (
       source: PackSource,
       x: number,
       width: number,
+      anchor: number,
     ) => {
       context.save()
       context.beginPath()
@@ -138,7 +141,11 @@ export function GroupStage({
       context.clip()
       context.translate(x + width, 0)
       context.scale(-1, 1)
-      place(context, source, 0, 0, width, STAGE_HEIGHT)
+      if (scene === "one-scene") {
+        drawFit(context, source, 0, 0, width, STAGE_HEIGHT, anchor)
+      } else {
+        drawCover(context, source, 0, 0, width, STAGE_HEIGHT)
+      }
       context.restore()
     }
 
@@ -158,8 +165,13 @@ export function GroupStage({
       ids.forEach((id, index) => {
         const source = sourceFor(id)
         if (!source) return
-        if (scene === "one-scene") drawMirrored(source, 0, STAGE_WIDTH)
-        else drawMirrored(source, index * sliceWidth, sliceWidth)
+        if (scene === "one-scene") {
+          // A received cutout was already placed by its sender (it is 4:3, so this changes nothing
+          // for it); this person's own camera is placed here, the same way.
+          drawMirrored(source, 0, STAGE_WIDTH, sceneAnchor(roster, id))
+        } else {
+          drawMirrored(source, index * sliceWidth, sliceWidth, 0.5)
+        }
       })
     }
     frame = requestAnimationFrame(draw)
