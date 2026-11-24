@@ -67,6 +67,12 @@ export function usePhotoFeed() {
     setPhotos((current) => prependUnique(current, added))
   }, [])
 
+  /** Permanently deletes a photo on the server, then drops it from the list. Throws if the request fails. */
+  const remove = useCallback(async (id: string) => {
+    await photosApi.remove(id)
+    setPhotos((current) => current.filter((photo) => photo.id !== id))
+  }, [])
+
   return {
     photos,
     hasMore,
@@ -77,6 +83,7 @@ export function usePhotoFeed() {
     isFetchingMore: fetching && photos.length > 0,
     loadMore,
     prepend,
+    remove,
   }
 }
 

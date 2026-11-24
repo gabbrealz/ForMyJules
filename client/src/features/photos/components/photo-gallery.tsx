@@ -1,9 +1,12 @@
+import { useState } from "react"
 import { ImageIcon } from "lucide-react"
 
 import { Button } from "#components/ui/button"
 import { useInfiniteScroll } from "../hooks/use-infinite-scroll.ts"
 import type { PhotoFeed } from "../hooks/use-photo-feed.ts"
+import type { Photo } from "../types.ts"
 import { PhotoGrid } from "./photo-grid.tsx"
+import { PhotoViewer } from "./photo-viewer.tsx"
 
 function LoadError({
   message,
@@ -30,7 +33,13 @@ function LoadError({
 
 /** The gallery wall: loads pages from the API as the person scrolls. */
 export function PhotoGallery({ feed }: { feed: PhotoFeed }) {
-  const { photos, hasMore, isLoading, isFetchingMore, error, loadMore } = feed
+  const { photos, hasMore, isLoading, isFetchingMore, error, loadMore, remove } =
+    feed
+
+  // Looked up by id so a deleted photo closes the viewer on its own.
+  const [openId, setOpenId] = useState<string | null>(null)
+  const openPhoto = photos.find((photo) => photo.id === openId) ?? null
+  const handleOpen = (photo: Photo) => setOpenId(photo.id)
 
   const sentinelRef = useInfiniteScroll<HTMLDivElement>({
     enabled: hasMore && !isLoading && !isFetchingMore && !error,
@@ -38,7 +47,7 @@ export function PhotoGallery({ feed }: { feed: PhotoFeed }) {
   })
 
   if (isLoading) {
-    return <PhotoGrid photos={[]} skeletonRows={3} />
+    return <PhotoGrid photos={[]} skeletonRows={3} onOpenPhoto={handleOpen} />
   }
 
   if (error && photos.length === 0) {
@@ -68,7 +77,11 @@ export function PhotoGallery({ feed }: { feed: PhotoFeed }) {
 
   return (
     <>
-      <PhotoGrid photos={photos} skeletonRows={isFetchingMore ? 1 : 0} />
+      <PhotoGrid
+        photos={photos}
+        skeletonRows={isFetchingMore ? 1 : 0}
+        onOpenPhoto={handleOpen}
+      />
       {/* Triggers the next page when it nears the viewport. */}
       <div ref={sentinelRef} aria-hidden="true" className="h-px" />
       {error ? (
@@ -80,6 +93,11 @@ export function PhotoGallery({ feed }: { feed: PhotoFeed }) {
           </p>
         )
       )}
+      <PhotoViewer
+        photo={openPhoto}
+        onClose={() => setOpenId(null)}
+        onDelete={(photo) => remove(photo.id)}
+      />
     </>
   )
 }

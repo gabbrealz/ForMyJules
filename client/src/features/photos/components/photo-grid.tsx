@@ -19,9 +19,11 @@ type Cell = { key: string; ratio: number; photo?: Photo }
 export function PhotoGrid({
   photos,
   skeletonRows = 0,
+  onOpenPhoto,
 }: {
   photos: Photo[]
   skeletonRows?: number
+  onOpenPhoto: (photo: Photo) => void
 }) {
   const [containerRef, columnCount] = useColumnCount()
 
@@ -46,7 +48,7 @@ export function PhotoGrid({
         <div key={index} className="flex min-w-0 flex-1 flex-col gap-4 sm:gap-5 md:gap-6 lg:gap-7 xl:gap-8">
           {column.map((cell) =>
             cell.photo ? (
-              <PhotoTile key={cell.key} photo={cell.photo} />
+              <PhotoTile key={cell.key} photo={cell.photo} onOpen={onOpenPhoto} />
             ) : (
               <Skeleton
                 key={cell.key}

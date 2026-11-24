@@ -14,7 +14,13 @@ function describe(photo: Photo): string {
   return `Photo taken on ${date.toLocaleDateString(undefined, { dateStyle: "long" })}`
 }
 
-export function PhotoTile({ photo }: { photo: Photo }) {
+export function PhotoTile({
+  photo,
+  onOpen,
+}: {
+  photo: Photo
+  onOpen: (photo: Photo) => void
+}) {
   const [state, setState] = useState<LoadState>("loading")
   const placeholder = useMemo(
     () => thumbhashToDataUrl(photo.thumbhash),
@@ -27,10 +33,13 @@ export function PhotoTile({ photo }: { photo: Photo }) {
   }, [])
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => onOpen(photo)}
       className={cn(
-        "relative w-full overflow-hidden bg-muted rounded-xs",
-        "hover:-translate-y-1.5 focus:-translate-y-2 transition-transform"
+        "relative block w-full cursor-pointer overflow-hidden bg-muted rounded-xs",
+        "hover:-translate-y-1.5 focus-visible:-translate-y-2 transition-transform",
+        "outline-none focus-visible:ring-2 focus-visible:ring-ring",
       )}
       style={{ aspectRatio: `${photo.w} / ${photo.h}` }}
     >
@@ -70,6 +79,6 @@ export function PhotoTile({ photo }: { photo: Photo }) {
           )}
         />
       )}
-    </div>
+    </button>
   )
 }

@@ -62,6 +62,15 @@ export function prependUnique(current: Photo[], incoming: Photo[]): Photo[] {
   return [...newestFirst, ...current.filter((photo) => !ids.has(photo.id))]
 }
 
+/** "Taken on March 5, 2026 at 3:30 PM" in the viewer's locale, or a fallback when the date is unknown. */
+export function formatTakenAt(takenAt: string | null): string {
+  const unknown = "Date taken unknown"
+  if (!takenAt) return unknown
+  const date = new Date(takenAt)
+  if (Number.isNaN(date.getTime())) return unknown
+  return `Taken on ${date.toLocaleString(undefined, { dateStyle: "long", timeStyle: "short" })}`
+}
+
 /** Decodes a stored base64 ThumbHash into a tiny blurred image URL, or undefined if it's invalid. */
 export function thumbhashToDataUrl(thumbhash: string): string | undefined {
   try {
